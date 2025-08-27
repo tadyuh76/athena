@@ -100,8 +100,7 @@ async function main() {
     }
     console.log(`🎉 Successfully seeded ${samplePosts.length} posts!`);
 }
-main()
-    .catch((e) => {
+main().catch((e) => {
     console.error("❌ Seed failed:", e);
     process.exit(1);
 });
