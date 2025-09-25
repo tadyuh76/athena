@@ -18,6 +18,9 @@ exports.supabaseAdmin = (0, supabase_js_1.createClient)(supabaseUrl, supabaseSer
     auth: {
         autoRefreshToken: false,
         persistSession: false
+    },
+    db: {
+        schema: 'public'
     }
 });
 //# sourceMappingURL=supabase.js.map

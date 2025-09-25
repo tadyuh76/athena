@@ -34,9 +34,10 @@ export declare class AuthService {
     forgotPassword(email: string): Promise<AuthResponse>;
     resetPassword(newPassword: string): Promise<AuthResponse>;
     resendVerificationEmail(email: string): Promise<AuthResponse>;
+    verifyOTP(email: string, otp: string): Promise<AuthResponse>;
     googleAuth(): Promise<{
         url: string;
     }>;
-    handleOAuthCallback(): Promise<AuthResponse>;
+    createOAuthProfile(userId: string, email: string, metadata: any): Promise<AuthResponse>;
 }
 //# sourceMappingURL=AuthService.d.ts.map

@@ -445,4 +445,51 @@ export class CartService {
       );
     }
   }
+
+  async releaseExpiredReservations(): Promise<void> {
+    try {
+      const now = new Date().toISOString();
+      
+      // Get all expired cart items
+      const { data: expiredItems } = await supabase
+        .from("cart_items")
+        .select("*, variant:product_variants(*)")
+        .lt("inventory_reserved_until", now)
+        .not("inventory_reserved_until", "is", null);
+
+      if (!expiredItems || expiredItems.length === 0) {
+        return;
+      }
+
+      // Release reserved inventory for expired items
+      for (const item of expiredItems) {
+        const variant = item.variant;
+        if (variant) {
+          await supabaseAdmin
+            .from("product_variants")
+            .update({
+              reserved_quantity: Math.max(
+                0,
+                variant.reserved_quantity - item.quantity
+              ),
+            })
+            .eq("id", variant.id);
+        }
+      }
+
+      // Clear the reservation timestamp on expired items
+      const expiredItemIds = expiredItems.map(item => item.id);
+      await supabase
+        .from("cart_items")
+        .update({ inventory_reserved_until: null })
+        .in("id", expiredItemIds);
+        
+    } catch (error) {
+      throw new Error(
+        `Failed to release expired reservations: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
+    }
+  }
 }

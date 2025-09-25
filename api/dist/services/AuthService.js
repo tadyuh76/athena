@@ -71,11 +71,15 @@ class AuthService {
     async login(data) {
         try {
             const { email, password } = data;
-            const { data: authData, error: authError } = await supabase_1.supabase.auth.signInWithPassword({
+            const { data: authData, error: authError } = await supabase_1.supabaseAdmin.auth.signInWithPassword({
                 email,
                 password
             });
             if (authError) {
+                console.error('Supabase login error:', authError);
+                if (authError.message.includes('Invalid login credentials')) {
+                    throw new Error('Invalid email or password');
+                }
                 throw authError;
             }
             if (!authData.user) {
@@ -141,31 +145,46 @@ class AuthService {
     async verifyToken(token) {
         try {
             const decoded = jsonwebtoken_1.default.verify(token, this.jwtSecret);
+            console.log('Token verified successfully for userId:', decoded.userId);
             return { valid: true, userId: decoded.userId };
         }
-        catch {
+        catch (error) {
+            console.error('Token verification failed:', error);
             return { valid: false };
         }
     }
     async getUser(userId) {
         try {
-            const { data, error } = await supabase_1.supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .single();
-            if (error) {
-                return null;
+            const { data: authUser, error: authError } = await supabase_1.supabaseAdmin.auth.admin.getUserById(userId);
+            if (!authError && authUser?.user) {
+                const user = {
+                    id: authUser.user.id,
+                    email: authUser.user.email,
+                    email_verified: authUser.user.email_confirmed_at !== null,
+                    first_name: authUser.user.user_metadata?.first_name || '',
+                    last_name: authUser.user.user_metadata?.last_name || '',
+                    phone: authUser.user.phone || authUser.user.user_metadata?.phone || null,
+                    status: 'active',
+                    role: authUser.user.user_metadata?.role || 'customer',
+                    created_at: authUser.user.created_at,
+                    updated_at: authUser.user.updated_at,
+                    last_login_at: authUser.user.last_sign_in_at,
+                    metadata: authUser.user.user_metadata || {}
+                };
+                console.log('User fetched from auth.users:', user.email);
+                return user;
             }
-            return data;
+            console.error('Failed to fetch user from auth.users:', authError);
+            return null;
         }
-        catch {
+        catch (err) {
+            console.error('Exception fetching user:', err);
             return null;
         }
     }
     async updateUser(userId, updates) {
         try {
-            const { data, error } = await supabase_1.supabase
+            const { data, error } = await supabase_1.supabaseAdmin
                 .from('users')
                 .update(updates)
                 .eq('id', userId)
@@ -250,12 +269,51 @@ class AuthService {
             };
         }
     }
+    async verifyOTP(email, otp) {
+        try {
+            const { data, error } = await supabase_1.supabase.auth.verifyOtp({
+                email,
+                token: otp,
+                type: 'email'
+            });
+            if (error) {
+                throw error;
+            }
+            if (data.user) {
+                await supabase_1.supabaseAdmin
+                    .from('users')
+                    .update({
+                    email_verified: true,
+                    status: 'active'
+                })
+                    .eq('id', data.user.id);
+                const userProfile = await this.getUser(data.user.id);
+                const token = this.generateToken(data.user.id);
+                return {
+                    success: true,
+                    user: userProfile || undefined,
+                    token,
+                    message: 'Email verified successfully'
+                };
+            }
+            return {
+                success: false,
+                error: 'Invalid OTP'
+            };
+        }
+        catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'OTP verification failed'
+            };
+        }
+    }
     async googleAuth() {
         try {
             const { data, error } = await supabase_1.supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${process.env.FRONTEND_URL}/auth-success.html`,
+                    redirectTo: `${process.env.FRONTEND_URL}/auth-callback.html`,
                     scopes: 'email profile'
                 }
             });
@@ -268,39 +326,34 @@ class AuthService {
             throw new Error(error instanceof Error ? error.message : 'Google auth failed');
         }
     }
-    async handleOAuthCallback() {
+    async createOAuthProfile(userId, email, metadata) {
         try {
-            const { data: { session }, error } = await supabase_1.supabase.auth.getSession();
-            if (error || !session) {
-                throw new Error('No session found');
-            }
-            const user = session.user;
-            let userProfile = await this.getUser(user.id);
-            if (!userProfile) {
-                const { data: newProfile } = await supabase_1.supabaseAdmin
-                    .from('users')
-                    .insert({
-                    id: user.id,
-                    email: user.email,
-                    email_verified: true,
-                    first_name: user.user_metadata?.full_name?.split(' ')[0] || '',
-                    last_name: user.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-                    status: 'active',
-                    role: 'customer',
-                    metadata: {
-                        auth_provider: user.app_metadata?.provider || 'google',
-                        avatar_url: user.user_metadata?.avatar_url || null
-                    }
-                })
-                    .select()
-                    .single();
-                userProfile = newProfile;
-            }
-            await supabase_1.supabaseAdmin
+            const { data: userProfile, error: upsertError } = await supabase_1.supabaseAdmin
                 .from('users')
-                .update({ last_login_at: new Date().toISOString() })
-                .eq('id', user.id);
-            const token = this.generateToken(user.id);
+                .upsert({
+                id: userId,
+                email: email,
+                email_verified: true,
+                first_name: metadata?.name?.split(' ')[0] || metadata?.given_name || '',
+                last_name: metadata?.name?.split(' ').slice(1).join(' ') || metadata?.family_name || '',
+                status: 'active',
+                role: 'customer',
+                last_login_at: new Date().toISOString(),
+                metadata: {
+                    auth_provider: 'google',
+                    avatar_url: metadata?.avatar_url || metadata?.picture || null,
+                    full_name: metadata?.name || metadata?.full_name || null
+                }
+            }, {
+                onConflict: 'id'
+            })
+                .select()
+                .single();
+            if (upsertError) {
+                console.error('Failed to upsert OAuth profile:', upsertError);
+                throw upsertError;
+            }
+            const token = this.generateToken(userId);
             return {
                 success: true,
                 user: userProfile || undefined,
@@ -310,7 +363,7 @@ class AuthService {
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'OAuth callback failed'
+                error: error instanceof Error ? error.message : 'Failed to create OAuth profile'
             };
         }
     }

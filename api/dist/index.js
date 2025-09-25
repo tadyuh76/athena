@@ -58,6 +58,12 @@ const server = (0, http_1.createServer)(async (req, res) => {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
             return;
         }
+        if (pathname === '/api/auth/verify-otp' && method === 'POST') {
+            const body = await (0, request_handler_1.parseBody)(req);
+            const result = await authService.verifyOTP(body.email, body.otp);
+            (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
+            return;
+        }
         if (pathname === '/api/auth/resend-verification' && method === 'POST') {
             const body = await (0, request_handler_1.parseBody)(req);
             const result = await authService.resendVerificationEmail(body.email);
@@ -75,20 +81,10 @@ const server = (0, http_1.createServer)(async (req, res) => {
             }
             return;
         }
-        if (pathname === '/api/auth/callback' && method === 'GET') {
-            const result = await authService.handleOAuthCallback();
-            if (result.success) {
-                res.writeHead(302, {
-                    Location: `${process.env.FRONTEND_URL}/auth-success.html?token=${result.token}`
-                });
-                res.end();
-            }
-            else {
-                res.writeHead(302, {
-                    Location: `${process.env.FRONTEND_URL}/login.html?error=${encodeURIComponent(result.error || 'Authentication failed')}`
-                });
-                res.end();
-            }
+        if (pathname === '/api/auth/oauth-profile' && method === 'POST') {
+            const body = await (0, request_handler_1.parseBody)(req);
+            const result = await authService.createOAuthProfile(body.user_id, body.email, body.metadata);
+            (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
             return;
         }
         if (pathname === '/api/auth/me' && method === 'GET') {
@@ -205,47 +201,41 @@ const server = (0, http_1.createServer)(async (req, res) => {
             (0, request_handler_1.sendJSON)(res, 200, cart);
             return;
         }
-        if (pathname === '/api/cart' && method === 'POST') {
+        if (pathname === '/api/cart/items' && method === 'POST') {
+            const authReq = req;
+            await (0, auth_1.optionalAuth)(authReq);
+            const body = await (0, request_handler_1.parseBody)(req);
+            const sessionId = body.session_id || query.get('session_id') || undefined;
+            const result = await cartService.addItem(authReq.userId, sessionId, body.product_id, body.variant_id, body.quantity);
+            (0, request_handler_1.sendJSON)(res, 201, result);
+            return;
+        }
+        if (pathname === '/api/cart/summary' && method === 'GET') {
             const authReq = req;
             await (0, auth_1.optionalAuth)(authReq);
             const sessionId = query.get('session_id') || undefined;
-            const cart = await cartService.createCart(authReq.userId, sessionId);
-            (0, request_handler_1.sendJSON)(res, 201, cart);
-            return;
-        }
-        if (pathname === '/api/cart/items' && method === 'POST') {
-            const body = await (0, request_handler_1.parseBody)(req);
-            const result = await cartService.addItem(body.cart_id, body.product_id, body.variant_id, body.quantity);
-            (0, request_handler_1.sendJSON)(res, 201, result);
+            const summary = await cartService.getCartSummary(authReq.userId, sessionId);
+            (0, request_handler_1.sendJSON)(res, 200, summary);
             return;
         }
         const cartItemMatch = (0, request_handler_1.matchRoute)(pathname, '/api/cart/items/:id');
         if (cartItemMatch && method === 'PUT') {
             const body = await (0, request_handler_1.parseBody)(req);
-            const result = await cartService.updateItemQuantity(body.cart_id, cartItemMatch.id, body.quantity);
+            const result = await cartService.updateItemQuantity(cartItemMatch.id, body.quantity);
             (0, request_handler_1.sendJSON)(res, 200, result);
             return;
         }
         if (cartItemMatch && method === 'DELETE') {
-            const cartId = query.get('cart_id');
-            if (!cartId) {
-                (0, request_handler_1.sendError)(res, 400, 'Cart ID required');
-                return;
-            }
-            await cartService.removeItem(cartId, cartItemMatch.id);
+            await cartService.removeItem(cartItemMatch.id);
             (0, request_handler_1.sendJSON)(res, 200, { success: true });
             return;
         }
-        const clearCartMatch = (0, request_handler_1.matchRoute)(pathname, '/api/cart/:id/clear');
-        if (clearCartMatch && method === 'POST') {
-            await cartService.clearCart(clearCartMatch.id);
+        if (pathname === '/api/cart/clear' && method === 'POST') {
+            const authReq = req;
+            await (0, auth_1.optionalAuth)(authReq);
+            const sessionId = query.get('session_id') || undefined;
+            await cartService.clearCart(authReq.userId, sessionId);
             (0, request_handler_1.sendJSON)(res, 200, { success: true });
-            return;
-        }
-        const cartSummaryMatch = (0, request_handler_1.matchRoute)(pathname, '/api/cart/:id/summary');
-        if (cartSummaryMatch && method === 'GET') {
-            const summary = await cartService.getCartSummary(cartSummaryMatch.id);
-            (0, request_handler_1.sendJSON)(res, 200, summary);
             return;
         }
         if (pathname === '/api/cart/merge' && method === 'POST') {
@@ -253,8 +243,8 @@ const server = (0, http_1.createServer)(async (req, res) => {
             if (!await (0, auth_1.requireAuth)(authReq, res))
                 return;
             const body = await (0, request_handler_1.parseBody)(req);
-            const cart = await cartService.mergeGuestCart(body.session_id, authReq.userId);
-            (0, request_handler_1.sendJSON)(res, 200, cart);
+            await cartService.mergeGuestCart(body.session_id, authReq.userId);
+            (0, request_handler_1.sendJSON)(res, 200, { success: true });
             return;
         }
         if (pathname === '/api/health' && method === 'GET') {
