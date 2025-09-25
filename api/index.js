@@ -1,8 +1,9 @@
-const { handleRequest } = require('../api/dist/serverless-handler');
+const { handleRequest } = require('../api-src/dist/serverless-handler');
 
 module.exports = async (req, res) => {
   // Convert Vercel request/response to Node.js IncomingMessage/ServerResponse format
-  req.url = req.url || req.query.path ? `/api/${req.query.path}` : '/api';
+  const path = req.url.replace('/api', '') || '/';
+  req.url = '/api' + path;
   
   // Ensure body is parsed
   if (req.body && typeof req.body === 'string') {

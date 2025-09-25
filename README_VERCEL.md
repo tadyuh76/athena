@@ -62,15 +62,15 @@ This starts:
 
 ```
 /
-├── api/                  # TypeScript API source
+├── api/                 # Vercel serverless function entry point
+│   └── index.js        # Vercel handler wrapper
+├── api-src/            # TypeScript API source
 │   ├── src/
 │   │   ├── services/     # Business logic
 │   │   ├── middleware/   # Auth middleware
 │   │   ├── utils/        # Utilities
 │   │   └── serverless-handler.ts  # Serverless adapter
 │   └── dist/            # Compiled JavaScript
-├── api-backend/         # Vercel serverless function
-│   └── index.js        # Vercel handler wrapper
 ├── public/             # Static files (HTML, CSS, JS)
 ├── vercel.json         # Vercel configuration
 └── package.json        # Project dependencies
@@ -82,7 +82,7 @@ This starts:
 2. **Production Mode**: 
    - Vercel serves static files from `/public`
    - API requests to `/api/*` are handled by serverless functions
-   - The `api-backend/index.js` wrapper adapts Vercel's request/response to Node.js format
+   - The `api/index.js` wrapper adapts Vercel's request/response to Node.js format
 
 ## Configuration Details
 

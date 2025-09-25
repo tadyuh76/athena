@@ -4,14 +4,14 @@
   "description": "Full-stack application with TypeScript and Supabase",
   "main": "index.js",
   "scripts": {
-    "install:api": "cd api && npm install",
+    "install:api": "cd api-src && npm install",
     "dev": "concurrently \"npm run dev:api\" \"npm run dev:server\"",
-    "dev:api": "cd api && npm run dev",
+    "dev:api": "cd api-src && npm run dev",
     "dev:server": "node server.js",
-    "build": "cd api && npm run build",
+    "build": "cd api-src && npm run build",
     "build:vercel": "npm run install:api && npm run build",
     "start": "concurrently \"npm run start:api\" \"npm run start:server\"",
-    "start:api": "cd api && npm start",
+    "start:api": "cd api-src && npm start",
     "start:server": "node server.js",
     "postinstall": "npm run install:api",
     "vercel-build": "npm run build:vercel"

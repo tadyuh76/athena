@@ -1,15 +1,15 @@
 {
-  "buildCommand": "cd api && npm run build",
+  "buildCommand": "cd api-src && npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api-backend/index.js": {
+    "api/index.js": {
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api-backend"
+      "destination": "/api"
     }
   ]
 }
