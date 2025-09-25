@@ -13,14 +13,31 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
     throw new Error('Missing Supabase environment variables');
 }
-exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseAnonKey);
-exports.supabaseAdmin = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        autoRefreshToken: false,
-        persistSession: false
-    },
-    db: {
-        schema: 'public'
+let supabaseInstance = null;
+let supabaseAdminInstance = null;
+exports.supabase = (() => {
+    if (!supabaseInstance) {
+        supabaseInstance = (0, supabase_js_1.createClient)(supabaseUrl, supabaseAnonKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            }
+        });
     }
-});
+    return supabaseInstance;
+})();
+exports.supabaseAdmin = (() => {
+    if (!supabaseAdminInstance) {
+        supabaseAdminInstance = (0, supabase_js_1.createClient)(supabaseUrl, supabaseServiceKey, {
+            auth: {
+                autoRefreshToken: false,
+                persistSession: false
+            },
+            db: {
+                schema: 'public'
+            }
+        });
+    }
+    return supabaseAdminInstance;
+})();
 //# sourceMappingURL=supabase.js.map

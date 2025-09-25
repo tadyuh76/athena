@@ -1,0 +1,16 @@
+{
+  "buildCommand": "cd api && npm run build",
+  "outputDirectory": "public",
+  "functions": {
+    "api-backend/index.js": {
+      "maxDuration": 30,
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api-backend"
+    }
+  ]
+}

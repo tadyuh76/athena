@@ -9,10 +9,12 @@
     "dev:api": "cd api && npm run dev",
     "dev:server": "node server.js",
     "build": "cd api && npm run build",
+    "build:vercel": "npm run install:api && npm run build",
     "start": "concurrently \"npm run start:api\" \"npm run start:server\"",
     "start:api": "cd api && npm start",
     "start:server": "node server.js",
-    "postinstall": "npm run install:api"
+    "postinstall": "npm run install:api",
+    "vercel-build": "npm run build:vercel"
   },
   "keywords": [
     "typescript",
@@ -25,6 +27,7 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@vercel/node": "^3.2.29",
     "http-proxy-middleware": "^3.0.5"
   }
 }
