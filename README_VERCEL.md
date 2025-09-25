@@ -18,6 +18,11 @@ SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_KEY=your_supabase_service_key
 ```
 
+Note: The frontend automatically detects the environment:
+- In production (Vercel): Uses the deployment URL (e.g., https://ueh-athena.vercel.app)
+- In development: Uses localhost:3000
+- The API URL is automatically configured based on the environment
+
 ## Deployment
 
 ### Using Vercel Dashboard

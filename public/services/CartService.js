@@ -1,6 +1,6 @@
 export class CartService {
   constructor() {
-    this.baseUrl = '/api';
+    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : '/api';
     this.cart = null;
     this.sessionId = this.getSessionId();
   }

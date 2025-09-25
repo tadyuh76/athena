@@ -1,6 +1,6 @@
 export class ProductService {
   constructor() {
-    this.baseUrl = "/api";
+    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : '/api';
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
   }

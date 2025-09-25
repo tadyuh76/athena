@@ -1,6 +1,6 @@
 export class WishlistService {
   constructor() {
-    this.baseUrl = '/api';
+    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : '/api';
     this.wishlist = [];
     this.count = 0;
   }

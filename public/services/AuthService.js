@@ -1,6 +1,6 @@
 export class AuthService {
   constructor() {
-    this.baseUrl = '/api';
+    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : '/api';
     this.token = localStorage.getItem('authToken');
     this.user = null;
     this.loadUser();
