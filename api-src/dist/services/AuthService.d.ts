@@ -36,7 +36,7 @@ export declare class AuthService {
     resetPassword(newPassword: string): Promise<AuthResponse>;
     resendVerificationEmail(email: string): Promise<AuthResponse>;
     verifyOTP(email: string, otp: string): Promise<AuthResponse>;
-    googleAuth(): Promise<{
+    googleAuth(redirectUrl?: string): Promise<{
         url: string;
     }>;
     createOAuthProfile(userId: string, email: string, metadata: any): Promise<AuthResponse>;

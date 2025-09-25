@@ -1,1 +1,1 @@
-{"version":3,"file":"serverless-handler.d.ts","sourceRoot":"","sources":["../src/serverless-handler.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,eAAe,EAAE,cAAc,EAAE,MAAM,MAAM,CAAC;AAoB5D,wBAAsB,aAAa,CAAC,GAAG,EAAE,eAAe,EAAE,GAAG,EAAE,cAAc,iBAoS5E"}
+{"version":3,"file":"serverless-handler.d.ts","sourceRoot":"","sources":["../src/serverless-handler.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,eAAe,EAAE,cAAc,EAAE,MAAM,MAAM,CAAC;AAoB5D,wBAAsB,aAAa,CAAC,GAAG,EAAE,eAAe,EAAE,GAAG,EAAE,cAAc,iBA0S5E"}

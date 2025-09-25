@@ -388,12 +388,15 @@ export class AuthService {
     }
   }
 
-  async googleAuth(): Promise<{ url: string }> {
+  async googleAuth(redirectUrl?: string): Promise<{ url: string }> {
     try {
+      // Use provided redirect URL or fall back to default
+      const finalRedirectUrl = redirectUrl || `${this.frontendUrl}/auth-callback.html`;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${this.frontendUrl}/auth-callback.html`,
+          redirectTo: finalRedirectUrl,
           scopes: 'email profile'
         }
       });

@@ -72,7 +72,10 @@ const server = (0, http_1.createServer)(async (req, res) => {
         }
         if (pathname === '/api/auth/google' && method === 'GET') {
             try {
-                const { url } = await authService.googleAuth();
+                const host = req.headers.host;
+                const origin = host ? `http://${host}` : 'http://localhost:3000';
+                const redirectUrl = `${origin}/auth-callback.html`;
+                const { url } = await authService.googleAuth(redirectUrl);
                 res.writeHead(302, { Location: url });
                 res.end();
             }

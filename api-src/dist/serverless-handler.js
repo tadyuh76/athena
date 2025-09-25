@@ -67,7 +67,11 @@ async function handleRequest(req, res) {
         }
         if (pathname === '/api/auth/google' && method === 'GET') {
             try {
-                const { url } = await authService.googleAuth();
+                const host = req.headers?.host;
+                const protocol = req.headers?.['x-forwarded-proto'] || 'https';
+                const origin = host ? `${protocol}://${host}` : undefined;
+                const redirectUrl = origin ? `${origin}/auth-callback.html` : undefined;
+                const { url } = await authService.googleAuth(redirectUrl);
                 res.writeHead(302, { Location: url });
                 res.end();
             }

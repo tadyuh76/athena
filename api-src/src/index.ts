@@ -89,7 +89,12 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
     if (pathname === '/api/auth/google' && method === 'GET') {
       try {
-        const { url } = await authService.googleAuth();
+        // Get the origin from request headers for local development
+        const host = req.headers.host;
+        const origin = host ? `http://${host}` : 'http://localhost:3000';
+        const redirectUrl = `${origin}/auth-callback.html`;
+        
+        const { url } = await authService.googleAuth(redirectUrl);
         res.writeHead(302, { Location: url });
         res.end();
       } catch (error) {

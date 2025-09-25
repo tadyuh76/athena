@@ -313,12 +313,13 @@ class AuthService {
             };
         }
     }
-    async googleAuth() {
+    async googleAuth(redirectUrl) {
         try {
+            const finalRedirectUrl = redirectUrl || `${this.frontendUrl}/auth-callback.html`;
             const { data, error } = await supabase_1.supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${this.frontendUrl}/auth-callback.html`,
+                    redirectTo: finalRedirectUrl,
                     scopes: 'email profile'
                 }
             });
