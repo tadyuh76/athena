@@ -1,6 +1,12 @@
 const { handleRequest } = require('../api-src/dist/serverless-handler');
 
 module.exports = async (req, res) => {
+  // Set FRONTEND_URL environment variable based on the request host
+  if (!process.env.FRONTEND_URL && req.headers.host) {
+    const protocol = req.headers['x-forwarded-proto'] || 'https';
+    process.env.FRONTEND_URL = `${protocol}://${req.headers.host}`;
+  }
+  
   // Convert Vercel request/response to Node.js IncomingMessage/ServerResponse format
   const path = req.url.replace('/api', '') || '/';
   req.url = '/api' + path;

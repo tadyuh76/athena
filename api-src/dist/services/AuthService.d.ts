@@ -20,6 +20,7 @@ export interface AuthResponse {
 }
 export declare class AuthService {
     private readonly jwtSecret;
+    private readonly frontendUrl;
     constructor();
     private generateToken;
     register(data: RegisterData): Promise<AuthResponse>;

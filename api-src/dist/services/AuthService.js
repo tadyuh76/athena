@@ -8,7 +8,12 @@ const supabase_1 = require("../utils/supabase");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 class AuthService {
     jwtSecret;
+    frontendUrl;
     constructor() {
+        this.frontendUrl = process.env.FRONTEND_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                (process.env.NODE_ENV === 'production' ? 'https://ueh-athena.vercel.app' :
+                    'http://localhost:3000'));
         this.jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret';
     }
     generateToken(userId) {
@@ -21,7 +26,7 @@ class AuthService {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${process.env.FRONTEND_URL}/auth-success.html`,
+                    emailRedirectTo: `${this.frontendUrl}/auth-success.html`,
                     data: {
                         first_name,
                         last_name,
@@ -208,7 +213,7 @@ class AuthService {
     async forgotPassword(email) {
         try {
             const { error } = await supabase_1.supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: `${process.env.FRONTEND_URL}/reset-password.html`,
+                redirectTo: `${this.frontendUrl}/reset-password.html`,
             });
             if (error) {
                 throw error;
@@ -251,7 +256,7 @@ class AuthService {
                 type: 'signup',
                 email,
                 options: {
-                    emailRedirectTo: `${process.env.FRONTEND_URL}/auth-success.html`
+                    emailRedirectTo: `${this.frontendUrl}/auth-success.html`
                 }
             });
             if (error) {
@@ -313,7 +318,7 @@ class AuthService {
             const { data, error } = await supabase_1.supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${process.env.FRONTEND_URL}/auth-callback.html`,
+                    redirectTo: `${this.frontendUrl}/auth-callback.html`,
                     scopes: 'email profile'
                 }
             });
