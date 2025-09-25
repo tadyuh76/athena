@@ -1,12 +1,12 @@
 #!/bin/bash
 
-echo "🚀 Starting Athena Blog Platform..."
+echo "🚀 Starting Athena E-commerce Platform..."
 
 # Kill any existing processes
 echo "🧹 Cleaning up existing processes..."
 pkill -f "npm.*dev" 2>/dev/null || true
 pkill -f "tsx" 2>/dev/null || true
-pkill -f "vite" 2>/dev/null || true
+pkill -f "node.*server.js" 2>/dev/null || true
 sleep 2
 
 # Function to check if a port is in use
@@ -14,32 +14,32 @@ check_port() {
     lsof -i :$1 >/dev/null 2>&1
 }
 
-# Start backend server
-echo "🔧 Starting backend server..."
-cd backend
-PORT=3003 npx tsx src/index.ts &
-BACKEND_PID=$!
-echo "Backend PID: $BACKEND_PID"
+# Start API server
+echo "🔧 Starting API server..."
+cd api
+npm run dev &
+API_PID=$!
+echo "API PID: $API_PID"
 
-# Wait for backend to start
-echo "⏳ Waiting for backend to start..."
+# Wait for API to start
+echo "⏳ Waiting for API to start..."
 for i in {1..10}; do
-    if check_port 3003; then
-        echo "✅ Backend server started on port 3003"
+    if check_port 3001; then
+        echo "✅ API server started on port 3001"
         break
     fi
     echo "   Attempt $i/10..."
     sleep 2
 done
 
-# Test backend
-echo "🧪 Testing backend API..."
-curl -s http://localhost:3003/api/health && echo "" || echo "❌ Backend health check failed"
+# Test API
+echo "🧪 Testing API..."
+curl -s http://localhost:3001/api/products && echo "" || echo "❌ API health check failed"
 
 # Start frontend server
 echo "🎨 Starting frontend server..."
-cd ../frontend
-npm run dev &
+cd ..
+node server.js &
 FRONTEND_PID=$!
 echo "Frontend PID: $FRONTEND_PID"
 
@@ -55,13 +55,13 @@ for i in {1..10}; do
 done
 
 echo ""
-echo "🎉 Athena is ready!"
-echo "📱 Frontend: http://localhost:3000"
-echo "🔌 Backend API: http://localhost:3003"
-echo "🔍 API Health: http://localhost:3003/api/health"
-echo "📊 API Posts: http://localhost:3003/api/posts"
+echo "🎉 Athena E-commerce Platform is ready!"
+echo "🛒 Frontend: http://localhost:3000"
+echo "🔌 API: http://localhost:3001"
+echo "📦 Products API: http://localhost:3001/api/products"
+echo "🏷️ Categories API: http://localhost:3001/api/categories"
 echo ""
-echo "💡 To stop the servers, run: pkill -f 'npm.*dev' && pkill -f tsx"
+echo "💡 To stop the servers, run: pkill -f 'npm.*dev' && pkill -f 'node.*server.js'"
 echo ""
 echo "🎯 The application should now be accessible in your browser!"
 

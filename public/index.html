@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Athena - Premium Eco Fashion</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+    <link href="css/index.css" rel="stylesheet" />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav
+      class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom"
+    >
+      <div class="container">
+        <a
+          class="navbar-brand fw-bold fs-2"
+          href="/"
+          style="font-family: 'Playfair Display', serif; color: #1f2937"
+          >Athena</a
+        >
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item me-4">
+              <a class="nav-link" href="#collections">Collections</a>
+            </li>
+            <li class="nav-item me-4">
+              <a class="nav-link" href="#craft">Our Craft</a>
+            </li>
+            <li class="nav-item me-4">
+              <a class="nav-link" href="#sustainability">Sustainability</a>
+            </li>
+            <li class="nav-item me-3">
+              <a href="/products.html" class="btn btn-outline-dark">Shop</a>
+            </li>
+            <li class="nav-item me-2">
+              <a class="nav-link position-relative" href="/cart.html">
+                <i class="bi bi-bag fs-5"></i>
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  id="cartCount"
+                  style="display: none"
+                  >0</span
+                >
+              </a>
+            </li>
+            <!-- Auth section will be dynamically inserted here -->
+            <li class="nav-item navbar-auth-section">
+              <!-- Loading... -->
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section min-vh-100 d-flex align-items-center">
+      <div class="container">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="hero-content">
+              <h1
+                class="display-1 fw-bold mb-4"
+                style="
+                  font-family: 'Playfair Display', serif;
+                  color: #1f2937;
+                  line-height: 1.1;
+                "
+              >
+                Exquisite.<br />Essential.
+              </h1>
+              <p class="fs-5 text-muted mb-5 lh-lg">
+                Premium eco fashion for modern minimalists. Crafted with
+                intention, designed to endure.
+              </p>
+              <div class="d-flex flex-column flex-sm-row gap-3">
+                <a href="/products.html" class="btn btn-dark btn-lg px-4 py-3">
+                  Explore the Collection
+                  <i class="bi bi-arrow-right ms-2"></i>
+                </a>
+                <a
+                  href="#sustainability"
+                  class="btn btn-outline-success btn-lg px-4 py-3"
+                >
+                  Discover Our Materials
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="hero-image">
+              <img
+                src="/images/featured-blazer.png"
+                alt="Athena architectural dress in natural light"
+                class="img-fluid rounded shadow-lg w-100 h-100"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section class="py-5 bg-white">
+      <div class="container py-5">
+        <div class="text-center mb-5">
+          <h2
+            class="display-4 fw-bold mb-4"
+            style="font-family: 'Playfair Display', serif; color: #1f2937"
+          >
+            Featured Pieces
+          </h2>
+          <p class="fs-5 text-muted mx-auto" style="max-width: 600px">
+            Discover our most coveted designs, each piece a testament to
+            architectural precision and sustainable luxury.
+          </p>
+        </div>
+
+        <div class="row g-4" id="featuredProducts">
+          <!-- Products will be loaded dynamically -->
+        </div>
+
+        <div class="text-center mt-5">
+          <a href="/products.html" class="btn btn-dark btn-lg px-4 py-3">
+            View All Products
+            <i class="bi bi-arrow-right ms-2"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Brand Pillars -->
+    <section class="py-5 bg-white">
+      <div class="container py-5">
+        <div class="text-center mb-5">
+          <h2
+            class="display-4 fw-bold mb-4"
+            style="font-family: 'Playfair Display', serif; color: #1f2937"
+          >
+            Quietly Powerful
+          </h2>
+          <p class="fs-5 text-muted mx-auto" style="max-width: 600px">
+            Every piece is a study in restraint: clean lines, architectural
+            silhouettes, and materials chosen for their integrity and longevity.
+          </p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body text-center p-5">
+                <div class="icon-circle mb-4 mx-auto">
+                  <i class="bi bi-award fs-2 text-success"></i>
+                </div>
+                <h5 class="fw-bold mb-3" style="color: #1f2937">
+                  Modern Minimalism
+                </h5>
+                <p class="text-muted lh-lg">
+                  Sculpted silhouettes, precise tailoring, and a restrained
+                  palette to elevate everyday dressing.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body text-center p-5">
+                <div class="icon-circle mb-4 mx-auto">
+                  <i class="bi bi-diamond fs-2 text-success"></i>
+                </div>
+                <h5 class="fw-bold mb-3" style="color: #1f2937">
+                  Responsible Luxury
+                </h5>
+                <p class="text-muted lh-lg">
+                  Ethical sourcing, low-impact dyes, certified materials, and
+                  transparent production.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body text-center p-5">
+                <div class="icon-circle mb-4 mx-auto">
+                  <i class="bi bi-people fs-2 text-success"></i>
+                </div>
+                <h5 class="fw-bold mb-3" style="color: #1f2937">
+                  Exquisite Craft
+                </h5>
+                <p class="text-muted lh-lg">
+                  Premium natural and recycled fibers, fine finishing, and
+                  enduring construction for garments that last.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Collection -->
+    <section id="collections" class="py-5" style="background-color: #f1f5f9">
+      <div class="container py-5">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="collection-content">
+              <h2
+                class="display-4 fw-bold mb-4"
+                style="font-family: 'Playfair Display', serif; color: #1f2937"
+              >
+                The Architecture Series
+              </h2>
+              <p class="fs-5 text-muted mb-4 lh-lg">
+                Sharp tailoring, structural shapes, precise pleats. Each piece
+                is designed with architectural precision to create silhouettes
+                that command attention through restraint.
+              </p>
+              <ul class="list-unstyled mb-4">
+                <li class="d-flex align-items-center mb-3">
+                  <div class="bullet-point me-3"></div>
+                  <span class="text-muted"
+                    >Certified organic cotton and TENCEL Lyocell</span
+                  >
+                </li>
+                <li class="d-flex align-items-center mb-3">
+                  <div class="bullet-point me-3"></div>
+                  <span class="text-muted"
+                    >Hand-finished seams and reinforced construction</span
+                  >
+                </li>
+                <li class="d-flex align-items-center mb-3">
+                  <div class="bullet-point me-3"></div>
+                  <span class="text-muted"
+                    >Seasonless design for lasting versatility</span
+                  >
+                </li>
+              </ul>
+              <a
+                href="/products.html?collection=architecture"
+                class="btn btn-success btn-lg px-4 py-3"
+              >
+                Shop Architecture Series
+              </a>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="collection-image mb-3">
+                  <img
+                    src="/images/white-blazer-model.png"
+                    alt="Architectural blazer from Athena collection"
+                    class="img-fluid rounded shadow"
+                  />
+                </div>
+                <div class="collection-image">
+                  <img
+                    src="/images/minimalist-trousers-detail.png"
+                    alt="Architectural trousers detail"
+                    class="img-fluid rounded shadow"
+                  />
+                </div>
+              </div>
+              <div class="col-6" style="padding-top: 2rem">
+                <div class="collection-image mb-3">
+                  <img
+                    src="/images/minimalist-dress-silhouette.png"
+                    alt="Architectural dress silhouette"
+                    class="img-fluid rounded shadow"
+                  />
+                </div>
+                <div class="collection-image">
+                  <img
+                    src="/images/minimalist-coat-architectural.png"
+                    alt="Architectural coat design"
+                    class="img-fluid rounded shadow"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Product Details & Craftsmanship -->
+    <section id="craft" class="py-5 bg-white">
+      <div class="container py-5">
+        <div class="text-center mb-5">
+          <h2
+            class="display-4 fw-bold mb-4"
+            style="font-family: 'Playfair Display', serif; color: #1f2937"
+          >
+            Uncompromising Quality
+          </h2>
+          <p class="fs-5 text-muted mx-auto" style="max-width: 600px">
+            Every detail matters. From fabric selection to final finishing, we
+            obsess over the elements that make each piece extraordinary.
+          </p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="quality-item">
+              <div class="quality-image mb-4">
+                <img
+                  src="/images/product-detail-fabric.png"
+                  alt="Premium organic cotton fabric texture"
+                  class="img-fluid rounded shadow"
+                />
+              </div>
+              <h5 class="fw-bold mb-3" style="color: #1f2937">
+                Premium Materials
+              </h5>
+              <p class="text-muted lh-lg">
+                Certified organic cotton, TENCEL Lyocell, and recycled wool
+                sourced from the world's finest mills.
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="quality-item">
+              <div class="quality-image mb-4">
+                <img
+                  src="/images/product-detail-stitching.png"
+                  alt="Hand-finished seams and stitching details"
+                  class="img-fluid rounded shadow"
+                />
+              </div>
+              <h5 class="fw-bold mb-3" style="color: #1f2937">
+                Artisan Craftsmanship
+              </h5>
+              <p class="text-muted lh-lg">
+                Hand-finished seams, reinforced construction, and meticulous
+                attention to every stitch and detail.
+              </p>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="quality-item">
+              <div class="quality-image mb-4">
+                <img
+                  src="/images/timeless-design-philosophy.png"
+                  alt="Timeless design philosophy"
+                  class="img-fluid rounded shadow"
+                />
+              </div>
+              <h5 class="fw-bold mb-3" style="color: #1f2937">
+                Timeless Design
+              </h5>
+              <p class="text-muted lh-lg">
+                Seasonless pieces designed to transcend trends, ensuring your
+                investment endures for years to come.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Customer Testimonials -->
+    <section class="py-5" style="background-color: #f1f5f9">
+      <div class="container py-5">
+        <div class="text-center mb-5">
+          <h2
+            class="display-4 fw-bold mb-4"
+            style="font-family: 'Playfair Display', serif; color: #1f2937"
+          >
+            What Our Clients Say
+          </h2>
+          <p class="fs-5 text-muted mx-auto" style="max-width: 600px">
+            Discover why discerning individuals choose Athena for their wardrobe
+            essentials.
+          </p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="stars mb-3">
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                </div>
+                <i
+                  class="bi bi-quote fs-2 text-success opacity-50 mb-3 d-block"
+                ></i>
+                <p class="text-muted lh-lg fst-italic mb-4">
+                  "The quality is exceptional. I've had my Athena blazer for two
+                  years and it still looks as perfect as the day I bought it.
+                  The architectural cut is so flattering."
+                </p>
+                <div>
+                  <p class="fw-semibold mb-1" style="color: #1f2937">
+                    Sarah Chen
+                  </p>
+                  <p class="small text-muted mb-0">
+                    Creative Director, New York
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="stars mb-3">
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                </div>
+                <i
+                  class="bi bi-quote fs-2 text-success opacity-50 mb-3 d-block"
+                ></i>
+                <p class="text-muted lh-lg fst-italic mb-4">
+                  "Finally, a brand that understands sustainable luxury. The
+                  fabrics feel incredible and knowing the entire supply chain is
+                  traceable gives me peace of mind."
+                </p>
+                <div>
+                  <p class="fw-semibold mb-1" style="color: #1f2937">
+                    Emma Rodriguez
+                  </p>
+                  <p class="small text-muted mb-0">
+                    Sustainability Consultant, London
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+              <div class="card-body p-4">
+                <div class="stars mb-3">
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                  <i class="bi bi-star-fill text-success"></i>
+                </div>
+                <i
+                  class="bi bi-quote fs-2 text-success opacity-50 mb-3 d-block"
+                ></i>
+                <p class="text-muted lh-lg fst-italic mb-4">
+                  "Athena has revolutionized my wardrobe. Every piece works
+                  seamlessly together, and the minimalist aesthetic is exactly
+                  what I was looking for."
+                </p>
+                <div>
+                  <p class="fw-semibold mb-1" style="color: #1f2937">
+                    Maya Patel
+                  </p>
+                  <p class="small text-muted mb-0">Architect, San Francisco</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sustainability Statement -->
+    <section
+      id="sustainability"
+      class="py-5 text-white"
+      style="background-color: #1f2937"
+    >
+      <div class="container py-5">
+        <div class="row justify-content-center">
+          <div class="col-lg-8 text-center">
+            <h2
+              class="display-4 fw-bold mb-4"
+              style="font-family: 'Playfair Display', serif"
+            >
+              Luxury, Lightly
+            </h2>
+            <p class="fs-5 mb-5 lh-lg" style="color: #d1d5db">
+              Every Athena garment is traceable—from fiber to finish. We obsess
+              over impact so you can obsess over the fit. Our commitment to the
+              planet is woven into every thread.
+            </p>
+            <div class="row g-4 mb-5">
+              <div class="col-md-4">
+                <div class="sustainability-stat">
+                  <div class="display-4 fw-bold text-white mb-2">100%</div>
+                  <div class="small" style="color: #d1d5db">
+                    Traceable Supply Chain
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="sustainability-stat">
+                  <div class="display-4 fw-bold text-white mb-2">Carbon</div>
+                  <div class="small" style="color: #d1d5db">
+                    Neutral Shipping
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="sustainability-stat">
+                  <div class="display-4 fw-bold text-white mb-2">Zero</div>
+                  <div class="small" style="color: #d1d5db">
+                    Plastic Packaging
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-outline-light btn-lg px-4 py-3">
+              Read Our Impact Report
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-5">
+      <div class="container py-4">
+        <div class="row g-4">
+          <div class="col-md-3">
+            <div class="footer-brand mb-4">
+              <h5
+                class="fw-bold mb-3"
+                style="font-family: 'Playfair Display', serif; color: #1f2937"
+              >
+                Athena
+              </h5>
+              <p class="text-muted small lh-lg">
+                Premium eco fashion for modern minimalists. Wear what matters.
+              </p>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <h6 class="fw-bold mb-3" style="color: #1f2937">Collections</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="/products.html"
+                  class="text-muted text-decoration-none small"
+                  >The White Space Edit</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/products.html"
+                  class="text-muted text-decoration-none small"
+                  >Architecture Series</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/products.html"
+                  class="text-muted text-decoration-none small"
+                  >Elemental Capsule</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/products.html"
+                  class="text-muted text-decoration-none small"
+                  >The Midnight Line</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h6 class="fw-bold mb-3" style="color: #1f2937">Our Craft</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a href="#craft" class="text-muted text-decoration-none small"
+                  >Materials</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="#sustainability"
+                  class="text-muted text-decoration-none small"
+                  >Traceability</a
+                >
+              </li>
+              <li class="mb-2">
+                <a href="#" class="text-muted text-decoration-none small"
+                  >Care & Repair</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="#sustainability"
+                  class="text-muted text-decoration-none small"
+                  >Impact Report</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="col-md-3">
+            <h6 class="fw-bold mb-3" style="color: #1f2937">Connect</h6>
+            <ul class="list-unstyled">
+              <li class="mb-2">
+                <a
+                  href="/products.html"
+                  class="text-muted text-decoration-none small"
+                  >Shop</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/account.html"
+                  class="text-muted text-decoration-none small"
+                  >Account</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/cart.html"
+                  class="text-muted text-decoration-none small"
+                  >Cart</a
+                >
+              </li>
+              <li class="mb-2">
+                <a
+                  href="/contact.html"
+                  class="text-muted text-decoration-none small"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-top mt-5 pt-4 text-center">
+          <p class="text-muted small mb-0">
+            © 2024 Athena. Designed to Endure.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/navbar.js"></script>
+    <script type="module" src="js/index.js"></script>
+  </body>
+</html>

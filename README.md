@@ -1,193 +1,161 @@
-# Athena - Blog Platform
+# Athena - Premium Eco Fashion E-commerce
 
-A modern full-stack blog platform built with TypeScript, Node.js (without Express), Supabase, and Bootstrap.
-
-## Features
-
-- 🚀 **Modern Stack**: TypeScript, Node.js, Supabase
-- 🎨 **Beautiful UI**: Bootstrap 5 with custom styling
-- 📝 **Post Management**: Create and view blog posts
-- 🔄 **Real-time**: Live data fetching and updates
-- 🌱 **Database Seeding**: Sample data for testing
+A modern, minimalist e-commerce platform for sustainable luxury fashion, built with TypeScript, Node.js, and Supabase.
 
 ## Tech Stack
 
-### Backend
+- **Frontend**: HTML, CSS, Bootstrap 5, TypeScript
+- **Backend**: Node.js, TypeScript (without Express)
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Email/Password, Google OAuth
 
-- **Node.js** - Runtime environment (without Express)
-- **TypeScript** - Type-safe JavaScript
-- **Supabase** - PostgreSQL database with JavaScript client
+## Features
 
-### Frontend
-
-- **HTML5 & CSS3** - Modern web standards
-- **TypeScript** - Type-safe frontend development
-- **Bootstrap 5** - Responsive UI framework
-- **Vite** - Fast build tool and dev server
-
-## Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Supabase account
-
-## Setup Instructions
-
-### 1. Install Dependencies
-
-```bash
-# Install root dependencies
-npm install
-
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-```
-
-### 2. Supabase Configuration
-
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Copy the project URL and anon key
-3. In the backend directory, copy `.env.example` to `.env`:
-
-```bash
-cd backend
-cp .env.example .env
-```
-
-4. Update the `.env` file with your Supabase credentials:
-
-```env
-DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
-SUPABASE_URL="https://[YOUR-PROJECT-REF].supabase.co"
-SUPABASE_ANON_KEY="[YOUR-ANON-KEY]"
-PORT=3001
-```
-
-### 3. Database Setup
-
-```bash
-# Seed the database with sample data
-npm run db:seed
-```
-
-### 4. Start Development Servers
-
-From the root directory:
-
-```bash
-# Start both frontend and backend concurrently
-npm run dev
-```
-
-Or start them separately:
-
-```bash
-# Backend (from backend directory)
-cd backend
-npm run dev
-
-# Frontend (from frontend directory)
-cd frontend
-npm run dev
-```
-
-The application will be available at:
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:3001
-
-## API Endpoints
-
-| Method | Endpoint         | Description         |
-| ------ | ---------------- | ------------------- |
-| GET    | `/api/posts`     | Get all posts       |
-| POST   | `/api/posts`     | Create a new post   |
-| GET    | `/api/posts/:id` | Get a specific post |
-| GET    | `/api/health`    | Health check        |
+- ✅ Email authentication with verification
+- ✅ Google OAuth integration
+- ✅ Password reset functionality
+- ✅ User profile management
+- ✅ Product catalog with filtering
+- ✅ Shopping cart system
+- ✅ Wishlist functionality
+- ✅ Responsive design
 
 ## Project Structure
 
 ```
 athena/
-├── backend/                 # Node.js API server
+├── api/                 # Backend API server
 │   ├── src/
-│   │   ├── index.ts        # Main server file
-│   │   └── seed.ts         # Database seeding
+│   │   ├── services/   # Business logic
+│   │   ├── middleware/ # Auth middleware
+│   │   └── utils/      # Helper functions
 │   └── package.json
-├── frontend/               # Frontend application
-│   ├── src/
-│   │   ├── main.ts         # Main TypeScript entry
-│   │   ├── style.css       # Custom styles
-│   │   ├── services/       # API services
-│   │   └── components/     # UI components
-│   ├── index.html          # Main HTML file
-│   └── package.json
-└── package.json           # Root package.json
+├── public/             # Frontend static files
+│   ├── css/           # Stylesheets
+│   ├── js/            # JavaScript files
+│   ├── src/services/  # Frontend services
+│   └── *.html         # HTML pages
+├── database/          # Database schemas
+├── server.js          # Main deployment server
+└── package.json       # Monorepo configuration
 ```
 
-## Database Schema
+## Setup Instructions
 
-The application uses a simple `posts` table:
-
-```sql
-CREATE TABLE posts (
-  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  author TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-```
-
-## Development
-
-### Adding New Features
-
-1. **Backend**: Add new routes in `backend/src/index.ts`
-2. **Frontend**: Create new components in `frontend/src/components/`
-3. **Database**: Create migrations directly in Supabase dashboard or via SQL
-
-### Building for Production
+### 1. Clone the repository
 
 ```bash
-# Build both frontend and backend
-npm run build
-
-# Or build separately
-cd backend && npm run build
-cd frontend && npm run build
+git clone <repository-url>
+cd athena
 ```
 
-## Troubleshooting
+### 2. Install dependencies
 
-### Common Issues
+```bash
+npm install
+```
 
-1. **Database Connection Error**: Check your Supabase credentials in `.env`
-2. **CORS Issues**: Ensure the backend CORS configuration allows your frontend URL
-3. **TypeScript Errors**: Check that all dependencies are properly installed
+### 3. Configure environment variables
 
-### Getting Help
+Create a `.env` file in the root directory:
 
-- Check the console for error messages
-- Verify all environment variables are set correctly
-- Ensure all dependencies are installed
-- Check that both servers are running on the correct ports
+```env
+# Supabase Configuration
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_KEY=your_supabase_service_key
 
-## Contributing
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Frontend URL
+FRONTEND_URL=http://localhost:3000
+
+# Google OAuth (from Supabase dashboard)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
+
+### 4. Set up Supabase
+
+1. Create a new Supabase project
+2. Run the database schema from `database/athena_schema_supabase.sql`
+3. Enable Google OAuth provider in Authentication settings
+4. Add redirect URL: `http://localhost:3000/auth/callback`
+
+### 5. Run the development server
+
+```bash
+npm run dev
+```
+
+This starts:
+
+- API server on http://localhost:3001
+- Main server on http://localhost:3000
+
+## Deployment
+
+### Single Domain Deployment
+
+The application is designed to run on a single domain with the API served at `/api` endpoints.
+
+### Production Build
+
+```bash
+npm run build
+npm start
+```
+
+### Environment Variables for Production
+
+Set these environment variables in your hosting platform:
+
+- All Supabase keys and URLs
+- `JWT_SECRET` with a secure random string
+- `FRONTEND_URL` with your production domain
+- `NODE_ENV=production`
+
+## API Endpoints
+
+### Authentication
+
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login with email/password
+- `GET /api/auth/google` - Initiate Google OAuth
+- `GET /api/auth/callback` - OAuth callback
+- `POST /api/auth/verify-email` - Verify email address
+- `POST /api/auth/forgot-password` - Request password reset
+- `POST /api/auth/reset-password` - Reset password
+- `GET /api/auth/me` - Get current user
+- `PUT /api/auth/me` - Update user profile
+
+### Products
+
+- `GET /api/products` - List products
+- `GET /api/products/:id` - Get product by ID
+- `GET /api/products/slug/:slug` - Get product by slug
+- `GET /api/categories` - List categories
+- `GET /api/collections` - List collections
+
+### Shopping Cart
+
+- `GET /api/cart` - Get current cart
+- `POST /api/cart` - Create new cart
+- `POST /api/cart/items` - Add item to cart
+- `PUT /api/cart/items/:id` - Update item quantity
+- `DELETE /api/cart/items/:id` - Remove item
+
+### Wishlist
+
+- `GET /api/wishlist` - Get user wishlist
+- `POST /api/wishlist` - Add to wishlist
+- `DELETE /api/wishlist/:id` - Remove from wishlist
 
 ## License
 
-MIT License - see LICENSE file for details
-# athena
+MIT

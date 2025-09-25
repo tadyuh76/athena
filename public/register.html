@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
+    <style>
+        .auth-container {
+            max-width: 450px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-header h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-dark);
+            margin-bottom: 10px;
+        }
+        .form-label {
+            color: var(--primary-dark);
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-control:focus {
+            border-color: var(--success-green);
+            box-shadow: 0 0 0 0.2rem rgba(15, 76, 47, 0.1);
+        }
+        .btn-register {
+            background: var(--primary-dark);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-register:hover {
+            background: var(--success-green);
+            transform: translateY(-2px);
+        }
+        .social-login {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .social-btn {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .social-btn:hover {
+            background: var(--light-bg);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold fs-2" href="/" style="font-family: 'Playfair Display', serif; color: #1f2937">Athena</a>
+        </div>
+    </nav>
+
+    <!-- Registration Form -->
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="auth-container">
+                    <div class="auth-header">
+                        <h2>Create Account</h2>
+                        <p class="text-muted">Join Athena for exclusive access to sustainable luxury fashion</p>
+                    </div>
+                    
+                    <div id="alertContainer"></div>
+                    
+                    <form id="registerForm">
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label for="firstName" class="form-label">First Name</label>
+                                <input type="text" class="form-control" id="firstName" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label for="lastName" class="form-label">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" required>
+                            <div class="form-text">We'll never share your email with anyone else.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number (Optional)</label>
+                            <input type="tel" class="form-control" id="phone">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required minlength="8">
+                            <div class="form-text">Must be at least 8 characters long</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required checked>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and 
+                                    <a href="/privacy.html" target="_blank">Privacy Policy</a>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-register w-100 mb-3">Create Account</button>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p>Already have an account? <a href="/login.html" class="text-decoration-none">Sign In</a></p>
+                    </div>
+                    
+                    <div class="social-login">
+                        <p class="text-center text-muted mb-3">Or continue with</p>
+                        <div class="d-grid gap-2">
+                            <button class="social-btn" disabled>
+                                <i class="bi bi-google me-2"></i>Continue with Google
+                            </button>
+                            <button class="social-btn" disabled>
+                                <i class="bi bi-facebook me-2"></i>Continue with Facebook
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { AuthService } from '/services/AuthService.js';
+        
+        const authService = new AuthService();
+        
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const alertContainer = document.getElementById('alertContainer');
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Passwords do not match
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Validate password strength
+            if (password.length < 8) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        Password must be at least 8 characters long
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // Show loading state
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+                
+                const response = await authService.register(
+                    email,
+                    password,
+                    firstName,
+                    lastName,
+                    phone || undefined
+                );
+                
+                if (response.success) {
+                    // Store email and token for verification page
+                    localStorage.setItem('pendingVerificationEmail', email);
+                    if (response.token) {
+                        localStorage.setItem('verificationToken', response.token);
+                    }
+                    
+                    // Show success message
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-success" role="alert">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Account created! Redirecting to email verification...
+                        </div>
+                    `;
+                    
+                    // Redirect to OTP verification page
+                    setTimeout(() => {
+                        window.location.href = `/verify-otp.html?email=${encodeURIComponent(email)}`;
+                    }, 1500);
+                } else {
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            ${response.error || 'Registration failed. Please try again.'}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Create Account';
+                }
+            } catch (error) {
+                alertContainer.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        An error occurred. Please try again.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Create Account';
+            }
+        });
+        
+        // Password validation feedback
+        document.getElementById('password').addEventListener('input', (e) => {
+            const password = e.target.value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password.length < 8) {
+                e.target.setCustomValidity('Password must be at least 8 characters');
+            } else {
+                e.target.setCustomValidity('');
+            }
+            
+            if (confirmPassword && password !== confirmPassword) {
+                document.getElementById('confirmPassword').setCustomValidity('Passwords do not match');
+            } else {
+                document.getElementById('confirmPassword').setCustomValidity('');
+            }
+        });
+        
+        document.getElementById('confirmPassword').addEventListener('input', (e) => {
+            const password = document.getElementById('password').value;
+            const confirmPassword = e.target.value;
+            
+            if (password !== confirmPassword) {
+                e.target.setCustomValidity('Passwords do not match');
+            } else {
+                e.target.setCustomValidity('');
+            }
+        });
+    </script>
+</body>
+</html>

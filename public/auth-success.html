@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verified - Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container d-flex align-items-center justify-content-center min-vh-100">
+        <div class="text-center">
+            <div id="loadingState">
+                <div class="spinner-border mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5>Verifying your email...</h5>
+                <p class="text-muted">Please wait while we complete the verification.</p>
+            </div>
+            
+            <div id="successState" style="display: none;">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
+                </div>
+                <h2 class="mb-3" style="font-family: 'Playfair Display', serif;">Email Verified!</h2>
+                <p class="text-muted mb-4">Your email has been successfully verified.</p>
+                <a href="/login.html" class="btn btn-dark btn-lg">Sign In to Your Account</a>
+            </div>
+            
+            <div id="errorState" style="display: none;">
+                <div class="mb-4">
+                    <i class="bi bi-x-circle-fill text-danger" style="font-size: 80px;"></i>
+                </div>
+                <h2 class="mb-3">Verification Failed</h2>
+                <p class="text-muted mb-4" id="errorMessage">Unable to verify your email. The link may have expired.</p>
+                <a href="/login.html" class="btn btn-dark">Return to Sign In</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        // Initialize Supabase client
+        const supabaseUrl = 'https://qvrehppbsvuordemsqrk.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmVocHBic3Z1b3JkZW1zcXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3Njk3NjcsImV4cCI6MjA3NDM0NTc2N30.P3QbX0g7LGTmvDlY8CbV-vSTsPyS-ph5gC4cXujB2kg';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        async function handleEmailVerification() {
+            const loadingState = document.getElementById('loadingState');
+            const successState = document.getElementById('successState');
+            const errorState = document.getElementById('errorState');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            try {
+                // Get hash parameters (Supabase returns tokens in hash)
+                const hashParams = new URLSearchParams(window.location.hash.substring(1));
+                const accessToken = hashParams.get('access_token');
+                const type = hashParams.get('type');
+                
+                // Also check URL params for token
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token') || accessToken;
+                
+                if (!token) {
+                    // Check if there's an error in URL
+                    const error = hashParams.get('error_description') || urlParams.get('error');
+                    throw new Error(error || 'No authentication token found');
+                }
+                
+                // If we have a token, the email is verified
+                // Get the current user session
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    throw error;
+                }
+                
+                if (user) {
+                    console.log('User verified:', user.email);
+                    
+                    // Create/update user profile in our database
+                    const response = await fetch('/api/auth/oauth-profile', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: user.id,
+                            email: user.email,
+                            metadata: {
+                                email_verified: true,
+                                ...user.user_metadata
+                            }
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Store auth info
+                        if (result.token) {
+                            localStorage.setItem('authToken', result.token);
+                        }
+                        if (result.user) {
+                            localStorage.setItem('user', JSON.stringify(result.user));
+                        }
+                        
+                        // Show success state
+                        loadingState.style.display = 'none';
+                        successState.style.display = 'block';
+                        
+                        // Auto redirect to home after 3 seconds
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 3000);
+                    } else {
+                        throw new Error(result.error || 'Failed to update profile');
+                    }
+                } else {
+                    throw new Error('No user data found');
+                }
+            } catch (error) {
+                console.error('Verification error:', error);
+                loadingState.style.display = 'none';
+                errorState.style.display = 'block';
+                errorMessage.textContent = error.message || 'Unable to verify your email. The link may have expired.';
+            }
+        }
+
+        // Handle verification on page load
+        handleEmailVerification();
+    </script>
+</body>
+</html>

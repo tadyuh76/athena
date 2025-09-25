@@ -4,12 +4,15 @@
   "description": "Full-stack application with TypeScript and Supabase",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build"
+    "install:api": "cd api && npm install",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:server\"",
+    "dev:api": "cd api && npm run dev",
+    "dev:server": "node server.js",
+    "build": "cd api && npm run build",
+    "start": "concurrently \"npm run start:api\" \"npm run start:server\"",
+    "start:api": "cd api && npm start",
+    "start:server": "node server.js",
+    "postinstall": "npm run install:api"
   },
   "keywords": [
     "typescript",
@@ -20,5 +23,8 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "http-proxy-middleware": "^3.0.5"
   }
 }

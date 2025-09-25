@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test - Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="mb-4">Authentication Test Page</h1>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Current User Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="userStatus">Loading...</div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Test Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="testGoogleAuth" class="btn btn-primary mb-2 w-100">
+                            <i class="bi bi-google me-2"></i>Test Google OAuth
+                        </button>
+                        <button id="testLogin" class="btn btn-success mb-2 w-100">
+                            Test Email Login
+                        </button>
+                        <button id="testRegister" class="btn btn-info mb-2 w-100">
+                            Test Registration
+                        </button>
+                        <button id="testLogout" class="btn btn-warning mb-2 w-100">
+                            Test Logout
+                        </button>
+                        <button id="clearStorage" class="btn btn-danger w-100">
+                            Clear Local Storage
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Console Output</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="console" style="max-height: 500px; overflow-y: auto; font-size: 12px;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { AuthService } from '/services/AuthService.js';
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        const authService = new AuthService();
+        const consoleEl = document.getElementById('console');
+        const userStatusEl = document.getElementById('userStatus');
+        
+        // Initialize Supabase client
+        const supabaseUrl = 'https://qvrehppbsvuordemsqrk.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmVocHBic3Z1b3JkZW1zcXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3Njk3NjcsImV4cCI6MjA3NDM0NTc2N30.P3QbX0g7LGTmvDlY8CbV-vSTsPyS-ph5gC4cXujB2kg';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        function log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            let output = `[${timestamp}] ${message}`;
+            if (data) {
+                output += '\n' + JSON.stringify(data, null, 2);
+            }
+            consoleEl.textContent += output + '\n\n';
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+        
+        async function checkUserStatus() {
+            log('Checking user status...');
+            
+            // Check localStorage
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            
+            // Check Supabase session
+            const { data: { user: supabaseUser }, error } = await supabase.auth.getUser();
+            
+            let statusHTML = '<div class="mb-3">';
+            
+            if (token) {
+                statusHTML += '<p class="mb-2"><strong>Local Token:</strong> <span class="text-success">✓ Present</span></p>';
+            } else {
+                statusHTML += '<p class="mb-2"><strong>Local Token:</strong> <span class="text-danger">✗ Missing</span></p>';
+            }
+            
+            if (user) {
+                const userData = JSON.parse(user);
+                statusHTML += '<p class="mb-2"><strong>Local User:</strong> <span class="text-success">✓ ' + userData.email + '</span></p>';
+                statusHTML += '<div class="alert alert-info small">';
+                statusHTML += '<strong>User Data:</strong><br>';
+                statusHTML += 'Name: ' + (userData.first_name || '') + ' ' + (userData.last_name || '') + '<br>';
+                statusHTML += 'Email Verified: ' + (userData.email_verified ? '✓' : '✗') + '<br>';
+                statusHTML += 'Role: ' + (userData.role || 'N/A') + '<br>';
+                if (userData.metadata?.avatar_url) {
+                    statusHTML += '<img src="' + userData.metadata.avatar_url + '" class="rounded-circle mt-2" style="width: 40px; height: 40px;">';
+                }
+                statusHTML += '</div>';
+            } else {
+                statusHTML += '<p class="mb-2"><strong>Local User:</strong> <span class="text-danger">✗ No user data</span></p>';
+            }
+            
+            if (supabaseUser) {
+                statusHTML += '<p class="mb-2"><strong>Supabase User:</strong> <span class="text-success">✓ ' + supabaseUser.email + '</span></p>';
+                log('Supabase user found', supabaseUser);
+            } else {
+                statusHTML += '<p class="mb-2"><strong>Supabase User:</strong> <span class="text-danger">✗ Not authenticated</span></p>';
+            }
+            
+            statusHTML += '</div>';
+            userStatusEl.innerHTML = statusHTML;
+        }
+        
+        // Test Google OAuth
+        document.getElementById('testGoogleAuth').addEventListener('click', () => {
+            log('Testing Google OAuth...');
+            window.location.href = '/api/auth/google';
+        });
+        
+        // Test Email Login
+        document.getElementById('testLogin').addEventListener('click', async () => {
+            const email = prompt('Enter test email:', 'test@example.com');
+            const password = prompt('Enter password:', 'Test123!');
+            
+            if (!email || !password) return;
+            
+            log('Testing email login...', { email });
+            
+            try {
+                const response = await authService.login(email, password);
+                log('Login response:', response);
+                
+                if (response.success) {
+                    setTimeout(checkUserStatus, 500);
+                }
+            } catch (error) {
+                log('Login error:', error.message);
+            }
+        });
+        
+        // Test Registration
+        document.getElementById('testRegister').addEventListener('click', async () => {
+            const email = prompt('Enter email:', 'test' + Date.now() + '@gmail.com');
+            const password = prompt('Enter password:', 'Test123!');
+            
+            if (!email || !password) return;
+            
+            log('Testing registration...', { email });
+            
+            try {
+                const response = await authService.register(
+                    email,
+                    password,
+                    'Test',
+                    'User',
+                    ''
+                );
+                log('Registration response:', response);
+                
+                if (response.success) {
+                    alert('Registration successful! Check the verify-otp page.');
+                }
+            } catch (error) {
+                log('Registration error:', error.message);
+            }
+        });
+        
+        // Test Logout
+        document.getElementById('testLogout').addEventListener('click', async () => {
+            log('Testing logout...');
+            
+            try {
+                const response = await authService.logout();
+                log('Logout response:', response);
+                
+                // Also sign out from Supabase
+                await supabase.auth.signOut();
+                
+                setTimeout(checkUserStatus, 500);
+            } catch (error) {
+                log('Logout error:', error.message);
+            }
+        });
+        
+        // Clear Storage
+        document.getElementById('clearStorage').addEventListener('click', () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('Local storage cleared');
+            checkUserStatus();
+        });
+        
+        // Check status on page load
+        checkUserStatus();
+        
+        // Check for auth callback parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('error')) {
+            log('Auth error from callback:', urlParams.get('error'));
+        }
+        if (urlParams.has('access_token')) {
+            log('Access token received from callback');
+        }
+    </script>
+</body>
+</html>

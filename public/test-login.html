@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login - Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container py-5">
+        <h1>Login Test Page</h1>
+        
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Email Login Test</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="emailLoginForm">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Test Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Response Output</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre id="output" style="max-height: 400px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button id="testGoogleAuth" class="btn btn-success">Test Google Auth</button>
+            <button id="checkSession" class="btn btn-info ms-2">Check Current Session</button>
+            <button id="clearAuth" class="btn btn-warning ms-2">Clear Auth Data</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+        
+        const outputEl = document.getElementById('output');
+        
+        // Initialize Supabase client
+        const supabaseUrl = 'https://qvrehppbsvuordemsqrk.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF2cmVocHBic3Z1b3JkZW1zcXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3Njk3NjcsImV4cCI6MjA3NDM0NTc2N30.P3QbX0g7LGTmvDlY8CbV-vSTsPyS-ph5gC4cXujB2kg';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        
+        function log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            let output = `[${timestamp}] ${message}\n`;
+            if (data) {
+                output += JSON.stringify(data, null, 2) + '\n';
+            }
+            outputEl.textContent += output + '\n';
+            outputEl.scrollTop = outputEl.scrollHeight;
+        }
+        
+        // Email Login Test
+        document.getElementById('emailLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('Testing email login...', { email });
+            
+            try {
+                // Test Supabase direct login
+                log('1. Testing Supabase auth.signInWithPassword...');
+                const { data: supabaseData, error: supabaseError } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (supabaseError) {
+                    log('Supabase login error:', supabaseError);
+                } else {
+                    log('Supabase login success:', {
+                        user: supabaseData.user,
+                        session: supabaseData.session ? 'Present' : 'Missing'
+                    });
+                }
+                
+                // Test API login
+                log('2. Testing API /api/auth/login...');
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                log(`API Response (${response.status}):`, result);
+                
+                if (result.success) {
+                    log('Login successful! Token:', result.token ? 'Present' : 'Missing');
+                    if (result.token) {
+                        localStorage.setItem('authToken', result.token);
+                        localStorage.setItem('user', JSON.stringify(result.user));
+                        log('Auth data stored in localStorage');
+                    }
+                } else {
+                    log('Login failed:', result.error);
+                }
+                
+            } catch (error) {
+                log('Error during login:', error.message);
+            }
+        });
+        
+        // Google Auth Test
+        document.getElementById('testGoogleAuth').addEventListener('click', () => {
+            log('Redirecting to Google OAuth...');
+            window.location.href = '/api/auth/google';
+        });
+        
+        // Check Session
+        document.getElementById('checkSession').addEventListener('click', async () => {
+            log('Checking current session...');
+            
+            // Check Supabase session
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (session) {
+                log('Supabase session found:', {
+                    user: session.user,
+                    expires_at: new Date(session.expires_at * 1000).toLocaleString()
+                });
+            } else {
+                log('No Supabase session');
+            }
+            
+            // Check localStorage
+            const token = localStorage.getItem('authToken');
+            const user = localStorage.getItem('user');
+            log('LocalStorage:', {
+                token: token ? 'Present' : 'Missing',
+                user: user ? JSON.parse(user) : 'Missing'
+            });
+            
+            // Test /api/auth/me
+            if (token) {
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const result = await response.json();
+                    log(`API /auth/me (${response.status}):`, result);
+                } catch (error) {
+                    log('Error checking /auth/me:', error.message);
+                }
+            }
+        });
+        
+        // Clear Auth
+        document.getElementById('clearAuth').addEventListener('click', async () => {
+            log('Clearing all auth data...');
+            
+            // Clear Supabase session
+            await supabase.auth.signOut();
+            
+            // Clear localStorage
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            
+            log('Auth data cleared');
+        });
+        
+        // Check for OAuth callback
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        if (urlParams.has('error') || hashParams.has('error')) {
+            log('OAuth error:', urlParams.get('error') || hashParams.get('error_description'));
+        }
+        
+        if (hashParams.has('access_token')) {
+            log('OAuth tokens received in hash');
+        }
+    </script>
+</body>
+</html>
