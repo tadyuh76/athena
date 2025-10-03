@@ -5,84 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/index.css" rel="stylesheet">
-    <style>
-        .auth-container {
-            max-width: 450px;
-            margin: 50px auto;
-            padding: 40px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-        .auth-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .auth-header h2 {
-            font-family: 'Playfair Display', serif;
-            color: var(--primary-dark);
-            margin-bottom: 10px;
-        }
-        .otp-inputs {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin: 30px 0;
-        }
-        .otp-input {
-            width: 50px;
-            height: 50px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        .otp-input:focus {
-            border-color: var(--success-green);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(15, 76, 47, 0.1);
-        }
-        .btn-verify {
-            background: var(--primary-dark);
-            color: white;
-            border: none;
-            padding: 12px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-verify:hover {
-            background: var(--success-green);
-            transform: translateY(-2px);
-        }
-        .btn-verify:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .resend-section {
-            text-align: center;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #e5e7eb;
-        }
-        .timer {
-            color: var(--success-green);
-            font-weight: 600;
-        }
-    </style>
+    <link href="css/verify-otp.css" rel="stylesheet">
+    <script src="/js/components.js"></script>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold fs-2" href="/" style="font-family: 'Playfair Display', serif; color: #1f2937">Athena</a>
-            <div class="navbar-auth-section ms-auto"></div>
-        </div>
-    </nav>
+    <site-header></site-header>
 
     <!-- OTP Verification Form -->
     <div class="container my-5">
@@ -134,6 +64,8 @@
             </div>
         </div>
     </div>
+
+    <site-footer></site-footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/navbar.js"></script>

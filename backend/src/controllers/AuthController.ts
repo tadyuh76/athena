@@ -1,0 +1,127 @@
+import { IncomingMessage, ServerResponse } from 'http';
+import { AuthService } from '../services/AuthService';
+import { AuthRequest } from '../middleware/auth';
+import { parseBody, sendJSON, sendError } from '../utils/request-handler';
+
+export class AuthController {
+  private authService: AuthService;
+
+  constructor() {
+    this.authService = new AuthService();
+  }
+
+  async register(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.register(body);
+      sendJSON(res, result.success ? 201 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Registration failed');
+    }
+  }
+
+  async login(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.login(body);
+      sendJSON(res, result.success ? 200 : 401, result);
+    } catch (error) {
+      sendError(res, 500, 'Login failed');
+    }
+  }
+
+  async logout(_req: AuthRequest, res: ServerResponse) {
+    try {
+      const result = await this.authService.logout();
+      sendJSON(res, 200, result);
+    } catch (error) {
+      sendError(res, 500, 'Logout failed');
+    }
+  }
+
+  async forgotPassword(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.forgotPassword(body.email);
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Password reset request failed');
+    }
+  }
+
+  async resetPassword(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.resetPassword(body.password);
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Password reset failed');
+    }
+  }
+
+  async verifyOTP(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.verifyOTP(body.email, body.otp);
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'OTP verification failed');
+    }
+  }
+
+  async resendVerification(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.resendVerificationEmail(body.email);
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Failed to resend verification');
+    }
+  }
+
+  async googleAuth(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const host = req.headers.host;
+      const origin = host ? `http://${host}` : 'http://localhost:3000';
+      const redirectUrl = `${origin}/auth-callback.html`;
+      
+      const { url } = await this.authService.googleAuth(redirectUrl);
+      res.writeHead(302, { Location: url });
+      res.end();
+    } catch (error) {
+      sendError(res, 500, 'Google auth failed');
+    }
+  }
+
+  async createOAuthProfile(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.createOAuthProfile(
+        body.user_id,
+        body.email,
+        body.metadata
+      );
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Failed to create OAuth profile');
+    }
+  }
+
+  async getMe(req: AuthRequest, res: ServerResponse) {
+    try {
+      sendJSON(res, 200, { user: req.user });
+    } catch (error) {
+      sendError(res, 500, 'Failed to get user info');
+    }
+  }
+
+  async updateMe(req: AuthRequest, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+      const result = await this.authService.updateUser(req.userId!, body);
+      sendJSON(res, result.success ? 200 : 400, result);
+    } catch (error) {
+      sendError(res, 500, 'Failed to update user');
+    }
+  }
+}

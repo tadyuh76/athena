@@ -1,4 +1,4 @@
-const { handleRequest } = require('../api-src/dist/serverless-handler');
+const { handleRequest } = require('../backend/dist/serverless-handler');
 
 module.exports = async (req, res) => {
   // Set FRONTEND_URL environment variable based on the request host

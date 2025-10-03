@@ -1,0 +1,49 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setupRoutes = setupRoutes;
+const Router_1 = require("./Router");
+const AuthController_1 = require("../controllers/AuthController");
+const ProductController_1 = require("../controllers/ProductController");
+const CartController_1 = require("../controllers/CartController");
+const WishlistController_1 = require("../controllers/WishlistController");
+const request_handler_1 = require("../utils/request-handler");
+function setupRoutes() {
+    const router = new Router_1.Router();
+    const authController = new AuthController_1.AuthController();
+    const productController = new ProductController_1.ProductController();
+    const cartController = new CartController_1.CartController();
+    const wishlistController = new WishlistController_1.WishlistController();
+    router.post('/api/auth/register', (req, res) => authController.register(req, res));
+    router.post('/api/auth/login', (req, res) => authController.login(req, res));
+    router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/auth/forgot-password', (req, res) => authController.forgotPassword(req, res));
+    router.post('/api/auth/reset-password', (req, res) => authController.resetPassword(req, res));
+    router.post('/api/auth/verify-otp', (req, res) => authController.verifyOTP(req, res));
+    router.post('/api/auth/resend-verification', (req, res) => authController.resendVerification(req, res));
+    router.get('/api/auth/google', (req, res) => authController.googleAuth(req, res));
+    router.post('/api/auth/oauth-profile', (req, res) => authController.createOAuthProfile(req, res));
+    router.get('/api/auth/me', (req, res) => authController.getMe(req, res), [Router_1.Router.requireAuth]);
+    router.put('/api/auth/me', (req, res) => authController.updateMe(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/products', (req, res) => productController.getProducts(req, res));
+    router.get('/api/products/:id', (req, res, params) => productController.getProductById(req, res, params.id));
+    router.get('/api/products/slug/:slug', (req, res, params) => productController.getProductBySlug(req, res, params.slug));
+    router.get('/api/categories', (req, res) => productController.getCategories(req, res));
+    router.get('/api/collections', (req, res) => productController.getCollections(req, res));
+    router.get('/api/cart', (req, res) => cartController.getCart(req, res), [Router_1.Router.optionalAuth]);
+    router.post('/api/cart/items', (req, res) => cartController.addItem(req, res), [Router_1.Router.optionalAuth]);
+    router.put('/api/cart/items/:id', (req, res, params) => cartController.updateItemQuantity(req, res, params.id));
+    router.delete('/api/cart/items/:id', (req, res, params) => cartController.removeItem(req, res, params.id));
+    router.get('/api/cart/summary', (req, res) => cartController.getCartSummary(req, res), [Router_1.Router.optionalAuth]);
+    router.post('/api/cart/clear', (req, res) => cartController.clearCart(req, res), [Router_1.Router.optionalAuth]);
+    router.post('/api/cart/merge', (req, res) => cartController.mergeGuestCart(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/wishlist', (req, res) => wishlistController.getUserWishlist(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/wishlist', (req, res) => wishlistController.addToWishlist(req, res), [Router_1.Router.requireAuth]);
+    router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/health', async (_req, res) => {
+        (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
+    });
+    return router;
+}
+//# sourceMappingURL=routes.js.map

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Column Dress - Athena</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="product-detail-styles.css" />
+  </head>
+  <body>
+    <!-- Header (include header.html content or use iframe/include) -->
+    <header class="athena-header">
+      <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid px-4 px-lg-5">
+          <a class="navbar-brand" href="/">ATHENA</a>
+          <button
+            class="navbar-toggler border-0"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mx-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="/products">Shop</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/collections">Collections</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/about">About</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/sustainability">Sustainability</a>
+              </li>
+            </ul>
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" href="/search"
+                  ><i class="bi bi-search"></i
+                ></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/account"
+                  ><i class="bi bi-person"></i
+                ></a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/cart"><i class="bi bi-bag"></i></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="product-detail-main">
+      <div class="container px-4 px-lg-5">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="breadcrumb-nav">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/products">Shop</a></li>
+            <li class="breadcrumb-item">The White Space Edit</li>
+            <li class="breadcrumb-item active" aria-current="page">
+              The Column Dress
+            </li>
+          </ol>
+        </nav>
+
+        <div class="row g-5 g-lg-5">
+          <!-- Image Gallery -->
+          <div class="col-lg-6">
+            <div class="product-gallery">
+              <div class="gallery-item">
+                <img
+                  src="/minimal-white-column-dress-front-view-architectura.jpg"
+                  alt="The Column Dress view 1"
+                  class="img-fluid"
+                />
+              </div>
+              <div class="gallery-item">
+                <img
+                  src="/minimal-white-column-dress-back-view-detail.jpg"
+                  alt="The Column Dress view 2"
+                  class="img-fluid"
+                />
+              </div>
+              <div class="gallery-item">
+                <img
+                  src="/minimal-white-column-dress-side-drape-movement.jpg"
+                  alt="The Column Dress view 3"
+                  class="img-fluid"
+                />
+              </div>
+              <div class="gallery-item">
+                <img
+                  src="/minimal-white-column-dress-fabric-texture-closeup.jpg"
+                  alt="The Column Dress view 4"
+                  class="img-fluid"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Info -->
+          <div class="col-lg-6">
+            <div class="product-info">
+              <!-- Product Header -->
+              <div class="product-header">
+                <p class="collection-name">THE WHITE SPACE EDIT</p>
+                <h1 class="product-title">The Column Dress</h1>
+                <p class="product-price">$385</p>
+                <p class="product-description">
+                  A precision-cut silhouette that skims the body with effortless
+                  structure. Crafted in certified organic sateen with a soft,
+                  weightless drape. Minimal seams, maximal impact.
+                </p>
+              </div>
+
+              <!-- Size Selection -->
+              <div class="size-selection">
+                <label class="section-label">Select Size</label>
+                <div class="size-grid">
+                  <button class="size-btn">XS</button>
+                  <button class="size-btn">S</button>
+                  <button class="size-btn">M</button>
+                  <button class="size-btn">L</button>
+                  <button class="size-btn">XL</button>
+                </div>
+              </div>
+
+              <!-- Add to Cart -->
+              <div class="add-to-cart-section">
+                <button class="btn btn-dark btn-lg w-100 add-to-cart-btn">
+                  Add to Cart
+                </button>
+                <p class="shipping-note">Free shipping on orders over $200</p>
+              </div>
+
+              <!-- The Craft -->
+              <div class="product-section">
+                <h3 class="section-label">The Craft</h3>
+                <ul class="detail-list">
+                  <li>
+                    <span class="dash">—</span> Architectural lines with fluid
+                    movement
+                  </li>
+                  <li><span class="dash">—</span> Hand-finished seams</li>
+                  <li><span class="dash">—</span> Reinforced hems</li>
+                  <li><span class="dash">—</span> Precision drape</li>
+                  <li><span class="dash">—</span> Seasonless design</li>
+                </ul>
+              </div>
+
+              <!-- Material -->
+              <div class="product-section">
+                <h3 class="section-label">Material</h3>
+                <div class="material-info">
+                  <p>100% Organic Cotton</p>
+                  <div class="certification-badges">
+                    <span class="badge-cert">GOTS Certified</span>
+                    <span class="badge-cert">OEKO-TEX Standard 100</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Care Instructions -->
+              <div class="product-section">
+                <h3 class="section-label">Care Instructions</h3>
+                <p class="care-text">
+                  Machine wash cold with like colors. Hang dry. Low iron if
+                  needed. Do not bleach.
+                </p>
+              </div>
+
+              <!-- Sustainability -->
+              <div class="product-section sustainability-section">
+                <h3 class="section-label">Sustainability</h3>
+                <div class="sustainability-grid">
+                  <div class="sustainability-item">
+                    <i class="bi bi-droplet sustainability-icon"></i>
+                    <div>
+                      <p class="sustainability-title">Water Conservation</p>
+                      <p class="sustainability-desc">
+                        Closed-loop water system reduces consumption by 90%
+                      </p>
+                    </div>
+                  </div>
+                  <div class="sustainability-item">
+                    <i class="bi bi-flower1 sustainability-icon"></i>
+                    <div>
+                      <p class="sustainability-title">Natural Dyes</p>
+                      <p class="sustainability-desc">Low-impact natural dyes</p>
+                    </div>
+                  </div>
+                  <div class="sustainability-item">
+                    <i class="bi bi-recycle sustainability-icon"></i>
+                    <div>
+                      <p class="sustainability-title">Ethical Production</p>
+                      <p class="sustainability-desc">
+                        Small-batch production in ethical factories
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quote Section -->
+        <div class="quote-section">
+          <p class="quote-text">
+            "Precision is our signature. Responsibility is our standard."
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer (include footer.html content or use iframe/include) -->
+    <footer class="athena-footer">
+      <div class="container px-4 px-lg-5">
+        <div class="row g-5">
+          <div class="col-lg-4">
+            <h3 class="footer-brand">ATHENA</h3>
+            <p class="footer-tagline">
+              Modern minimalism. Sustainable luxury. Timeless design.
+            </p>
+          </div>
+          <div class="col-6 col-lg-2">
+            <h4 class="footer-heading">Shop</h4>
+            <ul class="footer-links">
+              <li><a href="/products">All Products</a></li>
+              <li><a href="/collections">Collections</a></li>
+              <li><a href="/new-arrivals">New Arrivals</a></li>
+              <li><a href="/sale">Sale</a></li>
+            </ul>
+          </div>
+          <div class="col-6 col-lg-2">
+            <h4 class="footer-heading">About</h4>
+            <ul class="footer-links">
+              <li><a href="/about">Our Story</a></li>
+              <li><a href="/sustainability">Sustainability</a></li>
+              <li><a href="/craftsmanship">Craftsmanship</a></li>
+              <li><a href="/journal">Journal</a></li>
+            </ul>
+          </div>
+          <div class="col-6 col-lg-2">
+            <h4 class="footer-heading">Support</h4>
+            <ul class="footer-links">
+              <li><a href="/contact">Contact</a></li>
+              <li><a href="/shipping">Shipping</a></li>
+              <li><a href="/returns">Returns</a></li>
+              <li><a href="/faq">FAQ</a></li>
+            </ul>
+          </div>
+          <div class="col-6 col-lg-2">
+            <h4 class="footer-heading">Connect</h4>
+            <ul class="footer-links">
+              <li><a href="https://instagram.com">Instagram</a></li>
+              <li><a href="https://pinterest.com">Pinterest</a></li>
+              <li><a href="/newsletter">Newsletter</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 Athena. All rights reserved.</p>
+          <div class="footer-legal">
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/terms">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS for size selection -->
+    <script>
+      // Size selection functionality
+      document.querySelectorAll(".size-btn").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          document
+            .querySelectorAll(".size-btn")
+            .forEach((b) => b.classList.remove("active"));
+          this.classList.add("active");
+        });
+      });
+    </script>
+  </body>
+</html>

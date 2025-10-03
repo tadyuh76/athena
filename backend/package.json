@@ -1,0 +1,26 @@
+{
+  "name": "athena-api",
+  "version": "1.0.0",
+  "description": "Athena e-commerce API",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.46.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^22.7.4",
+    "@types/uuid": "^9.0.7",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2"
+  }
+}
