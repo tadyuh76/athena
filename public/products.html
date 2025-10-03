@@ -1,318 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Shop All - Athena</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Work+Sans:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
-      rel="stylesheet"
-    />
-    <link href="css/index.css" rel="stylesheet" />
-    <link href="css/products.css" rel="stylesheet" />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop - Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            font-weight: 300;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        
+        /* Header Styles */
+        .navbar {
+            padding: 1.5rem 0;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .navbar-brand {
+            font-family: var(--font-sans);
+            font-size: 1.25rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #1a1a1a !important;
+        }
+        
+        .navbar-nav .nav-link {
+            font-size: 0.875rem;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+            color: #1a1a1a;
+            padding: 0.5rem 1.5rem;
+            transition: color 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: #666;
+        }
+        
+        .nav-icons {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        
+        .nav-icons a {
+            color: #1a1a1a;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-icons a:hover {
+            color: #666;
+        }
+        
+        /* Hero Section */
+        .hero-section {
+            padding: 5rem 0 3rem;
+        }
+        
+        .hero-title {
+            font-family: var(--font-serif);
+            font-size: 3.5rem;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            color: #1a1a1a;
+        }
+        
+        .hero-description {
+            font-size: 1rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: #666;
+            max-width: 800px;
+        }
+        
+        /* Filter Buttons */
+        .filter-container {
+            padding: 2rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 3rem;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 1px solid #e0e0e0;
+            padding: 0.5rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 400;
+            letter-spacing: 0.02em;
+            transition: all 0.3s ease;
+            margin-right: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .filter-btn:hover {
+            border-color: #1a1a1a;
+        }
+        
+        .product-count {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        /* Product Grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem 2rem;
+            margin-bottom: 5rem;
+        }
+        
+        @media (max-width: 992px) {
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .product-card {
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.3s ease;
+        }
+        
+        .product-card:hover {
+            opacity: 0.9;
+        }
+        
+        .product-image-container {
+            position: relative;
+            padding-bottom: 133.33%; /* 4:3 aspect ratio */
+            overflow: hidden;
+            background: #f8f8f8;
+            margin-bottom: 1rem;
+        }
+        
+        .product-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        
+        .product-collection {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #999;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-name {
+            font-family: var(--font-sans);
+            font-size: 1rem;
+            font-weight: 400;
+            color: #1a1a1a;
+            margin-bottom: 0.25rem;
+        }
+        
+        .product-material {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+        
+        .product-price {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #1a1a1a;
+        }
+        
+        /* Sustainability Message */
+        .sustainability-message {
+            text-align: center;
+            padding: 5rem 0;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 5rem;
+        }
+        
+        .sustainability-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #999;
+            margin-bottom: 1.5rem;
+        }
+        
+        .sustainability-text {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.8;
+            color: #1a1a1a;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Footer */
+        footer {
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            padding: 4rem 0 2rem;
+            margin-top: 5rem;
+        }
+        
+        .footer-brand {
+            font-family: var(--font-sans);
+            font-size: 1.5rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-tagline {
+            font-size: 0.875rem;
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h6 {
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            color: #1a1a1a;
+            margin-bottom: 1.25rem;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-section li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .footer-section a {
+            font-size: 0.875rem;
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-section a:hover {
+            color: #1a1a1a;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #f0f0f0;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .footer-copyright {
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .footer-links a {
+            font-size: 0.875rem;
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #1a1a1a;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
     <!-- Navigation -->
-    <nav
-      class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom"
-    >
-      <div class="container">
-        <a
-          class="navbar-brand fw-bold fs-2"
-          href="/"
-          style="font-family: 'Playfair Display', serif; color: #1f2937"
-          >Athena</a
-        >
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto align-items-center">
-            <li class="nav-item me-4">
-              <a class="nav-link active" href="/products.html">Shop</a>
-            </li>
-            <li class="nav-item me-4">
-              <a class="nav-link" href="/#collections">Collections</a>
-            </li>
-            <li class="nav-item me-4">
-              <a class="nav-link" href="/#sustainability">Sustainability</a>
-            </li>
-            <!-- Cart moved to left of profile -->
-            <li class="nav-item me-2">
-              <a class="nav-link position-relative" href="/cart.html">
-                <i class="bi bi-bag fs-5"></i>
-                <span
-                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                  id="cartCount"
-                  style="display: none"
-                  >0</span
-                >
-              </a>
-            </li>
-            <!-- Auth section will be dynamically inserted here -->
-            <li class="nav-item navbar-auth-section">
-              <!-- Loading... -->
-            </li>
-          </ul>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">ATHENA</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/products.html">Shop</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/collections.html">Collections</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/craft.html">Our Craft</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/sustainability.html">Sustainability</a>
+                    </li>
+                </ul>
+                <div class="nav-icons">
+                    <a href="/cart.html">
+                        <i class="bi bi-bag" style="font-size: 1.1rem;"></i>
+                    </a>
+                    <a href="#" class="auth-link">
+                        <i class="bi bi-person" style="font-size: 1.3rem;"></i>
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
     </nav>
 
-    <!-- Page Header -->
-    <section class="py-5 bg-light">
-      <div class="container">
-        <div class="row">
-          <div class="col-12">
-            <h1
-              class="display-4 fw-bold mb-3"
-              style="font-family: 'Playfair Display', serif; color: #1f2937"
-            >
-              Shop All
-            </h1>
-            <p class="text-muted">
-              Discover our complete collection of sustainable luxury fashion
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Main Content -->
+    <main style="padding-top: 80px;">
+        <div class="container">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <h1 class="hero-title">Exquisite essentials</h1>
+                <p class="hero-description">
+                    Precision-crafted garments designed for longevity. Each piece is a study in restraint—clean lines, architectural silhouettes, and materials chosen for their integrity.
+                </p>
+            </section>
 
-    <!-- Products Section -->
-    <section class="py-5">
-      <div class="container">
-        <div class="row">
-          <!-- Filters Sidebar -->
-          <div class="col-lg-3 mb-4">
-            <div class="filters-container">
-              <div
-                class="d-flex justify-content-between align-items-center mb-4"
-              >
-                <h5 class="mb-0">Filters</h5>
-                <button
-                  class="btn btn-link btn-sm text-decoration-none"
-                  id="clearFilters"
-                >
-                  Clear All
-                </button>
-              </div>
-
-              <!-- Categories -->
-              <div class="filter-group mb-4">
-                <h6 class="mb-3">Categories</h6>
-                <div id="categoryFilters">
-                  <!-- Categories will be loaded dynamically -->
+            <!-- Filters -->
+            <div class="filter-container">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <button class="btn filter-btn">
+                            Collection <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                        <button class="btn filter-btn">
+                            Material <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                        <button class="btn filter-btn">
+                            Size <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                    </div>
+                    <span class="product-count">6 pieces</span>
                 </div>
-              </div>
-
-              <!-- Price Range -->
-              <div class="filter-group mb-4">
-                <h6 class="mb-3">Price</h6>
-                <div class="price-inputs d-flex gap-2 mb-2">
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    id="minPrice"
-                    placeholder="Min"
-                  />
-                  <input
-                    type="number"
-                    class="form-control form-control-sm"
-                    id="maxPrice"
-                    placeholder="Max"
-                  />
-                </div>
-                <button
-                  class="btn btn-sm btn-outline-dark w-100"
-                  id="applyPriceFilter"
-                >
-                  Apply
-                </button>
-              </div>
-
-              <!-- Collections -->
-              <div class="filter-group mb-4">
-                <h6 class="mb-3">Collections</h6>
-                <div id="collectionFilters">
-                  <!-- Collections will be loaded dynamically -->
-                </div>
-              </div>
-
-              <!-- Other Filters -->
-              <div class="filter-group">
-                <h6 class="mb-3">Availability</h6>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="inStockFilter"
-                  />
-                  <label class="form-check-label" for="inStockFilter"
-                    >In Stock Only</label
-                  >
-                </div>
-                <div class="form-check">
-                  <input
-                    class="form-check-input"
-                    type="checkbox"
-                    id="featuredFilter"
-                  />
-                  <label class="form-check-label" for="featuredFilter"
-                    >Featured Items</label
-                  >
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Products Grid -->
-          <div class="col-lg-9">
-            <!-- Toolbar -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-              <p class="text-muted mb-0" id="productCount">
-                Showing 0 products
-              </p>
-              <div class="d-flex gap-2 align-items-center">
-                <label for="sortBy" class="form-label mb-0 small"
-                  >Sort by:</label
-                >
-                <select
-                  class="form-select form-select-sm"
-                  id="sortBy"
-                  style="width: 200px"
-                >
-                  <option value="featured">Featured</option>
-                  <option value="newest">Newest</option>
-                  <option value="price_low">Price: Low to High</option>
-                  <option value="price_high">Price: High to Low</option>
-                  <option value="name">Name: A to Z</option>
-                </select>
-              </div>
             </div>
 
             <!-- Products Grid -->
-            <div class="row g-4" id="productsGrid">
-              <!-- Products will be loaded dynamically -->
+            <div class="product-grid" id="productsGrid">
+                <!-- Products will be loaded dynamically from database -->
+                <div class="text-center w-100 py-5">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Loading products...</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Pagination -->
-            <nav aria-label="Page navigation" class="mt-5">
-              <ul class="pagination justify-content-center" id="pagination">
-                <!-- Pagination will be loaded dynamically -->
-              </ul>
-            </nav>
-          </div>
+            <!-- Sustainability Message -->
+            <div class="sustainability-message">
+                <p class="sustainability-label">DESIGNED TO ENDURE</p>
+                <p class="sustainability-text">
+                    Every Athena garment is traceable—from fiber to finish. We obsess over impact so you can obsess over the fit.
+                </p>
+            </div>
         </div>
-      </div>
-    </section>
+    </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-top py-5">
-      <div class="container py-4">
-        <div class="row g-4">
-          <div class="col-md-3">
-            <div class="footer-brand mb-4">
-              <h5
-                class="fw-bold mb-3"
-                style="font-family: 'Playfair Display', serif; color: #1f2937"
-              >
-                Athena
-              </h5>
-              <p class="text-muted small lh-lg">
-                Premium eco fashion for modern minimalists. Wear what matters.
-              </p>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h5 class="footer-brand">ATHENA</h5>
+                    <p class="footer-tagline">Premium eco fashion for modern minimalists. Designed to endure.</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 footer-section">
+                    <h6>Shop</h6>
+                    <ul>
+                        <li><a href="/products.html">All Products</a></li>
+                        <li><a href="/collections.html">Collections</a></li>
+                        <li><a href="/new.html">New Arrivals</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 footer-section">
+                    <h6>About</h6>
+                    <ul>
+                        <li><a href="/story.html">Our Story</a></li>
+                        <li><a href="/craft.html">Craft Standards</a></li>
+                        <li><a href="/sustainability.html">Sustainability</a></li>
+                        <li><a href="/traceability.html">Traceability</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 footer-section">
+                    <h6>Support</h6>
+                    <ul>
+                        <li><a href="/care.html">Care & Repair</a></li>
+                        <li><a href="/shipping.html">Shipping</a></li>
+                        <li><a href="/returns.html">Returns</a></li>
+                        <li><a href="/contact.html">Contact</a></li>
+                    </ul>
+                </div>
             </div>
-          </div>
-          <div class="col-md-3">
-            <h6 class="fw-bold mb-3" style="color: #1f2937">Collections</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2">
-                <a
-                  href="/products.html"
-                  class="text-muted text-decoration-none small"
-                  >All Products</a
-                >
-              </li>
-              <li class="mb-2">
-                <a
-                  href="/products.html?featured=true"
-                  class="text-muted text-decoration-none small"
-                  >Featured</a
-                >
-              </li>
-              <li class="mb-2">
-                <a
-                  href="/products.html?collection=architecture"
-                  class="text-muted text-decoration-none small"
-                  >Architecture Series</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="col-md-3">
-            <h6 class="fw-bold mb-3" style="color: #1f2937">Customer Care</h6>
-            <ul class="list-unstyled">
-              <li class="mb-2">
-                <a
-                  href="/account.html"
-                  class="text-muted text-decoration-none small"
-                  >My Account</a
-                >
-              </li>
-              <li class="mb-2">
-                <a
-                  href="/orders.html"
-                  class="text-muted text-decoration-none small"
-                  >Order Status</a
-                >
-              </li>
-              <li class="mb-2">
-                <a
-                  href="/contact.html"
-                  class="text-muted text-decoration-none small"
-                  >Contact Us</a
-                >
-              </li>
-            </ul>
-          </div>
-          <div class="col-md-3">
-            <h6 class="fw-bold mb-3" style="color: #1f2937">Connect</h6>
-            <div class="d-flex gap-3 mb-3">
-              <a href="#" class="text-muted"><i class="bi bi-facebook"></i></a>
-              <a href="#" class="text-muted"><i class="bi bi-instagram"></i></a>
-              <a href="#" class="text-muted"><i class="bi bi-twitter"></i></a>
-              <a href="#" class="text-muted"><i class="bi bi-pinterest"></i></a>
+            <div class="footer-bottom">
+                <p class="footer-copyright mb-0">© 2025 Athena. Quietly Powerful.</p>
+                <div class="footer-links">
+                    <a href="/privacy.html">Privacy</a>
+                    <a href="/terms.html">Terms</a>
+                </div>
             </div>
-          </div>
         </div>
-        <div class="border-top mt-5 pt-4 text-center">
-          <p class="text-muted small mb-0">
-            © 2024 Athena. Designed to Endure.
-          </p>
-        </div>
-      </div>
     </footer>
-
-    <!-- Toast Container -->
-    <div
-      class="toast-container position-fixed bottom-0 end-0 p-3"
-      id="toastContainer"
-    ></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
-    <script type="module" src="js/products.js"></script>
-  </body>
+    <script type="module">
+        import { ProductService } from '/services/ProductService.js';
+        import { AuthService } from '/services/AuthService.js';
+        
+        const productService = new ProductService();
+        const authService = new AuthService();
+        
+        // Simple auth link handler
+        document.querySelector('.auth-link').addEventListener('click', function(e) {
+            e.preventDefault();
+            const user = authService.getCurrentUser();
+            if (user) {
+                window.location.href = '/account.html';
+            } else {
+                window.location.href = '/login.html';
+            }
+        });
+        
+        // Load products from database
+        async function loadProducts() {
+            const container = document.getElementById('productsGrid');
+            const countElement = document.querySelector('.product-count');
+            
+            try {
+                const { products, total } = await productService.getProducts({
+                    limit: 12,
+                    page: 1
+                });
+                
+                // Update product count
+                if (countElement) {
+                    countElement.textContent = `${total} pieces`;
+                }
+                
+                if (products.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center w-100 py-5">
+                            <p class="text-muted">No products available at the moment.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Render products
+                container.innerHTML = products.map(product => {
+                    const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
+                    const imageUrl = primaryImage?.url || product.featured_image_url || '/images/placeholder-user.jpg';
+                    
+                    // Get collection name
+                    const collectionName = product.collection?.name || 'COLLECTION';
+                    
+                    // Get material or short description
+                    const material = product.material || product.short_description || '';
+                    
+                    return `
+                        <a href="/product-detail.html?id=${product.id}" class="product-card">
+                            <div class="product-image-container">
+                                <img src="${imageUrl}" alt="${product.name}" class="product-image">
+                            </div>
+                            <div class="product-info">
+                                <p class="product-collection">${collectionName.toUpperCase()}</p>
+                                <h3 class="product-name">${product.name}</h3>
+                                <p class="product-material">${material}</p>
+                                <p class="product-price">$${product.base_price}</p>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Failed to load products:', error);
+                container.innerHTML = `
+                    <div class="text-center w-100 py-5">
+                        <p class="text-danger">Failed to load products. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Load products on page load
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
 </html>

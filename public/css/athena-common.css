@@ -1,0 +1,148 @@
+/* Athena Common Styles - Header and Footer */
+:root {
+    --font-serif: 'Playfair Display', serif;
+    --font-sans: 'Inter', sans-serif;
+}
+
+body {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    color: #1a1a1a;
+    line-height: 1.6;
+}
+
+/* Header Styles */
+.navbar {
+    padding: 1.5rem 0;
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.navbar-brand {
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1a1a1a !important;
+}
+
+.navbar-nav .nav-link {
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    color: #1a1a1a;
+    padding: 0.5rem 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #666;
+}
+
+.nav-icons {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.nav-icons a {
+    color: #1a1a1a;
+    transition: color 0.3s ease;
+}
+
+.nav-icons a:hover {
+    color: #666;
+}
+
+/* Footer */
+footer.athena-footer {
+    background: white;
+    border-top: 1px solid #f0f0f0;
+    padding: 4rem 0 2rem;
+    margin-top: 5rem;
+}
+
+.footer-brand {
+    font-family: var(--font-sans);
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+}
+
+.footer-tagline {
+    font-size: 0.875rem;
+    color: #666;
+    line-height: 1.8;
+    margin-bottom: 2rem;
+}
+
+.footer-section h6 {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: #1a1a1a;
+    margin-bottom: 1.25rem;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section li {
+    margin-bottom: 0.75rem;
+}
+
+.footer-section a {
+    font-size: 0.875rem;
+    color: #666;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+    color: #1a1a1a;
+}
+
+.footer-bottom {
+    border-top: 1px solid #f0f0f0;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.footer-copyright {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.footer-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.footer-links a {
+    font-size: 0.875rem;
+    color: #666;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #1a1a1a;
+}
+
+@media (max-width: 768px) {
+    .footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+}

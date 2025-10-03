@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run install:api && cd api-src && npm run build",
+  "buildCommand": "npm run install:api && cd backend && npm run build",
   "outputDirectory": "public",
   "functions": {
     "api/index.js": {
@@ -10,6 +10,10 @@
     {
       "source": "/api/(.*)",
       "destination": "/api"
+    },
+    {
+      "source": "/auth-callback",
+      "destination": "/auth-callback.html"
     }
   ]
 }
