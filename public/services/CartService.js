@@ -39,34 +39,38 @@ export class CartService {
 
   async getCart() {
     try {
-      const params = new URLSearchParams();
+      // Only get cart for authenticated users
       if (!localStorage.getItem('authToken')) {
-        params.append('session_id', this.sessionId);
+        this.cart = { id: null, items: [] };
+        this.updateCartBadge();
+        return this.cart;
       }
 
-      this.cart = await this.makeRequest(`/cart?${params.toString()}`);
+      this.cart = await this.makeRequest('/cart');
       this.updateCartBadge();
       return this.cart;
     } catch (error) {
       console.error('Failed to get cart:', error);
       // Create empty cart if API fails
-      this.cart = { id: this.sessionId, items: [] };
+      this.cart = { id: null, items: [] };
+      this.updateCartBadge();
       return this.cart;
     }
   }
 
   async addItem(productId, variantId, quantity = 1) {
+    // Require authentication for cart operations
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      throw new Error('Authentication required to add items to cart');
+    }
+
     try {
       const body = {
         product_id: productId,
         variant_id: variantId,
         quantity: quantity
       };
-
-      // Add session_id for guest users
-      if (!localStorage.getItem('authToken')) {
-        body.session_id = this.sessionId;
-      }
 
       const result = await this.makeRequest('/cart/items', 'POST', body);
 
@@ -80,6 +84,12 @@ export class CartService {
   }
 
   async updateItemQuantity(itemId, quantity) {
+    // Require authentication for cart operations
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      throw new Error('Authentication required to update cart');
+    }
+
     try {
       const result = await this.makeRequest(`/cart/items/${itemId}`, 'PUT', {
         quantity: quantity
@@ -94,6 +104,12 @@ export class CartService {
   }
 
   async removeItem(itemId) {
+    // Require authentication for cart operations
+    const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      throw new Error('Authentication required to remove items from cart');
+    }
+
     try {
       await this.makeRequest(`/cart/items/${itemId}`, 'DELETE');
       await this.getCart(); // Refresh cart
@@ -181,31 +197,86 @@ export class CartService {
 
   updateCartBadge() {
     const count = this.getItemCount();
-    const badges = document.querySelectorAll('.cart-count');
+    
+    // Update badges in regular DOM
+    const badges = document.querySelectorAll('.cart-count, .cart-badge');
     badges.forEach(badge => {
       badge.textContent = count > 0 ? count.toString() : '';
       badge.style.display = count > 0 ? 'inline-block' : 'none';
     });
+
+    // Update badge in web component (site-header)
+    const siteHeader = document.querySelector('site-header');
+    if (siteHeader && siteHeader.shadowRoot) {
+      const cartLink = siteHeader.shadowRoot.getElementById('cart-link');
+      if (cartLink) {
+        let existingBadge = cartLink.querySelector('.cart-badge');
+        
+        if (count > 0) {
+          if (existingBadge) {
+            existingBadge.textContent = count;
+          } else {
+            const badge = document.createElement('span');
+            badge.className = 'cart-badge';
+            badge.style.cssText = 'position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center; z-index: 1;';
+            badge.textContent = count;
+            cartLink.style.position = 'relative';
+            cartLink.appendChild(badge);
+          }
+        } else if (existingBadge) {
+          existingBadge.remove();
+        }
+      }
+    }
   }
 
-  showNotification(message) {
-    const toast = document.createElement('div');
-    toast.className = 'position-fixed bottom-0 end-0 p-3';
-    toast.style.zIndex = '11';
-    toast.innerHTML = `
-      <div class="toast show" role="alert">
-        <div class="toast-body">
-          <i class="bi bi-cart-check-fill text-success me-2"></i>
-          ${message}
+  showNotification(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toastContainer';
+      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+      toastContainer.style.zIndex = '1055';
+      document.body.appendChild(toastContainer);
+    }
+
+    const toastId = 'cart-toast-' + Date.now();
+    const bgClass = type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning' : type === 'danger' ? 'bg-danger' : 'bg-info';
+    const icon = type === 'success' ? 'bi-cart-check-fill' : 'bi-cart-x-fill';
+    
+    const toastHTML = `
+      <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" 
+           id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body d-flex align-items-center">
+            <i class="bi ${icon} me-2"></i>
+            ${message}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" 
+                  data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
       </div>
     `;
     
-    document.body.appendChild(toast);
+    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
     
-    setTimeout(() => {
-      toast.remove();
-    }, 3000);
+    const toastElement = document.getElementById(toastId);
+    if (window.bootstrap) {
+      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+      toast.show();
+      
+      toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+      });
+    } else {
+      // Fallback without Bootstrap
+      toastElement.style.display = 'block';
+      setTimeout(() => {
+        toastElement.style.opacity = '0';
+        setTimeout(() => toastElement.remove(), 300);
+      }, 3000);
+    }
   }
 
   formatPrice(price) {

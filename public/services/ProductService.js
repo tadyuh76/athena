@@ -24,8 +24,21 @@ export class ProductService {
       options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-    return await response.json();
+    const url = `${this.baseUrl}${endpoint}`;
+    console.log('Making request to:', url, 'with options:', options);
+    
+    const response = await fetch(url, options);
+    console.log('Response status:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', errorText);
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    const result = await response.json();
+    console.log('API Response:', result);
+    return result;
   }
 
   async getProducts(filters = {}, page = 1, limit = 20) {

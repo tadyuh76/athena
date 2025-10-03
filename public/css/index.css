@@ -16,7 +16,7 @@ body {
 /* Typography */
 .display-1,
 .display-4 {
-  font-family: "Playfair Display", serif;
+  font-family: "Cormorant Garamond", serif;
 }
 
 /* Navigation */
@@ -213,3 +213,31 @@ footer a:hover {
   color: white;
   border-color: var(--success-green);
 }
+
+/* Index page specific styles */
+body {
+  padding-top: 80px;
+}
+
+.athena-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e5e5;
+  height: 80px;
+}
+
+.athena-header .navbar {
+  padding: 0;
+  height: 100%;
+}
+
+.hero-section {
+  margin-top: -80px;
+  padding-top: 80px;
+}
+

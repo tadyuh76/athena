@@ -1,6 +1,6 @@
 /* Athena Common Styles - Header and Footer */
 :root {
-    --font-serif: 'Playfair Display', serif;
+    --font-serif: 'Cormorant Garamond', serif;
     --font-sans: 'Inter', sans-serif;
 }
 
@@ -12,19 +12,32 @@ body {
 }
 
 /* Header Styles */
-.navbar {
-    padding: 1.5rem 0;
-    background: white;
-    border-bottom: 1px solid #f0f0f0;
+.athena-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #e5e5e5;
+    height: 80px;
+}
+
+.athena-header .navbar {
+    padding: 0;
+    background: transparent;
+    border: none;
+    height: 100%;
 }
 
 .navbar-brand {
-    font-family: var(--font-sans);
-    font-size: 1.25rem;
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
     font-weight: 300;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    letter-spacing: -0.02em;
     color: #1a1a1a !important;
+    text-decoration: none;
 }
 
 .navbar-nav .nav-link {

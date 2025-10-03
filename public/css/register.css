@@ -1,0 +1,70 @@
+/* Register page styles */
+body {
+    padding-top: 80px;
+}
+
+.auth-container {
+    max-width: 450px;
+    margin: 50px auto;
+    padding: 40px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+}
+
+.form-label {
+    color: var(--primary-dark);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.form-control:focus {
+    border-color: var(--success-green);
+    box-shadow: 0 0 0 0.2rem rgba(15, 76, 47, 0.1);
+}
+
+.btn-register {
+    background: var(--primary-dark);
+    color: white;
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-register:hover {
+    background: var(--success-green);
+    transform: translateY(-2px);
+}
+
+.social-login {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.social-btn {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+    background: var(--light-bg);
+    transform: translateY(-2px);
+}

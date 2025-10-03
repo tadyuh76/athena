@@ -160,179 +160,98 @@ function renderProductDetail(product) {
   const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
   
   return `
-    <div class="product-detail-section">
-      <div class="container">
-        <div class="row g-4">
-          <!-- Product Images -->
-          <div class="col-lg-7">
-            <div class="product-image-gallery fade-in-up">
-              <div class="main-image-container">
-                <img src="${primaryImage?.url || product.featured_image_url || '/images/placeholder-user.jpg'}" 
-                     alt="${product.name}" 
-                     class="product-main-image" 
-                     id="mainProductImage">
-                ${discount > 0 ? `<div class="discount-badge">-${discount}%</div>` : ''}
-              </div>
-              ${renderThumbnailGallery(product.images)}
-            </div>
-          </div>
-          
-          <!-- Product Information -->
-          <div class="col-lg-5">
-            <div class="product-info slide-in-right">
-              <div class="product-category">${product.category?.name || 'Product'}</div>
-              <h1 class="product-title">${product.name}</h1>
-              
-              <!-- Rating Section -->
-              <div class="product-rating-section">
-                <div class="product-rating">
-                  ${renderStarRating(product.rating || 0)}
-                </div>
-                <div class="rating-count">(${product.review_count || 0} reviews)</div>
-              </div>
-              
-              <!-- Price Section -->
-              <div class="product-price-section">
-                <div class="d-flex align-items-baseline">
-                  <span class="product-price">${formatPrice(product.base_price)}</span>
-                  ${product.compare_price ? `<span class="product-compare-price">${formatPrice(product.compare_price)}</span>` : ''}
-                </div>
-                ${discount > 0 ? `<div class="discount-badge">Save ${discount}%</div>` : ''}
-              </div>
-              
-              <!-- Description -->
-              <div class="product-description">
-                ${product.short_description || product.description || 'No description available.'}
-              </div>
-              
-              <!-- Variants -->
-              ${renderVariantSelectors(product.variants)}
-              
-              <!-- Stock Status -->
-              <div class="stock-status ${stockStatus}">
-                <i class="bi bi-${stockStatus === 'in-stock' ? 'check-circle' : stockStatus === 'low-stock' ? 'exclamation-triangle' : 'x-circle'}"></i>
-                ${stockStatus === 'in-stock' ? 'In Stock' : stockStatus === 'low-stock' ? 'Low Stock' : 'Out of Stock'}
-              </div>
-              
-              <!-- Quantity Selector -->
-              <div class="quantity-section">
-                <div class="quantity-selector">
-                  <div class="quantity-label">Quantity:</div>
-                  <div class="quantity-controls">
-                    <button class="quantity-btn" onclick="changeQuantity(-1)" ${quantity <= 1 ? 'disabled' : ''}>-</button>
-                    <input type="number" class="quantity-input" value="${quantity}" min="1" max="10" onchange="updateQuantity(this.value)">
-                    <button class="quantity-btn" onclick="changeQuantity(1)" ${quantity >= 10 ? 'disabled' : ''}>+</button>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Action Buttons -->
-              <div class="action-buttons">
-                <button class="btn btn-add-to-cart" onclick="addToCart()" ${stockStatus === 'out-of-stock' ? 'disabled' : ''}>
-                  <i class="bi bi-bag-plus me-2"></i>
-                  ${stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Add to Cart'}
-                </button>
-                
-                <div class="secondary-actions">
-                  <button class="btn btn-wishlist ${isInWishlist ? 'active' : ''}" onclick="toggleWishlist()">
-                    <i class="bi bi-heart${isInWishlist ? '-fill' : ''} me-2"></i>
-                    ${isInWishlist ? 'In Wishlist' : 'Add to Wishlist'}
-                  </button>
-                  <button class="btn btn-share" onclick="shareProduct()">
-                    <i class="bi bi-share me-2"></i>
-                    Share
-                  </button>
-                </div>
-              </div>
-              
-              <!-- Product Features -->
-              <div class="product-features">
-                <h5>Key Features</h5>
-                <ul class="feature-list">
-                  <li><i class="bi bi-shield-check"></i> Premium Quality Materials</li>
-                  <li><i class="bi bi-truck"></i> Free Shipping Over $150</li>
-                  <li><i class="bi bi-arrow-repeat"></i> 30-Day Return Policy</li>
-                  <li><i class="bi bi-award"></i> Sustainable & Ethical Production</li>
-                </ul>
-              </div>
+    <!-- Image Gallery -->
+    <div class="col-lg-6">
+      <div class="product-gallery">
+        ${renderImageGallery(product.images, primaryImage)}
+      </div>
+    </div>
+
+    <!-- Product Info -->
+    <div class="col-lg-6">
+      <div class="product-info">
+        <!-- Product Header -->
+        <div class="product-header">
+          <p class="collection-name">${product.collection?.name ? product.collection.name.toUpperCase() : 'THE WHITE SPACE EDIT'}</p>
+          <h1 class="product-title">${product.name}</h1>
+          <p class="product-price">$${product.base_price}</p>
+          <p class="product-description">
+            ${product.short_description || product.description || 'A precision-cut silhouette that skims the body with effortless structure. Crafted in certified organic sateen with a soft, weightless drape.'}
+          </p>
+        </div>
+
+        <!-- Size Selection -->
+        ${renderSizeSelection(product.variants)}
+
+        <!-- Add to Cart -->
+        <div class="add-to-cart-section">
+          <button class="btn btn-dark btn-lg w-100 add-to-cart-btn" onclick="addToCart()" ${stockStatus === 'out-of-stock' ? 'disabled' : ''}>
+            ${stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Add to Cart'}
+          </button>
+          <p class="shipping-note">Free shipping on orders over $200</p>
+        </div>
+
+        <!-- The Craft -->
+        <div class="product-section">
+          <h3 class="section-label">The Craft</h3>
+          <ul class="detail-list">
+            <li><span class="dash">—</span> Architectural lines with fluid movement</li>
+            <li><span class="dash">—</span> Hand-finished seams</li>
+            <li><span class="dash">—</span> Reinforced hems</li>
+            <li><span class="dash">—</span> Precision drape</li>
+            <li><span class="dash">—</span> Seasonless design</li>
+          </ul>
+        </div>
+
+        <!-- Material -->
+        <div class="product-section">
+          <h3 class="section-label">Material</h3>
+          <div class="material-info">
+            <p>${product.material || '100% Organic Cotton'}</p>
+            <div class="certification-badges">
+              <span class="badge-cert">GOTS Certified</span>
+              <span class="badge-cert">OEKO-TEX Standard 100</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    
-    <!-- Product Tabs -->
-    <div class="product-tabs">
-      <div class="container">
-        <ul class="nav nav-tabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#details" type="button">
-              Details
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#materials" type="button">
-              Materials & Care
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#sustainability" type="button">
-              Sustainability
-            </button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#shipping" type="button">
-              Shipping
-            </button>
-          </li>
-        </ul>
-        
-        <div class="tab-content">
-          <div class="tab-pane fade show active" id="details">
-            <h5>Product Details</h5>
-            <p>${product.description || 'Detailed product information will be available soon.'}</p>
-            <h6>Specifications</h6>
-            <ul>
-              <li><strong>SKU:</strong> ${product.sku}</li>
-              <li><strong>Weight:</strong> ${product.weight_value || 'N/A'} ${product.weight_unit || ''}</li>
-              <li><strong>Collection:</strong> ${product.collection?.name || 'N/A'}</li>
-            </ul>
-          </div>
-          
-          <div class="tab-pane fade" id="materials">
-            <h5>Materials & Composition</h5>
-            <p>${renderMaterialComposition(product.material_composition)}</p>
-            <h6>Care Instructions</h6>
-            <p>${product.care_instructions || 'Standard care instructions apply.'}</p>
-          </div>
-          
-          <div class="tab-pane fade" id="sustainability">
-            <h5>Our Commitment to Sustainability</h5>
-            <p>${product.sustainability_notes || 'We are committed to sustainable and ethical fashion practices.'}</p>
-            <h6>Production Method</h6>
-            <p>${product.production_method || 'Crafted with care using traditional methods.'}</p>
-            ${product.certification_labels ? `
-              <h6>Certifications</h6>
-              <ul>
-                ${product.certification_labels.map(cert => `<li>${cert}</li>`).join('')}
-              </ul>
-            ` : ''}
-          </div>
-          
-          <div class="tab-pane fade" id="shipping">
-            <h5>Shipping Information</h5>
-            <ul>
-              <li><strong>Free shipping</strong> on orders over $150</li>
-              <li><strong>Standard delivery:</strong> 3-5 business days</li>
-              <li><strong>Express delivery:</strong> 1-2 business days (additional cost)</li>
-              <li><strong>International shipping:</strong> Available to select countries</li>
-            </ul>
-            <h6>Returns & Exchanges</h6>
-            <ul>
-              <li>30-day return policy</li>
-              <li>Free returns on all orders</li>
-              <li>Items must be in original condition</li>
-            </ul>
+
+        <!-- Care Instructions -->
+        <div class="product-section">
+          <h3 class="section-label">Care Instructions</h3>
+          <p class="care-text">
+            ${product.care_instructions || 'Machine wash cold with like colors. Hang dry. Low iron if needed. Do not bleach.'}
+          </p>
+        </div>
+
+        <!-- Sustainability -->
+        <div class="product-section sustainability-section">
+          <h3 class="section-label">Sustainability</h3>
+          <div class="sustainability-grid">
+            <div class="sustainability-item">
+              <i class="bi bi-droplet sustainability-icon"></i>
+              <div>
+                <p class="sustainability-title">Water Conservation</p>
+                <p class="sustainability-desc">
+                  Closed-loop water system reduces consumption by 90%
+                </p>
+              </div>
+            </div>
+            <div class="sustainability-item">
+              <i class="bi bi-flower1 sustainability-icon"></i>
+              <div>
+                <p class="sustainability-title">Natural Dyes</p>
+                <p class="sustainability-desc">Low-impact natural dyes</p>
+              </div>
+            </div>
+            <div class="sustainability-item">
+              <i class="bi bi-recycle sustainability-icon"></i>
+              <div>
+                <p class="sustainability-title">Ethical Production</p>
+                <p class="sustainability-desc">
+                  Small-batch production in ethical factories
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -340,17 +259,69 @@ function renderProductDetail(product) {
   `;
 }
 
-function renderThumbnailGallery(images) {
-  if (!images || images.length <= 1) return '';
+function renderImageGallery(images, primaryImage) {
+  if (!images || images.length === 0) {
+    return `
+      <div class="gallery-item">
+        <img
+          src="${primaryImage?.url || '/images/minimal-white-column-dress-front-view-architectura.jpg'}"
+          alt="Product view"
+          class="img-fluid"
+        />
+      </div>
+    `;
+  }
+  
+  return images.map((image, index) => `
+    <div class="gallery-item">
+      <img
+        src="${image.url}"
+        alt="${image.alt_text || `Product view ${index + 1}`}"
+        class="img-fluid"
+      />
+    </div>
+  `).join('');
+}
+
+function renderSizeSelection(variants) {
+  if (!variants || variants.length === 0) {
+    return `
+      <div class="size-selection">
+        <label class="section-label">Select Size</label>
+        <div class="size-grid">
+          <button class="size-btn" onclick="selectSize('XS')">XS</button>
+          <button class="size-btn" onclick="selectSize('S')">S</button>
+          <button class="size-btn" onclick="selectSize('M')">M</button>
+          <button class="size-btn" onclick="selectSize('L')">L</button>
+          <button class="size-btn" onclick="selectSize('XL')">XL</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+  
+  if (sizes.length === 0) {
+    return '';
+  }
   
   return `
-    <div class="product-thumbnail-gallery">
-      ${images.map((image, index) => `
-        <img src="${image.url}" 
-             alt="${image.alt_text || 'Product image'}" 
-             class="product-thumbnail ${index === 0 ? 'active' : ''}" 
-             onclick="changeMainImage('${image.url}', ${index})">
-      `).join('')}
+    <div class="size-selection">
+      <label class="section-label">Select Size</label>
+      <div class="size-grid">
+        ${sizes.map(size => {
+          const variant = variants.find(v => v.size === size);
+          const isSelected = selectedVariant?.size === size;
+          const isAvailable = getAvailableStock(variant) > 0;
+          return `
+            <button class="size-btn ${isSelected ? 'active' : ''}" 
+                    onclick="selectSize('${size}')" 
+                    ${!isAvailable ? 'disabled' : ''}>
+              ${size}
+            </button>
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
@@ -459,9 +430,15 @@ async function loadProduct(productId) {
     }
 
     // Update breadcrumb
-    const breadcrumbEl = document.getElementById("breadcrumbProduct");
-    if (breadcrumbEl) {
-      breadcrumbEl.textContent = currentProduct.name;
+    const breadcrumbProduct = document.getElementById("breadcrumbProduct");
+    const breadcrumbCollection = document.getElementById("breadcrumbCollection");
+    
+    if (breadcrumbProduct) {
+      breadcrumbProduct.textContent = currentProduct.name;
+    }
+    
+    if (breadcrumbCollection && currentProduct.collection?.name) {
+      breadcrumbCollection.textContent = currentProduct.collection.name.toUpperCase();
     }
 
     // Render beautiful product detail
@@ -491,6 +468,28 @@ window.changeMainImage = function(imageUrl, index) {
   // Update active thumbnail
   document.querySelectorAll('.product-thumbnail').forEach((thumb, i) => {
     thumb.classList.toggle('active', i === index);
+  });
+};
+
+window.selectSize = function(size) {
+  if (!currentProduct || !currentProduct.variants) return;
+  
+  // Find variant that matches the size
+  const targetVariant = currentProduct.variants.find(v => v.size === size);
+  
+  if (targetVariant) {
+    selectedVariant = targetVariant;
+    // Re-render the product to update the UI
+    const container = document.getElementById("productDetail");
+    container.innerHTML = renderProductDetail(currentProduct);
+  }
+  
+  // Also update size button states
+  document.querySelectorAll('.size-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent === size) {
+      btn.classList.add('active');
+    }
   });
 };
 
@@ -542,12 +541,22 @@ function updateQuantityUI() {
 }
 
 window.addToCart = async function() {
+  // Check if user is authenticated
+  if (!authService.isAuthenticated()) {
+    showToast('Please sign in to add items to cart', 'warning');
+    // Redirect to login after a short delay
+    setTimeout(() => {
+      window.location.href = '/login.html';
+    }, 1500);
+    return;
+  }
+
   if (!selectedVariant) {
-    showToast('Please select a variant', 'warning');
+    showToast('Please select a size first', 'warning');
     return;
   }
   
-  const button = document.querySelector('.btn-add-to-cart');
+  const button = document.querySelector('.add-to-cart-btn');
   const originalText = button.innerHTML;
   
   button.disabled = true;
@@ -557,10 +566,21 @@ window.addToCart = async function() {
     await cartService.addItem(currentProduct.id, selectedVariant.id, quantity);
     await updateCartCount();
     showToast('Added to cart!', 'success');
+    
+    // Update button with success state
+    button.classList.add('success');
+    button.innerHTML = '<i class="bi bi-check me-2"></i>Added to Cart';
+    
+    // Reset button after delay
+    setTimeout(() => {
+      button.classList.remove('success');
+      button.innerHTML = originalText;
+      button.disabled = false;
+    }, 2000);
+    
   } catch (error) {
     console.error('Failed to add to cart:', error);
-    showToast('Failed to add to cart', 'danger');
-  } finally {
+    showToast('Failed to add to cart. Please try again.', 'danger');
     button.disabled = false;
     button.innerHTML = originalText;
   }
@@ -692,17 +712,26 @@ async function loadRelatedProducts() {
 }
 
 function showToast(message, type = 'info') {
-  const toastContainer = document.getElementById('toastContainer');
-  if (!toastContainer) return;
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById('toastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toastContainer';
+    toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+    toastContainer.style.zIndex = '1055';
+    document.body.appendChild(toastContainer);
+  }
 
   const toastId = 'toast-' + Date.now();
   const bgClass = type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning' : type === 'danger' ? 'bg-danger' : 'bg-info';
+  const icon = type === 'success' ? 'bi-check-circle' : type === 'warning' ? 'bi-exclamation-triangle' : type === 'danger' ? 'bi-x-circle' : 'bi-info-circle';
   
   const toastHTML = `
-    <div class="toast align-items-center text-white ${bgClass} border-0" 
+    <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" 
          id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
-        <div class="toast-body">
+        <div class="toast-body d-flex align-items-center">
+          <i class="bi ${icon} me-2"></i>
           ${message}
         </div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" 
@@ -714,10 +743,19 @@ function showToast(message, type = 'info') {
   toastContainer.insertAdjacentHTML('beforeend', toastHTML);
   
   const toastElement = document.getElementById(toastId);
-  const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-  toast.show();
-  
-  toastElement.addEventListener('hidden.bs.toast', () => {
-    toastElement.remove();
-  });
+  if (window.bootstrap) {
+    const toast = new bootstrap.Toast(toastElement, { delay: 4000 });
+    toast.show();
+    
+    toastElement.addEventListener('hidden.bs.toast', () => {
+      toastElement.remove();
+    });
+  } else {
+    // Fallback without Bootstrap
+    toastElement.style.display = 'block';
+    setTimeout(() => {
+      toastElement.style.opacity = '0';
+      setTimeout(() => toastElement.remove(), 300);
+    }, 4000);
+  }
 }
