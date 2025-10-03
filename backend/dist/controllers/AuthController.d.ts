@@ -1,5 +1,5 @@
-import { IncomingMessage, ServerResponse } from 'http';
-import { AuthRequest } from '../middleware/auth';
+import { IncomingMessage, ServerResponse } from "http";
+import { AuthRequest } from "../middleware/auth";
 export declare class AuthController {
     private authService;
     constructor();

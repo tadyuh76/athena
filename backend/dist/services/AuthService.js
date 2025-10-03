@@ -10,14 +10,17 @@ class AuthService {
     jwtSecret;
     frontendUrl;
     constructor() {
-        this.frontendUrl = process.env.FRONTEND_URL ||
-            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                (process.env.NODE_ENV === 'production' ? 'https://ueh-athena.vercel.app' :
-                    'http://localhost:3000'));
-        this.jwtSecret = process.env.JWT_SECRET || 'default-jwt-secret';
+        this.frontendUrl =
+            process.env.FRONTEND_URL ||
+                (process.env.NODE_ENV === "development"
+                    ? "http://localhost:3000"
+                    : "https://ueh-athena.vercel.app");
+        this.jwtSecret = process.env.JWT_SECRET || "default-jwt-secret";
     }
     generateToken(userId) {
-        return jsonwebtoken_1.default.sign({ userId, type: 'auth' }, this.jwtSecret, { expiresIn: '7d' });
+        return jsonwebtoken_1.default.sign({ userId, type: "auth" }, this.jwtSecret, {
+            expiresIn: "7d",
+        });
     }
     async register(data) {
         try {
@@ -30,18 +33,18 @@ class AuthService {
                     data: {
                         first_name,
                         last_name,
-                        phone
-                    }
-                }
+                        phone,
+                    },
+                },
             });
             if (authError) {
                 throw authError;
             }
             if (!authData.user) {
-                throw new Error('Failed to create user');
+                throw new Error("Failed to create user");
             }
             const { data: userProfile, error: profileError } = await supabase_1.supabaseAdmin
-                .from('users')
+                .from("users")
                 .insert({
                 id: authData.user.id,
                 email,
@@ -49,13 +52,13 @@ class AuthService {
                 first_name,
                 last_name,
                 phone,
-                status: 'active',
-                role: 'customer'
+                status: "active",
+                role: "customer",
             })
                 .select()
                 .single();
             if (profileError) {
-                console.error('Profile creation error:', profileError);
+                console.error("Profile creation error:", profileError);
             }
             const token = this.generateToken(authData.user.id);
             return {
@@ -63,13 +66,13 @@ class AuthService {
                 user: userProfile || undefined,
                 token,
                 requiresVerification: true,
-                message: 'Registration successful! Please check your email to verify your account.'
+                message: "Registration successful! Please check your email to verify your account.",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Registration failed'
+                error: error instanceof Error ? error.message : "Registration failed",
             };
         }
     }
@@ -78,54 +81,54 @@ class AuthService {
             const { email, password } = data;
             const { data: authData, error: authError } = await supabase_1.supabaseAdmin.auth.signInWithPassword({
                 email,
-                password
+                password,
             });
             if (authError) {
-                console.error('Supabase login error:', authError);
-                if (authError.message.includes('Invalid login credentials')) {
-                    throw new Error('Invalid email or password');
+                console.error("Supabase login error:", authError);
+                if (authError.message.includes("Invalid login credentials")) {
+                    throw new Error("Invalid email or password");
                 }
                 throw authError;
             }
             if (!authData.user) {
-                throw new Error('Invalid credentials');
+                throw new Error("Invalid credentials");
             }
             let userProfile = await this.getUser(authData.user.id);
             if (!userProfile) {
                 const { data: newProfile } = await supabase_1.supabaseAdmin
-                    .from('users')
+                    .from("users")
                     .insert({
                     id: authData.user.id,
                     email: authData.user.email,
                     email_verified: authData.user.email_confirmed_at !== null,
-                    first_name: authData.user.user_metadata?.first_name || '',
-                    last_name: authData.user.user_metadata?.last_name || '',
-                    phone: authData.user.user_metadata?.phone || '',
-                    status: 'active',
-                    role: 'customer'
+                    first_name: authData.user.user_metadata?.first_name || "",
+                    last_name: authData.user.user_metadata?.last_name || "",
+                    phone: authData.user.user_metadata?.phone || "",
+                    status: "active",
+                    role: "customer",
                 })
                     .select()
                     .single();
                 userProfile = newProfile;
             }
             await supabase_1.supabaseAdmin
-                .from('users')
+                .from("users")
                 .update({
                 last_login_at: new Date().toISOString(),
-                email_verified: authData.user.email_confirmed_at !== null
+                email_verified: authData.user.email_confirmed_at !== null,
             })
-                .eq('id', authData.user.id);
+                .eq("id", authData.user.id);
             const token = this.generateToken(authData.user.id);
             return {
                 success: true,
                 user: userProfile || undefined,
-                token
+                token,
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Login failed'
+                error: error instanceof Error ? error.message : "Login failed",
             };
         }
     }
@@ -137,24 +140,24 @@ class AuthService {
             }
             return {
                 success: true,
-                message: 'Logged out successfully'
+                message: "Logged out successfully",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Logout failed'
+                error: error instanceof Error ? error.message : "Logout failed",
             };
         }
     }
     async verifyToken(token) {
         try {
             const decoded = jsonwebtoken_1.default.verify(token, this.jwtSecret);
-            console.log('Token verified successfully for userId:', decoded.userId);
+            console.log("Token verified successfully for userId:", decoded.userId);
             return { valid: true, userId: decoded.userId };
         }
         catch (error) {
-            console.error('Token verification failed:', error);
+            console.error("Token verification failed:", error);
             return { valid: false };
         }
     }
@@ -166,33 +169,33 @@ class AuthService {
                     id: authUser.user.id,
                     email: authUser.user.email,
                     email_verified: authUser.user.email_confirmed_at !== null,
-                    first_name: authUser.user.user_metadata?.first_name || '',
-                    last_name: authUser.user.user_metadata?.last_name || '',
+                    first_name: authUser.user.user_metadata?.first_name || "",
+                    last_name: authUser.user.user_metadata?.last_name || "",
                     phone: authUser.user.phone || authUser.user.user_metadata?.phone || null,
-                    status: 'active',
-                    role: authUser.user.user_metadata?.role || 'customer',
+                    status: "active",
+                    role: authUser.user.user_metadata?.role || "customer",
                     created_at: authUser.user.created_at,
                     updated_at: authUser.user.updated_at,
                     last_login_at: authUser.user.last_sign_in_at,
-                    metadata: authUser.user.user_metadata || {}
+                    metadata: authUser.user.user_metadata || {},
                 };
-                console.log('User fetched from auth.users:', user.email);
+                console.log("User fetched from auth.users:", user.email);
                 return user;
             }
-            console.error('Failed to fetch user from auth.users:', authError);
+            console.error("Failed to fetch user from auth.users:", authError);
             return null;
         }
         catch (err) {
-            console.error('Exception fetching user:', err);
+            console.error("Exception fetching user:", err);
             return null;
         }
     }
     async updateUser(userId, updates) {
         try {
             const { data, error } = await supabase_1.supabaseAdmin
-                .from('users')
+                .from("users")
                 .update(updates)
-                .eq('id', userId)
+                .eq("id", userId)
                 .select()
                 .single();
             if (error) {
@@ -200,13 +203,13 @@ class AuthService {
             }
             return {
                 success: true,
-                user: data
+                user: data,
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Update failed'
+                error: error instanceof Error ? error.message : "Update failed",
             };
         }
     }
@@ -220,57 +223,59 @@ class AuthService {
             }
             return {
                 success: true,
-                message: 'If an account exists with this email, you will receive password reset instructions.'
+                message: "If an account exists with this email, you will receive password reset instructions.",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Password reset failed'
+                error: error instanceof Error ? error.message : "Password reset failed",
             };
         }
     }
     async resetPassword(newPassword) {
         try {
             const { error } = await supabase_1.supabase.auth.updateUser({
-                password: newPassword
+                password: newPassword,
             });
             if (error) {
                 throw error;
             }
             return {
                 success: true,
-                message: 'Password has been reset successfully'
+                message: "Password has been reset successfully",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Password reset failed'
+                error: error instanceof Error ? error.message : "Password reset failed",
             };
         }
     }
     async resendVerificationEmail(email) {
         try {
             const { error } = await supabase_1.supabase.auth.resend({
-                type: 'signup',
+                type: "signup",
                 email,
                 options: {
-                    emailRedirectTo: `${this.frontendUrl}/auth-success.html`
-                }
+                    emailRedirectTo: `${this.frontendUrl}/auth-success.html`,
+                },
             });
             if (error) {
                 throw error;
             }
             return {
                 success: true,
-                message: 'Verification email has been resent'
+                message: "Verification email has been resent",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to resend verification email'
+                error: error instanceof Error
+                    ? error.message
+                    : "Failed to resend verification email",
             };
         }
     }
@@ -279,49 +284,57 @@ class AuthService {
             const { data, error } = await supabase_1.supabase.auth.verifyOtp({
                 email,
                 token: otp,
-                type: 'email'
+                type: "email",
             });
             if (error) {
                 throw error;
             }
             if (data.user) {
                 await supabase_1.supabaseAdmin
-                    .from('users')
+                    .from("users")
                     .update({
                     email_verified: true,
-                    status: 'active'
+                    status: "active",
                 })
-                    .eq('id', data.user.id);
+                    .eq("id", data.user.id);
                 const userProfile = await this.getUser(data.user.id);
                 const token = this.generateToken(data.user.id);
                 return {
                     success: true,
                     user: userProfile || undefined,
                     token,
-                    message: 'Email verified successfully'
+                    message: "Email verified successfully",
                 };
             }
             return {
                 success: false,
-                error: 'Invalid OTP'
+                error: "Invalid OTP",
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'OTP verification failed'
+                error: error instanceof Error ? error.message : "OTP verification failed",
             };
         }
     }
     async googleAuth(redirectUrl) {
         try {
             const finalRedirectUrl = redirectUrl || `${this.frontendUrl}/auth-callback.html`;
+            console.log('AuthService.googleAuth Debug:', {
+                providedRedirectUrl: redirectUrl,
+                thisFrontendUrl: this.frontendUrl,
+                finalRedirectUrl,
+                envFrontendUrl: process.env.FRONTEND_URL,
+                envVercelUrl: process.env.VERCEL_URL,
+                envNodeEnv: process.env.NODE_ENV
+            });
             const { data, error } = await supabase_1.supabase.auth.signInWithOAuth({
-                provider: 'google',
+                provider: "google",
                 options: {
                     redirectTo: finalRedirectUrl,
-                    scopes: 'email profile'
-                }
+                    scopes: "email profile",
+                },
             });
             if (error) {
                 throw error;
@@ -329,47 +342,51 @@ class AuthService {
             return { url: data.url };
         }
         catch (error) {
-            throw new Error(error instanceof Error ? error.message : 'Google auth failed');
+            throw new Error(error instanceof Error ? error.message : "Google auth failed");
         }
     }
     async createOAuthProfile(userId, email, metadata) {
         try {
             const { data: userProfile, error: upsertError } = await supabase_1.supabaseAdmin
-                .from('users')
+                .from("users")
                 .upsert({
                 id: userId,
                 email: email,
                 email_verified: true,
-                first_name: metadata?.name?.split(' ')[0] || metadata?.given_name || '',
-                last_name: metadata?.name?.split(' ').slice(1).join(' ') || metadata?.family_name || '',
-                status: 'active',
-                role: 'customer',
+                first_name: metadata?.name?.split(" ")[0] || metadata?.given_name || "",
+                last_name: metadata?.name?.split(" ").slice(1).join(" ") ||
+                    metadata?.family_name ||
+                    "",
+                status: "active",
+                role: "customer",
                 last_login_at: new Date().toISOString(),
                 metadata: {
-                    auth_provider: 'google',
+                    auth_provider: "google",
                     avatar_url: metadata?.avatar_url || metadata?.picture || null,
-                    full_name: metadata?.name || metadata?.full_name || null
-                }
+                    full_name: metadata?.name || metadata?.full_name || null,
+                },
             }, {
-                onConflict: 'id'
+                onConflict: "id",
             })
                 .select()
                 .single();
             if (upsertError) {
-                console.error('Failed to upsert OAuth profile:', upsertError);
+                console.error("Failed to upsert OAuth profile:", upsertError);
                 throw upsertError;
             }
             const token = this.generateToken(userId);
             return {
                 success: true,
                 user: userProfile || undefined,
-                token
+                token,
             };
         }
         catch (error) {
             return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to create OAuth profile'
+                error: error instanceof Error
+                    ? error.message
+                    : "Failed to create OAuth profile",
             };
         }
     }

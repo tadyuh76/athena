@@ -1,4 +1,4 @@
-import { User } from '../types/database.types';
+import { User } from "../types/database.types";
 export interface RegisterData {
     email: string;
     password: string;
