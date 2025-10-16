@@ -132,14 +132,14 @@ class SiteHeader extends HTMLElement {
                     <a class="navbar-brand" href="/">ATHENA</a>
                     
                     <nav id="main-nav">
-                        <a href="/products">Shop</a>
-                        <a href="/collections">Collections</a>
-                        <a href="/craft">Our Craft</a>
-                        <a href="/sustainability">Sustainability</a>
+                        <a href="/products.html">Shop</a>
+                        <a href="/collections.html">Collections</a>
+                        <a href="/craft.html">Our Craft</a>
+                        <a href="/sustainability.html">Sustainability</a>
                     </nav>
 
                     <div class="nav-icons">
-                        <a href="/cart" id="cart-link">
+                        <a href="/cart.html" id="cart-link">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>

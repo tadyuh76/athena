@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Initialize navigation
 async function initializeNavigation() {
-  const user = authService.getCurrentUser();
+  const user = authService.getUser();
   const authSection = document.querySelector(".navbar-auth-section");
 
   if (user && authSection) {

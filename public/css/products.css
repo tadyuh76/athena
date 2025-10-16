@@ -24,9 +24,36 @@
   cursor: pointer;
 }
 
-.form-check-input:checked {
-  background-color: var(--success-green);
-  border-color: var(--success-green);
+.form-check-input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #ddd;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-check-input[type="radio"]:checked {
+  background-color: #000;
+  border-color: #000;
+  background-image: none;
+}
+
+.form-check-input[type="radio"]:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.form-check-input[type="checkbox"]:checked {
+  background-color: #000;
+  border-color: #000;
 }
 
 .price-inputs input {
@@ -482,4 +509,105 @@ body {
     .hero-title {
         font-size: 2.5rem;
     }
+}
+
+/* Skeleton Loaders */
+.skeleton {
+    animation: skeleton-loading 1s linear infinite alternate;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-card {
+    border-radius: 8px;
+}
+
+.skeleton-image {
+    width: 100%;
+    padding-bottom: 133.33%;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-text {
+    height: 16px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.skeleton-text-short {
+    width: 60%;
+}
+
+.skeleton-text-long {
+    width: 90%;
+}
+
+.skeleton-filter {
+    height: 20px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.skeleton-filter:last-child {
+    margin-bottom: 0;
+}
+
+/* Button loading state - prevent layout shift */
+.btn {
+    position: relative;
+    min-height: 38px;
+}
+
+.btn .spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    border-width: 0.15em;
+    vertical-align: middle;
+}
+
+/* Quick add button states */
+.btn-dark.adding {
+    pointer-events: none;
+}
+
+.btn-dark .spinner-border {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Filter section skeletons */
+.filter-section .skeleton-loader {
+    padding: 0.5rem 0;
+}
+
+.filter-section .skeleton-loader .skeleton-filter {
+    height: 18px;
+    border-radius: 9px;
+    margin-bottom: 12px;
+}
+
+.filter-section .skeleton-loader .skeleton-filter:nth-child(1) {
+    width: 80%;
+}
+
+.filter-section .skeleton-loader .skeleton-filter:nth-child(2) {
+    width: 65%;
+}
+
+.filter-section .skeleton-filter:nth-child(3) {
+    width: 75%;
+}
+
+.filter-section .skeleton-loader .skeleton-filter:nth-child(4) {
+    width: 70%;
 }

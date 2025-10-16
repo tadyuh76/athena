@@ -92,14 +92,14 @@ class AuthController {
                 }
             }
             const redirectUrl = `${frontendUrl}/auth-callback.html`;
-            console.log('Google Auth Debug:', {
+            console.log("Google Auth Debug:", {
                 frontendUrl,
                 redirectUrl,
                 envFrontendUrl: process.env.FRONTEND_URL,
                 vercelUrl: process.env.VERCEL_URL,
                 referer: req.headers.referer,
                 origin: req.headers.origin,
-                host: req.headers.host
+                host: req.headers.host,
             });
             const { url } = await this.authService.googleAuth(redirectUrl);
             res.writeHead(302, { Location: url });

@@ -15,13 +15,18 @@ export class CartService {
   }
 
   async makeRequest(endpoint, method = 'GET', body = null) {
+    console.log('[CartService] Making request:', { endpoint, method, body });
+
     const headers = {
       'Content-Type': 'application/json',
     };
 
     const token = localStorage.getItem('authToken');
     if (token) {
+      console.log('[CartService] Using auth token');
       headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.log('[CartService] No auth token found');
     }
 
     const options = {
@@ -33,24 +38,33 @@ export class CartService {
       options.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-    return await response.json();
+    const url = `${this.baseUrl}${endpoint}`;
+    console.log('[CartService] Fetching:', url);
+    const response = await fetch(url, options);
+    console.log('[CartService] Response status:', response.status);
+    const data = await response.json();
+    console.log('[CartService] Response data:', data);
+    return data;
   }
 
   async getCart() {
     try {
+      console.log('[CartService.getCart] Called');
       // Only get cart for authenticated users
       if (!localStorage.getItem('authToken')) {
+        console.log('[CartService.getCart] No auth token, returning empty cart');
         this.cart = { id: null, items: [] };
         this.updateCartBadge();
         return this.cart;
       }
 
+      console.log('[CartService.getCart] Fetching cart from API...');
       this.cart = await this.makeRequest('/cart');
+      console.log('[CartService.getCart] Cart received:', { itemCount: this.cart?.items?.length || 0 });
       this.updateCartBadge();
       return this.cart;
     } catch (error) {
-      console.error('Failed to get cart:', error);
+      console.error('[CartService.getCart] Error:', error);
       // Create empty cart if API fails
       this.cart = { id: null, items: [] };
       this.updateCartBadge();
@@ -59,9 +73,12 @@ export class CartService {
   }
 
   async addItem(productId, variantId, quantity = 1) {
+    console.log('[CartService.addItem] Called with:', { productId, variantId, quantity });
+
     // Require authentication for cart operations
     const authToken = localStorage.getItem('authToken');
     if (!authToken) {
+      console.error('[CartService.addItem] No auth token found');
       throw new Error('Authentication required to add items to cart');
     }
 
@@ -72,13 +89,16 @@ export class CartService {
         quantity: quantity
       };
 
+      console.log('[CartService.addItem] Sending request to add item...');
       const result = await this.makeRequest('/cart/items', 'POST', body);
+      console.log('[CartService.addItem] Item added successfully:', result);
 
+      console.log('[CartService.addItem] Refreshing cart...');
       await this.getCart(); // Refresh cart
       this.showNotification('Added to cart');
       return result;
     } catch (error) {
-      console.error('Failed to add item to cart:', error);
+      console.error('[CartService.addItem] Error:', error);
       throw error;
     }
   }
