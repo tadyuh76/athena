@@ -6,6 +6,7 @@ const AuthController_1 = require("../controllers/AuthController");
 const ProductController_1 = require("../controllers/ProductController");
 const CartController_1 = require("../controllers/CartController");
 const WishlistController_1 = require("../controllers/WishlistController");
+const ReviewController_1 = require("../controllers/ReviewController");
 const request_handler_1 = require("../utils/request-handler");
 function setupRoutes() {
     const router = new Router_1.Router();
@@ -13,6 +14,7 @@ function setupRoutes() {
     const productController = new ProductController_1.ProductController();
     const cartController = new CartController_1.CartController();
     const wishlistController = new WishlistController_1.WishlistController();
+    const reviewController = new ReviewController_1.ReviewController();
     router.post('/api/auth/register', (req, res) => authController.register(req, res));
     router.post('/api/auth/login', (req, res) => authController.login(req, res));
     router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router_1.Router.requireAuth]);
@@ -41,6 +43,14 @@ function setupRoutes() {
     router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router_1.Router.requireAuth]);
     router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
+    router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router_1.Router.requireAuth]);
+    router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
+    router.post('/api/reviews', (req, res) => reviewController.createReview(req, res), [Router_1.Router.requireAuth]);
+    router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
     router.get('/api/health', async (_req, res) => {
         (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     });

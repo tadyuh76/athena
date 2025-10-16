@@ -3,15 +3,17 @@ import { AuthController } from '../controllers/AuthController';
 import { ProductController } from '../controllers/ProductController';
 import { CartController } from '../controllers/CartController';
 import { WishlistController } from '../controllers/WishlistController';
+import { ReviewController } from '../controllers/ReviewController';
 import { sendJSON } from '../utils/request-handler';
 
 export function setupRoutes(): Router {
   const router = new Router();
-  
+
   const authController = new AuthController();
   const productController = new ProductController();
   const cartController = new CartController();
   const wishlistController = new WishlistController();
+  const reviewController = new ReviewController();
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -48,6 +50,16 @@ export function setupRoutes(): Router {
   router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router.requireAuth]);
   router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router.requireAuth]);
   router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
+
+  // Review routes
+  router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
+  router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router.requireAuth]);
+  router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router.requireAuth]);
+  router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
+  router.post('/api/reviews', (req, res) => reviewController.createReview(req, res), [Router.requireAuth]);
+  router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router.requireAuth]);
+  router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router.requireAuth]);
+  router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
 
   // Health check
   router.get('/api/health', async (_req, res) => {

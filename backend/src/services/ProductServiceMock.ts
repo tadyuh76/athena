@@ -1,6 +1,6 @@
 // Mock ProductService for when Supabase is unavailable
 export class ProductServiceMock {
-  async getProducts(filter: any = {}, page: number = 1, limit: number = 20) {
+  async getProducts(_filter: any = {}, page: number = 1, _limit: number = 20) {
     const mockProducts = [
       {
         id: '1',

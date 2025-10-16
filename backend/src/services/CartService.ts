@@ -40,7 +40,7 @@ export class CartService {
 
       let query = supabase.from("cart_items").select(`
           *,
-          product:products(*),
+          product:products(*, images:product_images(*)),
           variant:product_variants(*)
         `);
 

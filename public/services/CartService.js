@@ -93,9 +93,7 @@ export class CartService {
       const result = await this.makeRequest('/cart/items', 'POST', body);
       console.log('[CartService.addItem] Item added successfully:', result);
 
-      console.log('[CartService.addItem] Refreshing cart...');
-      await this.getCart(); // Refresh cart
-      this.showNotification('Added to cart');
+      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return result;
     } catch (error) {
       console.error('[CartService.addItem] Error:', error);
@@ -115,7 +113,7 @@ export class CartService {
         quantity: quantity
       });
 
-      await this.getCart(); // Refresh cart
+      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return result;
     } catch (error) {
       console.error('Failed to update item quantity:', error);
@@ -132,8 +130,7 @@ export class CartService {
 
     try {
       await this.makeRequest(`/cart/items/${itemId}`, 'DELETE');
-      await this.getCart(); // Refresh cart
-      this.showNotification('Removed from cart');
+      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return true;
     } catch (error) {
       console.error('Failed to remove item:', error);

@@ -2,12 +2,15 @@ import { AuthService } from "/services/AuthService.js";
 import { ProductService } from "/services/ProductService.js";
 import { CartService } from "/services/CartService.js";
 import { WishlistService } from "/services/WishlistService.js";
+import { ReviewService } from "/services/ReviewService.js";
+import { Dialog } from "/js/dialog.js";
 
 // Initialize services
 const authService = new AuthService();
 const productService = new ProductService();
 const cartService = new CartService();
 const wishlistService = new WishlistService();
+const reviewService = new ReviewService();
 
 // State
 let currentProduct = null;
@@ -16,6 +19,9 @@ let quantity = 1;
 let isInWishlist = false;
 let wishlistItemId = null;
 let isAddingToCart = false;
+let currentReviews = null;
+let selectedRating = 0;
+let reviewModal = null;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
@@ -28,7 +34,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (authService.isAuthenticated()) {
       await checkWishlistStatus(productId);
     }
+    await loadReviews(productId);
     await loadRelatedProducts();
+    initializeReviewModal();
   } else {
     window.location.href = "/products.html";
   }
@@ -678,3 +686,355 @@ function showToast(message, type = 'info') {
     toast.remove();
   });
 }
+
+// =============================================
+// REVIEWS FUNCTIONALITY
+// =============================================
+
+// Load reviews for the current product
+async function loadReviews(productId) {
+  const container = document.getElementById('reviewsContainer');
+  if (!container) return;
+
+  try {
+    const data = await reviewService.getProductReviews(productId, 1, 10);
+    currentReviews = data;
+
+    container.innerHTML = renderReviewsSection(data);
+  } catch (error) {
+    console.error('Failed to load reviews:', error);
+    container.innerHTML = `
+      <div class="alert alert-danger">
+        Failed to load reviews. Please try again later.
+      </div>
+    `;
+  }
+}
+
+// Render the entire reviews section
+function renderReviewsSection(data) {
+  const { reviews, stats } = data;
+  const hasReviews = reviews && reviews.length > 0;
+
+  return `
+    <div class="row">
+      <!-- Reviews Summary -->
+      <div class="col-lg-4 mb-4 mb-lg-0">
+        ${renderReviewsSummary(stats)}
+      </div>
+
+      <!-- Reviews List -->
+      <div class="col-lg-8">
+        ${renderReviewsList(reviews, stats)}
+      </div>
+    </div>
+  `;
+}
+
+// Render reviews summary sidebar
+function renderReviewsSummary(stats) {
+  const { averageRating, totalReviews, ratingDistribution } = stats;
+
+  return `
+    <div class="reviews-summary card border-0 shadow-sm p-4">
+      <div class="text-center mb-4">
+        <div class="display-4 fw-light mb-2">${averageRating.toFixed(1)}</div>
+        <div class="mb-2">
+          ${reviewService.renderStars(averageRating)}
+        </div>
+        <div class="text-muted small">Based on ${totalReviews} ${totalReviews === 1 ? 'review' : 'reviews'}</div>
+      </div>
+
+      <!-- Rating Distribution -->
+      <div class="rating-distribution mb-4">
+        ${[5, 4, 3, 2, 1].map(rating => {
+          const count = ratingDistribution[rating] || 0;
+          const percentage = totalReviews > 0 ? (count / totalReviews * 100) : 0;
+          return `
+            <div class="d-flex align-items-center mb-2 small">
+              <span class="me-2" style="min-width: 60px;">${rating} stars</span>
+              <div class="progress flex-grow-1" style="height: 8px;">
+                <div class="progress-bar bg-warning" role="progressbar"
+                     style="width: ${percentage}%"
+                     aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <span class="ms-2 text-muted" style="min-width: 35px;">${count}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      <!-- Write Review Button -->
+      ${authService.isAuthenticated() ? `
+        <button class="btn btn-dark w-100" onclick="window.openReviewModal()">
+          <i class="bi bi-pencil-square me-2"></i>Write a Review
+        </button>
+      ` : `
+        <a href="/login.html?redirect=${encodeURIComponent(window.location.href)}"
+           class="btn btn-dark w-100">
+          <i class="bi bi-pencil-square me-2"></i>Sign in to Write a Review
+        </a>
+      `}
+    </div>
+  `;
+}
+
+// Render list of reviews
+function renderReviewsList(reviews, stats) {
+  if (!reviews || reviews.length === 0) {
+    return `
+      <div class="text-center py-5">
+        <i class="bi bi-chat-quote display-1 text-muted mb-3"></i>
+        <h5 class="text-muted">No reviews yet</h5>
+        <p class="text-muted">Be the first to share your experience!</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="reviews-list">
+      ${reviews.map(review => renderReviewCard(review)).join('')}
+    </div>
+  `;
+}
+
+// Render a single review card
+function renderReviewCard(review) {
+  const userName = review.user
+    ? `${review.user.first_name || ''} ${review.user.last_name || ''}`.trim() || 'Anonymous'
+    : 'Anonymous';
+  const userInitials = review.user
+    ? reviewService.getInitials(review.user.first_name, review.user.last_name)
+    : '??';
+  const avatarUrl = review.user?.avatar_url;
+
+  return `
+    <div class="review-card card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex align-items-start mb-3">
+          <!-- Avatar -->
+          <div class="review-avatar me-3">
+            ${avatarUrl ? `
+              <img src="${avatarUrl}" alt="${userName}" class="rounded-circle"
+                   style="width: 48px; height: 48px; object-fit: cover;">
+            ` : `
+              <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center"
+                   style="width: 48px; height: 48px; background-color: var(--color-accent); color: white; font-weight: 500;">
+                ${userInitials}
+              </div>
+            `}
+          </div>
+
+          <!-- Review Header -->
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h6 class="mb-1">${userName}</h6>
+                <div class="mb-1">
+                  ${reviewService.renderStars(review.rating)}
+                </div>
+              </div>
+              <span class="text-muted small">${reviewService.formatDate(review.created_at)}</span>
+            </div>
+
+            ${review.is_verified_purchase ? `
+              <span class="badge bg-success-subtle text-success small mb-2">
+                <i class="bi bi-patch-check-fill me-1"></i>Verified Purchase
+              </span>
+            ` : ''}
+
+            <!-- Review Title -->
+            ${review.title ? `
+              <h6 class="fw-semibold mb-2">${review.title}</h6>
+            ` : ''}
+
+            <!-- Review Text -->
+            ${review.review ? `
+              <p class="mb-3">${review.review}</p>
+            ` : ''}
+
+            <!-- Review Actions -->
+            <div class="d-flex gap-3 align-items-center">
+              <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none"
+                      onclick="window.markReviewHelpful('${review.id}')">
+                <i class="bi bi-hand-thumbs-up me-1"></i>
+                Helpful ${review.helpful_count > 0 ? `(${review.helpful_count})` : ''}
+              </button>
+
+              ${authService.isAuthenticated() && authService.user?.id === review.user_id ? `
+                <button class="btn btn-sm btn-link text-danger p-0 text-decoration-none"
+                        onclick="window.deleteReview('${review.id}')">
+                  <i class="bi bi-trash me-1"></i>Delete
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Initialize review modal
+function initializeReviewModal() {
+  const modalEl = document.getElementById('reviewModal');
+  if (!modalEl) return;
+
+  reviewModal = new bootstrap.Modal(modalEl);
+
+  // Setup rating input
+  const ratingStars = document.querySelectorAll('.rating-star');
+  ratingStars.forEach(star => {
+    star.addEventListener('click', () => {
+      const rating = parseInt(star.dataset.rating);
+      setRating(rating);
+    });
+
+    star.addEventListener('mouseenter', () => {
+      const rating = parseInt(star.dataset.rating);
+      highlightStars(rating);
+    });
+  });
+
+  document.getElementById('ratingInput').addEventListener('mouseleave', () => {
+    highlightStars(selectedRating);
+  });
+
+  // Setup form submission
+  document.getElementById('submitReviewBtn').addEventListener('click', submitReview);
+
+  // Reset form when modal is closed
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    resetReviewForm();
+  });
+}
+
+// Set rating value
+function setRating(rating) {
+  selectedRating = rating;
+  document.getElementById('ratingValue').value = rating;
+  highlightStars(rating);
+}
+
+// Highlight stars up to rating
+function highlightStars(rating) {
+  const stars = document.querySelectorAll('.rating-star');
+  stars.forEach((star, index) => {
+    if (index < rating) {
+      star.classList.remove('bi-star');
+      star.classList.add('bi-star-fill', 'text-warning');
+    } else {
+      star.classList.remove('bi-star-fill', 'text-warning');
+      star.classList.add('bi-star');
+    }
+  });
+}
+
+// Open review modal
+window.openReviewModal = async function() {
+  if (!authService.isAuthenticated()) {
+    showToast('Please sign in to write a review', 'warning');
+    setTimeout(() => {
+      window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.href);
+    }, 1500);
+    return;
+  }
+
+  // Check if user can review
+  try {
+    const eligibility = await reviewService.checkReviewEligibility(currentProduct.id);
+    if (!eligibility.canReview) {
+      showToast(eligibility.reason || 'You cannot review this product', 'warning');
+      return;
+    }
+
+    reviewModal.show();
+  } catch (error) {
+    console.error('Error checking review eligibility:', error);
+    showToast('Failed to check review eligibility', 'danger');
+  }
+};
+
+// Submit review
+async function submitReview() {
+  const rating = parseInt(document.getElementById('ratingValue').value);
+  const title = document.getElementById('reviewTitle').value.trim();
+  const reviewText = document.getElementById('reviewText').value.trim();
+
+  if (!rating || rating < 1 || rating > 5) {
+    showToast('Please select a rating', 'warning');
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitReviewBtn');
+  const originalText = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+
+  try {
+    await reviewService.createReview(currentProduct.id, rating, title, reviewText);
+
+    showToast('Review submitted successfully!', 'success');
+    reviewModal.hide();
+    resetReviewForm();
+
+    // Reload reviews
+    await loadReviews(currentProduct.id);
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    showToast(error.message || 'Failed to submit review', 'danger');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalText;
+  }
+}
+
+// Reset review form
+function resetReviewForm() {
+  document.getElementById('reviewForm').reset();
+  document.getElementById('ratingValue').value = '';
+  selectedRating = 0;
+  highlightStars(0);
+}
+
+// Mark review as helpful
+window.markReviewHelpful = async function(reviewId) {
+  try {
+    await reviewService.markHelpful(reviewId);
+    showToast('Thank you for your feedback!', 'success');
+
+    // Reload reviews to show updated count
+    await loadReviews(currentProduct.id);
+  } catch (error) {
+    console.error('Error marking review as helpful:', error);
+    showToast('Failed to mark review as helpful', 'danger');
+  }
+};
+
+// Delete review
+window.deleteReview = async function(reviewId) {
+  const confirmed = await Dialog.confirm(
+    'Are you sure you want to delete this review? This action cannot be undone.',
+    {
+      title: 'Delete Review',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      confirmClass: 'btn-danger'
+    }
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await reviewService.deleteReview(reviewId);
+    showToast('Review deleted successfully', 'success');
+
+    // Reload reviews
+    await loadReviews(currentProduct.id);
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    showToast('Failed to delete review', 'danger');
+  }
+};

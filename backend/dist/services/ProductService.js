@@ -73,6 +73,7 @@ class ProductService {
             };
         }
         catch (error) {
+            console.error('Error in getProducts:', error);
             throw new Error(`Failed to get products: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
