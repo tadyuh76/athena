@@ -224,4 +224,17 @@ export interface ProductImage {
     sort_order: number;
     created_at: Date;
 }
+export interface ProductReview {
+    id: string;
+    product_id: string;
+    user_id: string;
+    order_id?: string;
+    rating: number;
+    title?: string;
+    review?: string;
+    is_verified_purchase: boolean;
+    helpful_count: number;
+    created_at: Date;
+    updated_at: Date;
+}
 //# sourceMappingURL=database.types.d.ts.map

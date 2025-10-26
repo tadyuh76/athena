@@ -321,13 +321,13 @@ class AuthService {
     async googleAuth(redirectUrl) {
         try {
             const finalRedirectUrl = redirectUrl || `${this.frontendUrl}/auth-callback.html`;
-            console.log('AuthService.googleAuth Debug:', {
+            console.log("AuthService.googleAuth Debug:", {
                 providedRedirectUrl: redirectUrl,
                 thisFrontendUrl: this.frontendUrl,
                 finalRedirectUrl,
                 envFrontendUrl: process.env.FRONTEND_URL,
                 envVercelUrl: process.env.VERCEL_URL,
-                envNodeEnv: process.env.NODE_ENV
+                envNodeEnv: process.env.NODE_ENV,
             });
             const { data, error } = await supabase_1.supabase.auth.signInWithOAuth({
                 provider: "google",

@@ -570,13 +570,7 @@ CREATE TABLE product_reviews (
   
   -- Review metadata
   is_verified_purchase BOOLEAN DEFAULT FALSE,
-  is_featured BOOLEAN DEFAULT FALSE,
   helpful_count INT DEFAULT 0,
-  
-  -- Moderation workflow
-  status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-  moderated_at TIMESTAMPTZ,
-  moderated_by UUID REFERENCES users(id) ON DELETE SET NULL,
   
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),

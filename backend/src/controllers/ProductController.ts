@@ -22,8 +22,10 @@ export class ProductController {
         in_stock: query.get('in_stock') === 'true',
         is_featured: query.get('featured') === 'true',
         search: query.get('search') || undefined,
-        status: (query.get('status') || 'active') as any
+        status: (query.get('status') || 'active') as any,
+        sort_by: (query.get('sort_by') || 'newest') as any
       };
+
       const result = await this.productService.getProducts(filter, page, limit);
       sendJSON(res, 200, result);
     } catch (error) {

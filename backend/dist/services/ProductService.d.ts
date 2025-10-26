@@ -8,6 +8,7 @@ export interface ProductFilter {
     is_featured?: boolean;
     search?: string;
     status?: 'draft' | 'active' | 'archived';
+    sort_by?: 'newest' | 'price_low' | 'price_high' | 'name' | 'popular';
 }
 export interface ProductWithVariants extends Product {
     variants?: ProductVariant[];

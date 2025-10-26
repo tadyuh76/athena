@@ -21,7 +21,8 @@ class ProductController {
                 in_stock: query.get('in_stock') === 'true',
                 is_featured: query.get('featured') === 'true',
                 search: query.get('search') || undefined,
-                status: (query.get('status') || 'active')
+                status: (query.get('status') || 'active'),
+                sort_by: (query.get('sort_by') || 'newest')
             };
             const result = await this.productService.getProducts(filter, page, limit);
             (0, request_handler_1.sendJSON)(res, 200, result);

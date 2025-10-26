@@ -7,59 +7,186 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="css/athena-common.css" rel="stylesheet">
-    <link href="css/products.css" rel="stylesheet">
+    <link href="/css/athena-common.css" rel="stylesheet">
+    <link href="/css/products.css" rel="stylesheet">
     <script src="/js/components.js"></script>
 </head>
 <body>
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;"></div>
+
     <!-- Site Header Component -->
     <site-header></site-header>
 
     <!-- Main Content -->
     <main style="padding-top: 80px;">
-        <div class="container">
-            <!-- Hero Section -->
-            <section class="hero-section">
-                <h1 class="hero-title">Exquisite essentials</h1>
-                <p class="hero-description">
-                    Precision-crafted garments designed for longevity. Each piece is a study in restraint—clean lines, architectural silhouettes, and materials chosen for their integrity.
-                </p>
-            </section>
-
-            <!-- Filters -->
-            <div class="filter-container">
-                <div class="d-flex justify-content-between align-items-center flex-wrap">
-                    <div>
-                        <button class="btn filter-btn">
-                            Collection <i class="bi bi-chevron-down ms-1"></i>
-                        </button>
-                        <button class="btn filter-btn">
-                            Material <i class="bi bi-chevron-down ms-1"></i>
-                        </button>
-                        <button class="btn filter-btn">
-                            Size <i class="bi bi-chevron-down ms-1"></i>
-                        </button>
-                    </div>
-                    <span class="product-count">6 pieces</span>
+        <div class="container py-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col">
+                    <h1 class="display-5 fw-light mb-2">Our Collection</h1>
+                    <p class="text-muted">Discover precision-crafted garments designed for longevity</p>
                 </div>
             </div>
 
-            <!-- Products Grid -->
-            <div class="product-grid" id="productsGrid">
-                <!-- Products will be loaded dynamically from database -->
-                <div class="text-center w-100 py-5">
-                    <div class="spinner-border text-secondary" role="status">
-                        <span class="visually-hidden">Loading products...</span>
+            <div class="row">
+                <!-- Sidebar Filters -->
+                <div class="col-lg-3 col-md-4 mb-4">
+                    <div class="filter-sidebar">
+                        <!-- Search -->
+                        <div class="filter-section mb-4">
+                            <h6 class="filter-title mb-3">Search</h6>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search products...">
+                                <button class="btn btn-outline-secondary" type="button" id="searchBtn">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Categories -->
+                        <div class="filter-section mb-4">
+                            <h6 class="filter-title mb-3">Categories</h6>
+                            <div id="categoryFilters">
+                                <div class="skeleton-loader">
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Collections -->
+                        <div class="filter-section mb-4">
+                            <h6 class="filter-title mb-3">Collections</h6>
+                            <div id="collectionFilters">
+                                <div class="skeleton-loader">
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                    <div class="skeleton skeleton-filter"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Price Range -->
+                        <div class="filter-section mb-4">
+                            <h6 class="filter-title mb-3">Price Range</h6>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" id="minPrice" placeholder="Min" min="0">
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control form-control-sm" id="maxPrice" placeholder="Max" min="0">
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-dark w-100 mt-2" id="applyPriceFilter">Apply</button>
+                        </div>
+
+                        <!-- Other Filters -->
+                        <div class="filter-section mb-4">
+                            <h6 class="filter-title mb-3">Availability</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="inStockFilter">
+                                <label class="form-check-label" for="inStockFilter">
+                                    In Stock Only
+                                </label>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" id="featuredFilter">
+                                <label class="form-check-label" for="featuredFilter">
+                                    Featured Products
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Clear Filters -->
+                        <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                            <i class="bi bi-x-circle me-2"></i>Clear All Filters
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Sustainability Message -->
-            <div class="sustainability-message">
-                <p class="sustainability-label">DESIGNED TO ENDURE</p>
-                <p class="sustainability-text">
-                    Every Athena garment is traceable—from fiber to finish. We obsess over impact so you can obsess over the fit.
-                </p>
+                <!-- Products Grid -->
+                <div class="col-lg-9 col-md-8">
+                    <!-- Toolbar -->
+                    <div class="products-toolbar mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span id="productCount" class="text-muted">Loading...</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm" id="sortBy" style="width: auto;">
+                                    <option value="newest">Newest First</option>
+                                    <option value="price_low">Price: Low to High</option>
+                                    <option value="price_high">Price: High to Low</option>
+                                    <option value="name">Name: A to Z</option>
+                                    <option value="popular">Most Popular</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="row g-4" id="productsGrid">
+                        <!-- Skeleton loaders will be injected by JS -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-6">
+                            <div class="skeleton-card">
+                                <div class="skeleton skeleton-image"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-long mb-2"></div>
+                                <div class="skeleton skeleton-text skeleton-text-short"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <nav aria-label="Products pagination" class="mt-5">
+                        <ul class="pagination justify-content-center" id="pagination"></ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </main>
@@ -68,82 +195,7 @@
     <site-footer></site-footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/config.js"></script>
-    <script type="module">
-        import { ProductService } from '/services/ProductService.js';
-        import { AuthService } from '/services/AuthService.js';
-        
-        const productService = new ProductService();
-        const authService = new AuthService();
-        
-        // Load products from database
-        async function loadProducts() {
-            const container = document.getElementById('productsGrid');
-            const countElement = document.querySelector('.product-count');
-            
-            try {
-                console.log('Loading products...');
-                const result = await productService.getProducts({}, 1, 12);
-                console.log('API result:', result);
-                
-                // Handle different possible response structures
-                const products = result.products || result.data || result || [];
-                const total = result.total || result.count || products.length;
-                
-                // Update product count
-                if (countElement) {
-                    countElement.textContent = `${total} pieces`;
-                }
-                
-                if (products.length === 0) {
-                    container.innerHTML = `
-                        <div class="text-center w-100 py-5">
-                            <p class="text-muted">No products available at the moment.</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                // Render products
-                container.innerHTML = products.map(product => {
-                    const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
-                    const imageUrl = primaryImage?.url || product.featured_image_url || '/images/placeholder-user.jpg';
-                    
-                    // Get collection name
-                    const collectionName = product.collection?.name || 'COLLECTION';
-                    
-                    // Get material or short description
-                    const material = product.material || product.short_description || '';
-                    
-                    return `
-                        <a href="/product-detail.html?id=${product.id}" class="product-card">
-                            <div class="product-image-container">
-                                <img src="${imageUrl}" alt="${product.name}" class="product-image">
-                            </div>
-                            <div class="product-info">
-                                <p class="product-collection">${collectionName.toUpperCase()}</p>
-                                <h3 class="product-name">${product.name}</h3>
-                                <p class="product-material">${material}</p>
-                                <p class="product-price">$${product.base_price}</p>
-                            </div>
-                        </a>
-                    `;
-                }).join('');
-                
-            } catch (error) {
-                console.error('Failed to load products:', error);
-                console.error('Error details:', error.message, error.stack);
-                container.innerHTML = `
-                    <div class="text-center w-100 py-5">
-                        <p class="text-danger">Failed to load products. Please try again later.</p>
-                        <small class="text-muted">Error: ${error.message}</small>
-                    </div>
-                `;
-            }
-        }
-        
-        // Load products on page load
-        document.addEventListener('DOMContentLoaded', loadProducts);
-    </script>
+    <script src="/js/config.js"></script>
+    <script type="module" src="/js/products.js"></script>
 </body>
 </html>

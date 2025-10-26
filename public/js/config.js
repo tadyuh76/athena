@@ -6,7 +6,8 @@ const ENV = {
   // Get the base URL dynamically
   getBaseUrl: function() {
     if (this.isLocal) {
-      return `${window.location.protocol}//${window.location.hostname}:${window.location.port || 3000}`;
+      // Backend runs on port 3001 in development
+      return `${window.location.protocol}//${window.location.hostname}:3001`;
     }
     // In production, use the current origin
     return window.location.origin;

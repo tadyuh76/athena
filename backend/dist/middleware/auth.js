@@ -39,5 +39,6 @@ async function requireAuth(req, res) {
 }
 async function optionalAuth(req) {
     await authenticateToken(req);
+    return true;
 }
 //# sourceMappingURL=auth.js.map

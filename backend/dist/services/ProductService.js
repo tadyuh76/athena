@@ -14,8 +14,25 @@ class ProductService {
           category:product_categories(*),
           collection:product_collections(*)
         `, { count: 'exact' })
-                .eq('status', filter.status || 'active')
-                .order('created_at', { ascending: false });
+                .eq('status', filter.status || 'active');
+            switch (filter.sort_by) {
+                case 'price_low':
+                    query = query.order('base_price', { ascending: true });
+                    break;
+                case 'price_high':
+                    query = query.order('base_price', { ascending: false });
+                    break;
+                case 'name':
+                    query = query.order('name', { ascending: true });
+                    break;
+                case 'popular':
+                    query = query.order('view_count', { ascending: false });
+                    break;
+                case 'newest':
+                default:
+                    query = query.order('created_at', { ascending: false });
+                    break;
+            }
             if (filter.category_id) {
                 query = query.eq('category_id', filter.category_id);
             }
@@ -56,6 +73,7 @@ class ProductService {
             };
         }
         catch (error) {
+            console.error('Error in getProducts:', error);
             throw new Error(`Failed to get products: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }

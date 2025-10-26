@@ -1,6 +1,7 @@
 import { AuthService } from "/services/AuthService.js";
 import { CartService } from "/services/CartService.js";
 import { ProductService } from "/services/ProductService.js";
+import { Dialog } from "/js/dialog.js";
 
 // Initialize services
 const authService = new AuthService();
@@ -29,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // Initialize navigation
 async function initializeNavigation() {
-  const user = authService.getCurrentUser();
+  const user = authService.getUser();
   const authSection = document.querySelector(".navbar-auth-section");
 
   if (user && authSection) {
@@ -96,7 +97,10 @@ async function loadCart() {
     cart = await cartService.getCart();
     cartSummary = await cartService.getCartSummary();
 
-    loadingSpinner.style.display = "none";
+    // Hide spinner if it exists
+    if (loadingSpinner) {
+      loadingSpinner.style.display = "none";
+    }
 
     if (!cart || !cart.items || cart.items.length === 0) {
       renderEmptyCart();
@@ -104,9 +108,12 @@ async function loadCart() {
       renderCart();
     }
   } catch (error) {
-    loadingSpinner.style.display = "none";
+    // Hide spinner if it exists
+    if (loadingSpinner) {
+      loadingSpinner.style.display = "none";
+    }
     showError("Failed to load cart. Please refresh the page.");
-    throw error;
+    console.error("Failed to load cart:", error);
   }
 }
 
@@ -210,13 +217,15 @@ function renderCartItem(item) {
   const variant = item.variant;
   const isInStock = productService.getAvailableStock(variant) > 0;
 
+  // Get primary image or first image from images array
+  const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
+  const imageUrl = primaryImage?.url || product.featured_image_url || "/images/placeholder-user.jpg";
+
   return `
     <div class="cart-item" data-item-id="${item.id}">
       <div class="row align-items-center">
         <div class="col-md-2">
-          <img src="${
-            product.featured_image_url || "/images/placeholder-user.jpg"
-          }" 
+          <img src="${imageUrl}"
                alt="${product.name}" class="cart-item-image">
         </div>
         
@@ -305,19 +314,32 @@ window.updateQuantity = async function (itemId, newQuantity) {
 
 // Remove item from cart
 window.removeItem = async function (itemId) {
-  if (!confirm("Are you sure you want to remove this item from your cart?")) {
+  const confirmed = await Dialog.confirm(
+    "Are you sure you want to remove this item from your cart?",
+    {
+      title: "Remove Item",
+      confirmText: "Remove",
+      cancelText: "Cancel",
+      confirmClass: "btn-danger"
+    }
+  );
+
+  if (!confirmed) {
     return;
   }
 
   try {
     showLoading(itemId);
     await cartService.removeItem(itemId);
-    await loadCart(); // Refresh cart
-    await updateCartCount();
     showToast("Item removed from cart", "success");
+    // Refresh cart after showing success message
+    await loadCart();
+    await updateCartCount();
   } catch (error) {
     console.error("Failed to remove item:", error);
     showToast("Failed to remove item", "danger");
+    // Reload cart anyway to show current state
+    await loadCart();
   }
 };
 

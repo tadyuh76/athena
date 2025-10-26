@@ -31,25 +31,33 @@ export class CartService {
     sessionId?: string
   ): Promise<CartWithItems | null> {
     try {
+      console.log('[CartService.getCart] Called with userId:', userId, 'sessionId:', sessionId);
+
       if (!userId && !sessionId) {
         sessionId = uuidv4();
+        console.log('[CartService.getCart] Generated new sessionId:', sessionId);
       }
 
       let query = supabase.from("cart_items").select(`
           *,
-          product:products(*),
+          product:products(*, images:product_images(*)),
           variant:product_variants(*)
         `);
 
       if (userId) {
+        console.log('[CartService.getCart] Querying by userId:', userId);
         query = query.eq("user_id", userId);
       } else if (sessionId) {
+        console.log('[CartService.getCart] Querying by sessionId:', sessionId);
         query = query.eq("session_id", sessionId);
       }
 
+      console.log('[CartService.getCart] Executing Supabase query...');
       const { data, error } = await query;
+      console.log('[CartService.getCart] Query complete. Items found:', data?.length || 0);
 
       if (error) {
+        console.error('[CartService.getCart] Supabase error:', error);
         throw error;
       }
 
@@ -63,8 +71,10 @@ export class CartService {
         updated_at: data?.[0]?.updated_at || new Date().toISOString(),
       };
 
+      console.log('[CartService.getCart] Returning cart with', cart.items.length, 'items');
       return cart;
     } catch (error) {
+      console.error('[CartService.getCart] Error:', error);
       throw new Error(
         `Failed to get cart: ${
           error instanceof Error ? error.message : "Unknown error"
@@ -81,11 +91,15 @@ export class CartService {
     quantity: number = 1
   ): Promise<CartItem> {
     try {
+      console.log('[CartService.addItem] Called with:', { userId, sessionId, productId, variantId, quantity });
+
       if (!userId && !sessionId) {
         sessionId = uuidv4();
+        console.log('[CartService.addItem] Generated new sessionId:', sessionId);
       }
 
       // Check existing item
+      console.log('[CartService.addItem] Checking for existing item...');
       let existingQuery = supabase
         .from("cart_items")
         .select("*")
@@ -100,6 +114,7 @@ export class CartService {
       const { data: existing } = await existingQuery.single();
 
       if (existing) {
+        console.log('[CartService.addItem] Item already exists, updating quantity');
         // Update quantity if item exists
         return this.updateItemQuantity(
           existing.id,
@@ -108,6 +123,7 @@ export class CartService {
       }
 
       // Get product and variant details for pricing
+      console.log('[CartService.addItem] Fetching variant details...');
       const { data: variant } = await supabase
         .from("product_variants")
         .select("*, product:products(base_price)")
@@ -115,19 +131,25 @@ export class CartService {
         .single();
 
       if (!variant) {
+        console.error('[CartService.addItem] Variant not found:', variantId);
         throw new Error("Variant not found");
       }
+
+      console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
 
       const price = variant.price || variant.product?.base_price || 0;
 
       // Check inventory
       const available = variant.inventory_quantity - variant.reserved_quantity;
+      console.log('[CartService.addItem] Available inventory:', available);
       if (available < quantity) {
+        console.error('[CartService.addItem] Insufficient inventory');
         throw new Error(`Only ${available} items available`);
       }
 
       // Reserve inventory
       const reservationExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      console.log('[CartService.addItem] Adding item to cart...');
 
       // Add item to cart
       const { data, error } = await supabase
@@ -145,9 +167,11 @@ export class CartService {
         .single();
 
       if (error) {
+        console.error('[CartService.addItem] Error inserting cart item:', error);
         throw error;
       }
 
+      console.log('[CartService.addItem] Item added, updating reserved quantity...');
       // Update variant reserved quantity
       await supabaseAdmin
         .from("product_variants")
@@ -156,8 +180,10 @@ export class CartService {
         })
         .eq("id", variantId);
 
+      console.log('[CartService.addItem] Success! Cart item ID:', data.id);
       return data;
     } catch (error) {
+      console.error('[CartService.addItem] Error:', error);
       throw new Error(
         `Failed to add item to cart: ${
           error instanceof Error ? error.message : "Unknown error"
