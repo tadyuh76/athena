@@ -122,7 +122,12 @@
                     }
                     
                     // Redirect to account or original destination
-                    const redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
+                    const user = authService.getUser(); 
+                    let redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
+                    // THÊM LOGIC CHUYỂN HƯỚNG ADMIN
+                    if (user && (user.role === 'admin' || user.role === 'staff')) {
+                        redirect = '/admin.html'; // Chuyển hướng cứng đến Admin Dashboard
+                        }
                     window.location.href = redirect;
                 } else {
                     // Reset button state

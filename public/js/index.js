@@ -12,7 +12,7 @@ const wishlistService = new WishlistService();
 // Initialize navigation
 async function initializeNavigation() {
   // Check authentication status
-  const user = authService.getCurrentUser();
+  const user = authService.getUser();
   const authNav = document.getElementById("authNav");
 
   if (user && authNav) {

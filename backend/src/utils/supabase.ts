@@ -1,7 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 import path from 'path';
-
+dotenv.config();
 // Load .env from project root
 // Check if we're in src (development with tsx) or dist (production build)
 const isDev = __dirname.includes('/src/');

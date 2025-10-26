@@ -3,11 +3,9 @@ import { AuthController } from '../controllers/AuthController';
 import { ProductController } from '../controllers/ProductController';
 import { CartController } from '../controllers/CartController';
 import { WishlistController } from '../controllers/WishlistController';
-<<<<<<< HEAD
 import { OrderController } from '../controllers/OrderController';
-=======
+import { AdminController } from '../controllers/AdminController';
 import { ReviewController } from '../controllers/ReviewController';
->>>>>>> cf41885a264d352879efb00c4fe3b80e59e459f1
 import { sendJSON } from '../utils/request-handler';
 
 export function setupRoutes(): Router {
@@ -17,11 +15,9 @@ export function setupRoutes(): Router {
   const productController = new ProductController();
   const cartController = new CartController();
   const wishlistController = new WishlistController();
-<<<<<<< HEAD
   const orderController = new OrderController();
-=======
+  const adminController = new AdminController();
   const reviewController = new ReviewController();
->>>>>>> cf41885a264d352879efb00c4fe3b80e59e459f1
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -59,7 +55,6 @@ export function setupRoutes(): Router {
   router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router.requireAuth]);
   router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
 
-<<<<<<< HEAD
   // Order routes
   // CUSTOMER: Tạo order
   router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router.requireAuth]);
@@ -69,7 +64,11 @@ export function setupRoutes(): Router {
     (req, res) => orderController.getAllOrders(req, res), 
     [Router.requireRole(['admin', 'staff'])] // <--- CHỈ ADMIN hoặc STAFF MỚI ĐƯỢC TRUY CẬP
   );
-=======
+  router.get(
+    '/api/admin/summary', // ROUTE Dashboard Summary
+    (req, res) => adminController.getDashboardSummary(req, res), 
+    [Router.requireRole(['admin', 'staff'])]
+  );
   // Review routes
   router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
   router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router.requireAuth]);
@@ -79,7 +78,6 @@ export function setupRoutes(): Router {
   router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router.requireAuth]);
   router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router.requireAuth]);
   router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
->>>>>>> cf41885a264d352879efb00c4fe3b80e59e459f1
 
   // Health check
   router.get('/api/health', async (_req, res) => {

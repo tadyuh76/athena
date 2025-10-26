@@ -25,6 +25,21 @@ class SiteHeader extends HTMLElement {
                     border-bottom: 1px solid #e5e5e5;
                     height: 80px;
                 }
+                .switch-btn { /* Style cho nút chuyển đổi giao diện */
+                background: #0f4c2f; /* success-green */
+                color: white !important;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 0.75rem;
+                font-weight: 500;
+                text-decoration: none;
+                transition: background 0.3s ease;
+                }
+
+                .switch-btn:hover {
+                background: #1a1a1a; /* primary-dark */
+                color: white !important;
+                }    
 
                 .container {
                     max-width: 1280px;
@@ -158,18 +173,12 @@ class SiteHeader extends HTMLElement {
                     </nav>
 
                     <div class="nav-icons">
-                        <a href="/cart.html" id="cart-link">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="m1 1 4 4 1.68 8.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                            </svg>
+                        <div id="switch-container">
+                            </div> 
+                        
+                        <a href="/cart" id="cart-link">
                         </a>
                         <a href="#" id="auth-link">
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
                         </a>
                     </div>
 
@@ -285,12 +294,46 @@ class SiteHeader extends HTMLElement {
       };
       updateAuthIcon();
 
+      // Thêm hàm mới: Update nút chuyển đổi
+        const updateSwitchButton = () => {
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            const role = user?.role;
+            const switchContainer = this.shadowRoot.getElementById('switch-container');
+            const isCurrentlyAdmin = window.location.pathname.includes('/admin.html');
+
+            if (switchContainer) {
+                switchContainer.innerHTML = ''; // Xóa nội dung cũ
+            }
+            
+            // Chỉ hiển thị nút nếu user là Admin/Staff
+            if (role === 'admin' || role === 'staff') {
+                const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
+                const buttonText = isCurrentlyAdmin ? 'Đổi sang giao diện Khách hàng' : 'Đổi sang giao diện Admin';
+
+                if (switchContainer) {
+                    // Chèn nút chuyển đổi
+                    switchContainer.innerHTML = `
+                        <a href="${targetUrl}" class="switch-btn">
+                            <i class="bi bi-arrow-repeat"></i> ${buttonText}
+                        </a>
+                    `;
+                }
+            }
+        };
+        updateSwitchButton();
+
       // Listen for user data updates
       window.addEventListener("storage", (e) => {
-        if (e.key === "user") {
+        if (e.key === "user" || e.key === "authToken") {
           updateAuthIcon();
+          this.updateAuthIcon();
+          updateSwitchButton();
         }
       });
+
+      if (window.location.pathname.includes('/admin.html')) {
+        updateSwitchButton();
+        }
 
       // Add method to manually refresh auth icon
       this.updateAuthIcon = updateAuthIcon;

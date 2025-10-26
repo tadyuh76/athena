@@ -1,0 +1,107 @@
+:root {
+    --admin-primary: #1f2937; /* Primary Dark */
+    --admin-accent: #0f4c2f; /* Success Green */
+    --admin-light: #f9fafb;
+    --admin-font: 'Inter', sans-serif;
+    --admin-serif: 'Cormorant Garamond', serif;
+}
+
+body.admin-mode {
+    padding-top: 80px; /* Bù đắp cho header cố định */
+    background: var(--admin-light);
+    font-family: var(--admin-font);
+}
+
+/* Sidebar Navigation */
+.admin-sidebar {
+    position: fixed;
+    top: 80px;
+    bottom: 0;
+    left: 0;
+    width: 250px;
+    background: var(--admin-primary);
+    padding: 20px 0;
+    color: white;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 15px 20px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-menu a:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-menu a.active {
+    color: var(--admin-primary);
+    background: white;
+    font-weight: 600;
+    /* Dùng border-left để tạo điểm nhấn Admin */
+    border-left: 5px solid var(--admin-accent);
+}
+
+/* Main Content Area */
+.admin-main-content {
+    margin-left: 250px; /* Tạo khoảng trống cho sidebar */
+    padding: 30px;
+    min-height: calc(100vh - 80px); /* Đảm bảo chiều cao tối thiểu */
+}
+
+.admin-header h1 {
+    font-family: var(--admin-serif);
+    font-weight: 300;
+    color: var(--admin-primary);
+    margin-bottom: 30px;
+}
+
+/* Summary Cards (Dựa trên mẫu UI của bạn) */
+.summary-card {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--admin-accent);
+}
+
+.summary-card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--admin-primary);
+}
+
+.summary-card .label {
+    font-size: 0.9rem;
+    color: var(--admin-accent);
+    text-transform: uppercase;
+}
+
+/* Alert khi không có quyền */
+.admin-unauthorized {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--admin-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    text-align: center;
+}

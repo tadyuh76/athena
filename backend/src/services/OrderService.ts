@@ -30,4 +30,21 @@ export class OrderService {
             order_number: 'ATH-MOCK-001' 
         };
     }
+
+    // Phương thức mới: Lấy tổng số lượng đơn hàng (chỉ dành cho Admin)
+    async getOrderCount(): Promise<number> {
+        try {
+            // Sử dụng supabaseAdmin để lấy count tổng (không bị RLS hạn chế)
+            const { count, error } = await supabaseAdmin
+                .from('orders')
+                .select('*', { count: 'exact', head: true });
+
+            if (error) {
+                throw error;
+            }
+            return count || 0;
+        } catch (error) {
+            throw new Error(`Failed to get order count: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    }
 }
