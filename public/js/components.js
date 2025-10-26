@@ -43,8 +43,26 @@ class SiteHeader extends HTMLElement {
                     letter-spacing: -0.02em;
                     color: #1a1a1a;
                     text-decoration: none;
+                    
+                    /* Cấu hình FLEXBOX MỚI */
+                    display: inline-flex;
+                    flex-direction: column;
+                    line-height: 1;
                 }
 
+                /* CSS cho nhãn Admin/Staff */
+                .admin-label { 
+                    display: block;
+                    font-family: 'Inter', sans-serif;
+                    font-size: 0.65rem;
+                    font-weight: 500;
+                    letter-spacing: 0.2em;
+                    color: #0f4c2f; /* success-green */
+                    line-height: 1;
+                    margin-top: 3px; 
+                    text-transform: uppercase;
+                }
+                
                 nav {
                     display: flex;
                     gap: 3rem;
@@ -129,7 +147,8 @@ class SiteHeader extends HTMLElement {
 
             <header class="athena-header">
                 <div class="container">
-                    <a class="navbar-brand" href="/">ATHENA</a>
+                    <a class="navbar-brand navbar-brand-wrapper" href="/" id="athena-brand">
+                        </a>
                     
                     <nav id="main-nav">
                         <a href="/products">Shop</a>
@@ -162,6 +181,42 @@ class SiteHeader extends HTMLElement {
                 </div>
             </header>
         `;
+
+    this.updateNavbarBrand = function() {
+        const brandLink = this.shadowRoot.getElementById('athena-brand');
+        // Lấy thông tin người dùng từ Local Storage
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+        const role = user?.role; // 'admin', 'staff', hoặc 'customer'
+        
+        // HTML mặc định cho tên ATHENA (dùng style inline để giữ nguyên font)
+        const athenaNameHTML = `<span style="font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; font-weight: 300; letter-spacing: -0.02em; color: #1a1a1a;">ATHENA</span>`;
+        
+        if (brandLink) {
+            if (role && (role === 'admin' || role === 'staff')) {
+                const roleText = (role === 'admin' ? 'ADMIN' : 'STAFF');
+                
+                // Hiển thị 2 dòng
+                brandLink.innerHTML = `
+                    ${athenaNameHTML}
+                    <small class="admin-label">${roleText}</small>
+                `;
+            } else {
+                // Chỉ hiển thị 1 dòng
+                brandLink.innerHTML = athenaNameHTML;
+            }
+        }
+    }
+
+    // 1. Chạy hàm cập nhật Brand ngay lập tức khi component được tải
+    this.updateNavbarBrand(); 
+    
+    // 2. Lắng nghe sự kiện thay đổi Local Storage (khi đăng nhập/đăng xuất)
+    window.addEventListener("storage", (e) => {
+        if (e.key === "user" || e.key === "authToken") {
+            this.updateNavbarBrand();
+            this.updateAuthIcon(); // Gọi cả cập nhật icon
+        }
+    });
 
     // Add event listeners
     this.shadowRoot

@@ -68,3 +68,6 @@ echo "🎯 The application should now be accessible in your browser!"
 # Keep script running
 echo "Press Ctrl+C to stop all servers..."
 wait
+
+pkill -f "npm.*dev" 2>/dev/null || true
+pkill -f "node.*server.js" 2>/dev/null || true

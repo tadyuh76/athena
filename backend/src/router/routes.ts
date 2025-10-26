@@ -3,6 +3,7 @@ import { AuthController } from '../controllers/AuthController';
 import { ProductController } from '../controllers/ProductController';
 import { CartController } from '../controllers/CartController';
 import { WishlistController } from '../controllers/WishlistController';
+import { OrderController } from '../controllers/OrderController';
 import { sendJSON } from '../utils/request-handler';
 
 export function setupRoutes(): Router {
@@ -12,6 +13,7 @@ export function setupRoutes(): Router {
   const productController = new ProductController();
   const cartController = new CartController();
   const wishlistController = new WishlistController();
+  const orderController = new OrderController();
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -49,6 +51,16 @@ export function setupRoutes(): Router {
   router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router.requireAuth]);
   router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
 
+  // Order routes
+  // CUSTOMER: Tạo order
+  router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router.requireAuth]);
+  // ADMIN API - CHỈ ADMIN MỚI CÓ QUYỀN TRUY CẬP
+   router.get(
+    '/api/admin/orders', 
+    (req, res) => orderController.getAllOrders(req, res), 
+    [Router.requireRole(['admin', 'staff'])] // <--- CHỈ ADMIN hoặc STAFF MỚI ĐƯỢC TRUY CẬP
+  );
+
   // Health check
   router.get('/api/health', async (_req, res) => {
     sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
@@ -56,3 +68,4 @@ export function setupRoutes(): Router {
 
   return router;
 }
+

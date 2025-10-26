@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { AuthRequest, requireAuth, optionalAuth } from '../middleware/auth';
+import { AuthRequest, requireAuth, optionalAuth , requireRole } from '../middleware/auth';
 import { parseUrl, matchRoute, sendError } from '../utils/request-handler';
 
 export type RouteHandler = (req: IncomingMessage | AuthRequest, res: ServerResponse, params?: any) => Promise<void>;
@@ -67,4 +67,5 @@ export class Router {
 
   static requireAuth = requireAuth;
   static optionalAuth = optionalAuth;
+  static requireRole = requireRole;
 }
