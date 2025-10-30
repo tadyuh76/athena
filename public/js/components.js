@@ -173,12 +173,20 @@ class SiteHeader extends HTMLElement {
                     </nav>
 
                     <div class="nav-icons">
-                        <div id="switch-container">
-                            </div> 
+                        <div id="switch-container"></div> 
                         
                         <a href="/cart" id="cart-link">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="m1 1 4 4 1.68 8.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
                         </a>
                         <a href="#" id="auth-link">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
                         </a>
                     </div>
 
@@ -223,101 +231,137 @@ class SiteHeader extends HTMLElement {
     window.addEventListener("storage", (e) => {
         if (e.key === "user" || e.key === "authToken") {
             this.updateNavbarBrand();
-            this.updateAuthIcon(); // Gọi cả cập nhật icon
+            this.updateAuthIcon(); // Lệnh này sẽ gọi updateIconVisibility và Fix Display
+            updateCartCount();
         }
     });
 
+    // Hàm điều khiển hiển thị/ẩn Icons dựa trên Role
+    const updateIconVisibility = (role) => {
+        const cartLink = this.shadowRoot.getElementById('cart-link');
+        const authLink = this.shadowRoot.getElementById('auth-link');
+        const switchContainer = this.shadowRoot.getElementById('switch-container');
+        const isCurrentlyAdmin = window.location.pathname.includes('/admin.html');
+
+        // Mặc định: HIỆN Icons (cho Customer/Guest)
+        if (cartLink) { cartLink.style.display = 'flex'; }
+        if (authLink) { authLink.style.display = 'flex'; }
+        if (switchContainer) { switchContainer.style.display = 'none'; }
+
+        if (role === 'admin' || role === 'staff') {
+            const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
+            const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
+
+            if (switchContainer) {
+                // HIỆN Switch Container và nút
+                switchContainer.style.display = 'flex'; 
+                switchContainer.innerHTML = `
+                    <a href="${targetUrl}" class="switch-btn" style="background: #0f4c2f; color: white !important; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; text-decoration: none; transition: background 0.3s ease;">
+                        <i class="bi bi-arrow-repeat"></i> ${buttonText}
+                    </a>
+                `;
+            }
+        }
+    };
+    
     // Add event listeners
     this.shadowRoot
-      .getElementById("mobile-toggle")
-      ?.addEventListener("click", () => {
-        const nav = this.shadowRoot.getElementById("main-nav");
-        nav?.classList.toggle("active");
-      });
+        .getElementById("mobile-toggle")
+        ?.addEventListener("click", () => {
+            const nav = this.shadowRoot.getElementById("main-nav");
+            nav?.classList.toggle("active");
+        });
 
     // Auth link handler
     const authLink = this.shadowRoot.getElementById("auth-link");
     if (authLink) {
-      authLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        if (user) {
-          window.location.href = "/account.html";
-        } else {
-          window.location.href = "/login.html";
-        }
-      });
+        authLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            if (user) {
+                window.location.href = "/account.html";
+            } else {
+                window.location.href = "/login.html";
+            }
+        });
 
       // Update auth icon based on login status
       const updateAuthIcon = () => {
-        const user = JSON.parse(localStorage.getItem("user") || "null");
-        if (user) {
-          // Check if user has profile image - check multiple possible locations
-          const avatarUrl =
-            user.metadata?.avatar_url ||
-            user.metadata?.picture ||
-            user.profile_image_url;
-
-          if (avatarUrl) {
-            authLink.innerHTML = `
-                            <img src="${avatarUrl}" alt="Profile" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
-                        `;
-          } else {
-            // Use initials as fallback
-            const firstName = user.first_name || "";
-            const lastName = user.last_name || "";
-            let initials = "";
-
-            if (firstName && lastName) {
-              initials = (firstName[0] + lastName[0]).toUpperCase();
-            } else if (firstName) {
-              initials = firstName[0].toUpperCase();
-            } else if (user.name) {
-              initials = user.name
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .toUpperCase();
-            } else if (user.email) {
-              initials = user.email[0].toUpperCase();
+            const user = JSON.parse(localStorage.getItem("user") || "null");
+            
+            // 1. Áp dụng logic hiển thị Admin/Customer/Guest
+            updateIconVisibility(user?.role); 
+            
+            // 2. Chèn nội dung Icon
+            if (user) {
+                // User Đã đăng nhập: Hiện Avatar/Initials
+                const avatarUrl = user.metadata?.avatar_url || user.metadata?.picture || user.profile_image_url;
+                
+                if (avatarUrl) {
+                    authLink.innerHTML = `
+                        <img src="${avatarUrl}" alt="Profile" style="width: 22px; height: 22px; border-radius: 50%; object-fit: cover;">
+                    `;
+                } else {
+                    // Logic hiển thị Initials (giữ nguyên từ code gốc)
+                    const firstName = user.first_name || "";
+                    const lastName = user.last_name || "";
+                    let initials = (firstName && lastName) ? (firstName[0] + lastName[0]).toUpperCase() : (firstName || user.email)?.[0]?.toUpperCase() || "U";
+                    
+                    authLink.innerHTML = `
+                        <div style="width: 22px; height: 22px; border-radius: 50%; background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500;">
+                            ${initials}
+                        </div>
+                    `;
+                }
             } else {
-              initials = "U";
+                // User CHƯA Đăng nhập: Phục hồi Icon mặc định (User Icon SVG)
+                authLink.innerHTML = `
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                `;
             }
-
-            authLink.innerHTML = `
-                            <div style="width: 22px; height: 22px; border-radius: 50%; background: #1a1a1a; color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 500;">
-                                ${initials}
-                            </div>
-                        `;
-          }
-        }
-      };
-      updateAuthIcon();
-
-      // Thêm hàm mới: Update nút chuyển đổi
+        };
+        this.updateAuthIcon = updateAuthIcon;
+        updateAuthIcon();
+    }
+    
+        // Nút chuyển đổi Admin/Customer View
         const updateSwitchButton = () => {
             const user = JSON.parse(localStorage.getItem("user") || "null");
             const role = user?.role;
             const switchContainer = this.shadowRoot.getElementById('switch-container');
+            const cartLink = this.shadowRoot.getElementById('cart-link'); 
+            const authLink = this.shadowRoot.getElementById('auth-link'); 
             const isCurrentlyAdmin = window.location.pathname.includes('/admin.html');
 
-            if (switchContainer) {
-                switchContainer.innerHTML = ''; // Xóa nội dung cũ
+            // 1. THIẾT LẬP TRẠNG THÁI MẶC ĐỊNH CHO MỌI NGƯỜI DÙNG
+            if (switchContainer) { 
+                switchContainer.innerHTML = '';
+                switchContainer.style.display = 'none';
             }
-            
-            // Chỉ hiển thị nút nếu user là Admin/Staff
+            // CUSTOMER/GUEST: LUÔN THẤY ICONS
+            if (cartLink) { cartLink.style.display = 'flex'; } 
+            if (authLink) { authLink.style.display = 'flex'; }
+
+            // 2. LOGIC ADMIN/STAFF: GHI ĐÈ
             if (role === 'admin' || role === 'staff') {
                 const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
-                const buttonText = isCurrentlyAdmin ? 'Đổi sang giao diện Khách hàng' : 'Đổi sang giao diện Admin';
+                const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
 
                 if (switchContainer) {
-                    // Chèn nút chuyển đổi
+                    switchContainer.style.display = 'flex'; 
                     switchContainer.innerHTML = `
-                        <a href="${targetUrl}" class="switch-btn">
+                        <a href="${targetUrl}" class="switch-btn" style="background: #0f4c2f; color: white !important; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; text-decoration: none; transition: background 0.3s ease;">
                             <i class="bi bi-arrow-repeat"></i> ${buttonText}
                         </a>
                     `;
                 }
+                
+                // ẨN ICONS GỐC
+                if (cartLink) { cartLink.style.display = 'none'; } 
+                if (authLink) { authLink.style.display = 'none'; } 
             }
         };
         updateSwitchButton();
@@ -337,34 +381,43 @@ class SiteHeader extends HTMLElement {
 
       // Add method to manually refresh auth icon
       this.updateAuthIcon = updateAuthIcon;
-    }
+    
 
     // Update cart count if available
     const updateCartCount = () => {
-      const cartLink = this.shadowRoot.getElementById("cart-link");
-      if (cartLink) {
-        const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
-        const count = cartItems.reduce(
-          (sum, item) => sum + (item.quantity || 1),
-          0
-        );
+        const cartLink = this.shadowRoot.getElementById("cart-link");
+        if (cartLink) {
+            const cartItems = JSON.parse(localStorage.getItem("cart") || "[]");
+            const count = cartItems.reduce(
+                (sum, item) => sum + (item.quantity || 1),
+                0
+            );
+            
+            // Lấy hoặc tạo Badge
+            let existingBadge = cartLink.querySelector(".cart-badge");
 
-        if (count > 0) {
-          // Add badge to cart icon
-          const existingBadge = cartLink.querySelector(".cart-badge");
-          if (existingBadge) {
-            existingBadge.textContent = count;
-          } else {
-            const badge = document.createElement("span");
-            badge.className = "cart-badge";
-            badge.style.cssText =
-              "position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center;";
-            badge.textContent = count;
-            cartLink.style.position = "relative";
-            cartLink.appendChild(badge);
-          }
+            if (count > 0) {
+                if (existingBadge) {
+                    existingBadge.textContent = count;
+                } else {
+                    // Logic tạo Badge (giữ nguyên)
+                    const badge = document.createElement("span");
+                    badge.className = "cart-badge";
+                    badge.style.cssText =
+                        "position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center;";
+                    badge.textContent = count;
+                    cartLink.style.position = "relative";
+                    cartLink.appendChild(badge);
+                }
+            } else {
+                // Xóa Badge nếu count = 0
+                if (existingBadge) {
+                    existingBadge.remove();
+                }
+            }
+            
+            // QUAN TRỌNG: KHÔNG CÓ DÒNG NÀO THAY ĐỔI cartLink.style.display Ở ĐÂY!
         }
-      }
     };
     updateCartCount();
   }
