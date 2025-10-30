@@ -7,6 +7,7 @@ import { OrderController } from '../controllers/OrderController';
 import { AdminController } from '../controllers/AdminController';
 import { ReviewController } from '../controllers/ReviewController';
 import { sendJSON } from '../utils/request-handler';
+import { getAdminDashboard } from "./admin/dashboard";
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -22,7 +23,7 @@ export function setupRoutes(): Router {
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
   router.post('/api/auth/login', (req, res) => authController.login(req, res));
-  router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router.requireAuth]);
+  router.post('/api/auth/logout', (req, res)  => authController.logout(req, res), [Router.requireAuth]);
   router.post('/api/auth/forgot-password', (req, res) => authController.forgotPassword(req, res));
   router.post('/api/auth/reset-password', (req, res) => authController.resetPassword(req, res));
   router.post('/api/auth/verify-otp', (req, res) => authController.verifyOTP(req, res));
@@ -83,6 +84,17 @@ export function setupRoutes(): Router {
   router.get('/api/health', async (_req, res) => {
     sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
   });
+
+// Admin Dashboard
+  router.get(
+    "/api/admin/dashboard",
+    async (req, res) => {
+      const result = await getAdminDashboard();
+      sendJSON(res, result.status, result.body);
+    },
+    [Router.requireRole(["admin", "staff"])]
+  );
+
 
   return router;
 }
