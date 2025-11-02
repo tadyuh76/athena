@@ -25,9 +25,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 🔹 2. KHỞI TẠO ADMIN DASHBOARD
   // ===============================
   try {
-    // Kiểm tra quyền Admin (giữ nguyên logic cũ của bạn)
-    await checkAdminAuth();
-
     // Load dữ liệu dashboard
     await loadDashboard();
 
@@ -37,7 +34,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   } catch (error) {
     console.error("Admin App Initialization Error:", error);
-    handleAuthError(error.message);
   }
 });
 
@@ -47,15 +43,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ===============================
 async function loadDashboard() {
   try {
-    const response = await fetch("/api/admin/dashboard", {
-      headers: { "Authorization": `Bearer ${localStorage.getItem("access_token")}` }
-    });
+    const response = await fetch("/api/admin/dashboard");
     const data = await response.json();
 
-    document.getElementById("totalRevenue").textContent = data.totalRevenue + " ₫";
-    document.getElementById("totalOrders").textContent = data.totalOrders;
-    document.getElementById("totalCollections").textContent = data.totalCollections;
-    document.getElementById("totalProducts").textContent = data.totalProducts;
+    // 🧠 Gắn dữ liệu vào giao diện (không cần data.success)
+    document.getElementById("totalRevenue").textContent =
+      (data.totalRevenue || 0).toLocaleString("vi-VN") + " ₫";
+    document.getElementById("totalOrders").textContent = data.totalOrders || 0;
+    document.getElementById("totalCollections").textContent = data.totalCollections || 0;
+    document.getElementById("totalProducts").textContent = data.totalProducts || 0;
+
+    console.log("✅ Dashboard data loaded:", data);
   } catch (err) {
     console.error("Lỗi tải dashboard:", err);
   }
@@ -93,3 +91,5 @@ function updateAdminName() {
   const adminName = localStorage.getItem("user_name") || "Admin";
   document.getElementById("adminName").textContent = adminName;
 }
+
+document.addEventListener("DOMContentLoaded", loadDashboard);

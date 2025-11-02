@@ -1,44 +1,36 @@
 import { supabase } from "../../utils/supabase";
-import { sendJSON } from "../../utils/request-handler";
 
-// ✅ Lấy dữ liệu tổng hợp cho Dashboard
 export async function getAdminDashboard() {
   try {
-    // Lấy tổng doanh thu
-    const { data: orderData, error: orderErr } = await supabase
+    const { data: orders, error: orderError } = await supabase
       .from("orders")
-      .select("total, status");
+      .select("total_price, status");
 
-    if (orderErr) throw orderErr;
+    if (orderError) throw orderError;
 
-    const totalOrders = orderData.length;
-    const totalRevenue = orderData
-      .filter((o) => o.status === "completed" || o.status === "paid")
-      .reduce((sum, o) => sum + (o.total || 0), 0);
+    const totalOrders = orders?.length || 0;
+    const totalRevenue = orders
+      ?.filter((o) => o.status === "completed" || o.status === "paid")
+      .reduce((sum, o) => sum + (Number(o.total_price) || 0), 0) || 0;
 
-    // Đếm số collection
-    const { count: totalCollections, error: colErr } = await supabase
-      .from("collections")
-      .select("*", { count: "exact", head: true });
-    if (colErr) throw colErr;
-
-    // Đếm số sản phẩm
-    const { count: totalProducts, error: prodErr } = await supabase
+    const { count: totalProducts, error: productError } = await supabase
       .from("products")
       .select("*", { count: "exact", head: true });
-    if (prodErr) throw prodErr;
+    if (productError) throw productError;
 
-    // ✅ Trả kết quả JSON
+    const { count: totalCollections, error: collectionError } = await supabase
+      .from("collections")
+      .select("*", { count: "exact", head: true });
+    if (collectionError) throw collectionError;
+
     return {
       status: 200,
       body: {
         success: true,
-        data: {
-          totalRevenue,
-          totalOrders,
-          totalCollections,
-          totalProducts,
-        },
+        totalRevenue,
+        totalOrders,
+        totalProducts,
+        totalCollections,
       },
     };
   } catch (err: any) {

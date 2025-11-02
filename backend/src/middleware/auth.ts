@@ -51,7 +51,7 @@ export async function requireAuth(req: AuthRequest, res: ServerResponse): Promis
 }
 
 export async function optionalAuth(req: AuthRequest): Promise<boolean> {
-  await authenticateToken(req);
+  return await authenticateToken(req);
 }
 
 

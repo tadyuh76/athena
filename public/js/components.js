@@ -378,9 +378,6 @@ class SiteHeader extends HTMLElement {
       if (window.location.pathname.includes('/admin.html')) {
         updateSwitchButton();
         }
-
-      // Add method to manually refresh auth icon
-      this.updateAuthIcon = updateAuthIcon;
     
 
     // Update cart count if available

@@ -8,6 +8,7 @@ import { AdminController } from '../controllers/AdminController';
 import { ReviewController } from '../controllers/ReviewController';
 import { sendJSON } from '../utils/request-handler';
 import { getAdminDashboard } from "./admin/dashboard";
+import { supabase } from "../utils/supabase";
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -65,11 +66,7 @@ export function setupRoutes(): Router {
     (req, res) => orderController.getAllOrders(req, res), 
     [Router.requireRole(['admin', 'staff'])] // <--- CHỈ ADMIN hoặc STAFF MỚI ĐƯỢC TRUY CẬP
   );
-  router.get(
-    '/api/admin/summary', // ROUTE Dashboard Summary
-    (req, res) => adminController.getDashboardSummary(req, res), 
-    [Router.requireRole(['admin', 'staff'])]
-  );
+
   // Review routes
   router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
   router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router.requireAuth]);
@@ -85,17 +82,53 @@ export function setupRoutes(): Router {
     sendJSON(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
   });
 
-// Admin Dashboard
-  router.get(
-    "/api/admin/dashboard",
-    async (req, res) => {
-      const result = await getAdminDashboard();
-      sendJSON(res, result.status, result.body);
-    },
-    [Router.requireRole(["admin", "staff"])]
-  );
+  // Admin Dashboard route
+  router.get("/api/admin/dashboard", async (req, res) => {
+    try {
+      // 🧾 Lấy dữ liệu orders
+      const { data: orders, error: ordersError } = await supabase
+        .from("orders")
+        .select("subtotal, tax_amount, shipping_amount, discount_amount, total_amount");
+
+      if (ordersError) throw ordersError;
+
+      const totalOrders = orders?.length || 0;
+      const totalRevenue = orders?.reduce(
+        (sum, o) => sum + (o.total_amount || 0),
+        0
+      );
+
+      // 🗂️ Đếm số collections (bảng product_collections)
+      const { count: totalCollections, error: collectionsError } = await supabase
+        .from("product_collections")
+        .select("*", { count: "exact", head: true });
+      if (collectionsError) throw collectionsError;
+
+      // 📦 Đếm số products
+      const { count: totalProducts, error: productsError } = await supabase
+        .from("products")
+        .select("*", { count: "exact", head: true });
+      if (productsError) throw productsError;
+
+      // 🧠 Trả JSON
+      const responseBody = JSON.stringify({
+        totalRevenue,
+        totalOrders,
+        totalCollections: totalCollections ?? 0,
+        totalProducts: totalProducts ?? 0,
+      });
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(responseBody);
+
+    } catch (error) {
+      console.error("Dashboard API Error:", error);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ message: "Error loading admin dashboard" }));
+    }
+  });
+
 
 
   return router;
-}
-
+} 
