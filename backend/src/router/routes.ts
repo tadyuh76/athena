@@ -10,6 +10,7 @@ import { sendJSON } from '../utils/request-handler';
 import { getAdminDashboard } from "./admin/dashboard";
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
+import { registerAdminProductRoutes } from "./admin/adminProducts";
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -135,6 +136,8 @@ export function setupRoutes(): Router {
   router.put("/api/admin/collections/:id", CollectionController.update);
   router.delete("/api/admin/collections/:id", CollectionController.remove);
 
+  // Register Admin Product Routes
+  registerAdminProductRoutes(router);
 
   return router;
 } 

@@ -60,9 +60,31 @@
             <p>Giao diện quản lý bộ sưu tập sẽ được xây dựng tại đây...</p>
         </div>
         <div id="productsSection" style="display:none;">
-            <div class="admin-header"><h1>Products & Variants</h1></div>
-            <p>Giao diện quản lý sản phẩm chi tiết sẽ được xây dựng tại đây...</p>
-        </div>
+            <div class="admin-header d-flex justify-content-between align-items-center">
+                <h1>Products & Variants</h1>
+                <button id="addProductBtn" class="btn btn-dark">
+                <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm
+                </button>
+            </div>
+
+            <div class="table-responsive mt-3"> 
+                <table class="table table-bordered align-middle" id="adminProductTable">
+                <thead class="table-light">
+                    <tr>
+                    <th>Tên sản phẩm</th>
+                    <th>Collection</th>
+                    <th>Giá gốc</th>
+                    <th>Giá bán</th>
+                    <th>Hình ảnh</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dữ liệu sản phẩm sẽ được JS render -->
+                </tbody>
+                </table>
+            </div>
+            </div>
+
         <div id="ordersSection" style="display:none;">
             <div class="admin-header"><h1>Order Management</h1></div>
             <p>Giao diện quản lý đơn hàng sẽ được xây dựng tại đây...</p>
@@ -82,5 +104,37 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
     <script type="module" src="js/admin-app.js"></script>
+
+        <!-- Modal xem chi tiết sản phẩm -->
+        <div class="modal fade" id="productDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chi tiết sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- JS sẽ render chi tiết sản phẩm tại đây -->
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- Modal thêm/sửa sản phẩm -->
+        <div class="modal fade" id="productFormModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productFormModalLabel">Thêm / Sửa sản phẩm</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="productFormBody">
+                <!-- Form sẽ render ở đây -->
+            </div>
+            </div>
+        </div>
+        </div>
+
+
 </body>
 </html>

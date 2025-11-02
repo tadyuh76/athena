@@ -139,3 +139,9 @@ body.admin-mode {
   font-weight: 600;
   color: #111;
 }
+
+/* Kích thước tuỳ chỉnh Modal Sản phẩm cho admin */
+#productDetailModal .modal-dialog {
+    max-width: 85%;  /* hoặc 100% nếu muốn full màn hình */
+    width: auto;
+}
