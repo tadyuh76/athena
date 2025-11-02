@@ -9,6 +9,7 @@ import { ReviewController } from '../controllers/ReviewController';
 import { sendJSON } from '../utils/request-handler';
 import { getAdminDashboard } from "./admin/dashboard";
 import { supabase } from "../utils/supabase";
+import { CollectionController } from "../controllers/CollectionController";
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -128,6 +129,11 @@ export function setupRoutes(): Router {
     }
   });
 
+  // Collection routes
+  router.get("/api/admin/collections", CollectionController.getAll);
+  router.post("/api/admin/collections", CollectionController.create);
+  router.put("/api/admin/collections/:id", CollectionController.update);
+  router.delete("/api/admin/collections/:id", CollectionController.remove);
 
 
   return router;
