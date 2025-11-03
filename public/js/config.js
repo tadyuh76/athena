@@ -1,5 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 // Environment configuration
 const ENV = {
   // Detect if running locally

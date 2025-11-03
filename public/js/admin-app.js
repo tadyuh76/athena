@@ -546,12 +546,22 @@ async function openProductForm(productId = null) {
         </div>
 
         <div class="col-md-6">
-          <label class="form-label">Images (chọn từ máy)</label>
-          <input type="file" id="productImagesFile" class="form-control mb-1" multiple accept="image/*">
-          <div id="productImagesPreview" class="d-flex flex-wrap gap-2">
-            ${(productData?.images || []).map(i => `<img src="${i.url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">`).join("")}
+          <label class="form-label fw-bold">Ảnh sản phẩm</label>
+          <div class="border rounded p-3 bg-light mb-2">
+            <button type="button" id="openImagePicker" class="btn btn-outline-secondary btn-sm mb-2">
+              Chọn ảnh từ thư mục
+            </button>
+            <input type="text" id="productImageUrl" class="form-control mb-2" placeholder="/images/ten-anh.jpg" readonly>
+            <div id="selectedImagePreview" class="mb-2">
+              ${productData?.images?.[0]?.url
+                ? `<img src="${productData.images[0].url}" style="width:100px;height:100px;object-fit:cover;border-radius:6px;">`
+                : ""
+              }
+            </div>
           </div>
-          <small class="text-muted d-block mb-2">Chọn hình sản phẩm, có thể để trống và thêm sau.</small>
+          <small class="text-muted d-block mb-2">
+            Chọn ảnh có sẵn trong thư mục /public/images
+          </small>
 
           <label class="form-label mt-2">Thành phần (JSON)</label>
           <textarea id="productMaterial" class="form-control" rows="3">${JSON.stringify(productData?.material_composition || {})}</textarea>
@@ -595,26 +605,6 @@ async function openProductForm(productId = null) {
     });
   }
 
-  // Preview hình ảnh
-  const fileInput = modalBody.querySelector("#productImagesFile");
-  const previewContainer = modalBody.querySelector("#productImagesPreview");
-  fileInput.addEventListener("change", () => {
-    previewContainer.innerHTML = "";
-    Array.from(fileInput.files).forEach(f => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = document.createElement("img");
-        img.src = e.target.result;
-        img.style.width = "80px";
-        img.style.height = "80px";
-        img.style.objectFit = "cover";
-        img.style.borderRadius = "6px";
-        previewContainer.appendChild(img);
-      };
-      reader.readAsDataURL(f);
-    });
-  });
-
   // Tạo slug tự động
   const nameInput = modalBody.querySelector("#productName");
   const slugInput = modalBody.querySelector("#productSlug");
@@ -626,6 +616,7 @@ async function openProductForm(productId = null) {
       .replace(/^-+|-+$/g, "");
     slugInput.value = slug;
   });
+
 
   // Submit form
   const formEl = modalBody.querySelector("#productForm");
@@ -654,7 +645,7 @@ async function openProductForm(productId = null) {
       certification_labels: modalBody.querySelector("#productCertifications").value
         ? modalBody.querySelector("#productCertifications").value.split(",").map(s => s.trim())
         : null,
-      featured_image_url: null,
+      featured_image_url:  document.getElementById("productImageUrl").value || null,
       status: "active",
       is_featured: false,
       low_stock_threshold: null
@@ -687,26 +678,6 @@ async function openProductForm(productId = null) {
         }
       newProductId = productId || result.data.id;
 
-      // Upload ảnh nếu có file
-      const files = Array.from(fileInput.files);
-      if (files.length > 0) {
-        for (const file of files) {
-          const filePath = `${newProductId}/${Date.now()}_${file.name}`;
-          const { data, error } = await supabase
-            .storage
-            .from("product-images")
-            .upload(filePath, file);
-
-          if (!error) {
-            await fetch("/api/admin/product-images", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ product_id: newProductId, url: data.path })
-            });
-          }
-        }
-      }
-
       alert(`✅ Sản phẩm ${productId ? "cập nhật" : "thêm mới"} thành công!`);
       bootstrap.Modal.getInstance(modalEl).hide();
       loadAdminProducts();
@@ -718,10 +689,94 @@ async function openProductForm(productId = null) {
   };
 
   new bootstrap.Modal(modalEl).show();
+
+// ===== CHỌN ẢNH TỪ THƯ MỤC =====
+const openPickerBtn = modalBody.querySelector("#openImagePicker");
+const imageUrlInput = modalBody.querySelector("#productImageUrl");
+const imagePreview = modalBody.querySelector("#selectedImagePreview");
+
+openPickerBtn.addEventListener("click", async () => {
+  // Tạo ID duy nhất cho modal mỗi lần mở
+  const modalId = `imagePickerModal_${Date.now()}`;
+
+  const modalHtml = `
+    <div class="modal fade" id="${modalId}" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Chọn ảnh từ thư mục</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body d-flex flex-wrap gap-2 justify-content-start">
+            <div class="text-center text-muted py-3">Đang tải ảnh...</div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+            <button type="button" class="btn btn-primary" id="confirmImageBtn" disabled>Chọn ảnh</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Thêm modal vào DOM
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  const modalEl = document.getElementById(modalId);
+  const modalBodyEl = modalEl.querySelector(".modal-body");
+  const confirmBtn = modalEl.querySelector("#confirmImageBtn");
+
+  let selectedUrl = null;
+
+  // Lấy danh sách ảnh từ server
+  try {
+    const res = await fetch("/api/admin/product-images");
+    const images = await res.json();
+
+    if (!Array.isArray(images) || images.length === 0) {
+      modalBodyEl.innerHTML = "<div class='text-center text-danger py-3'>Không có ảnh nào.</div>";
+    } else {
+      modalBodyEl.innerHTML = images.map(url => `
+        <img src="${url}" data-url="${url}" 
+             style="width:100px;height:100px;object-fit:cover;border-radius:6px;cursor:pointer;
+                    border:2px solid transparent;">
+      `).join("");
+
+      modalBodyEl.querySelectorAll("img").forEach(img => {
+        img.addEventListener("click", () => {
+          // highlight ảnh được chọn
+          modalBodyEl.querySelectorAll("img").forEach(i => i.style.border = "2px solid transparent");
+          img.style.border = "2px solid #0d6efd";
+
+          selectedUrl = img.dataset.url;
+          confirmBtn.disabled = false;
+        });
+      });
+    }
+  } catch (err) {
+    console.error("❌ Lỗi khi tải danh sách ảnh:", err);
+    modalBodyEl.innerHTML = "<div class='text-center text-danger py-3'>Không tải được danh sách ảnh.</div>";
+  }
+
+  // Xử lý nút confirm
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", () => {
+      if (selectedUrl) {
+        imageUrlInput.value = selectedUrl;
+        imagePreview.innerHTML = `<img src="${selectedUrl}" style="width:120px;height:120px;object-fit:cover;border-radius:6px;">`;
+        bootstrap.Modal.getInstance(modalEl).hide();
+      }
+    });
+  }
+
+  // Mở modal
+  const bsModal = new bootstrap.Modal(modalEl);
+  bsModal.show();
+
+  // Remove modal khỏi DOM khi đóng
+  modalEl.addEventListener("hidden.bs.modal", () => modalEl.remove());
+});
 }
-
-
-
 
 
 // ============================
@@ -733,11 +788,7 @@ document.addEventListener("submit", (e) => {
   }
 });
 
-document.addEventListener("click", (e) => {
-  if (e.target && e.target.id === "addProductBtn") {
-    console.log("🟢 Nút Thêm sản phẩm được click");
-    openProductForm();
-  }
-});
-
-
+const addProductBtn = document.getElementById("addProductBtn");
+if (addProductBtn) {
+  addProductBtn.addEventListener("click", () => openProductForm());
+}

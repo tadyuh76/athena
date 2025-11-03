@@ -12,6 +12,8 @@ import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
 import { registerAdminProductRoutes } from "./admin/adminProducts";
 import { registerAdminProductImagesRoutes } from "./admin/adminProductImages";
+import { registerAdminImageBrowser } from "./admin/adminImageBrowser";
+
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -142,6 +144,11 @@ export function setupRoutes(): Router {
 
   // Register Admin Product Images Routes
   registerAdminProductImagesRoutes(router);
+
+  // Register Admin Image Browser Routes
+  registerAdminImageBrowser(router);
+
+
 
   return router;
 } 
