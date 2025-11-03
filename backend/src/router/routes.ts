@@ -11,6 +11,7 @@ import { getAdminDashboard } from "./admin/dashboard";
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
 import { registerAdminProductRoutes } from "./admin/adminProducts";
+import { registerAdminProductImagesRoutes } from "./admin/adminProductImages";
 
 export function setupRoutes(): Router {
   const router = new Router();
@@ -138,6 +139,9 @@ export function setupRoutes(): Router {
 
   // Register Admin Product Routes
   registerAdminProductRoutes(router);
+
+  // Register Admin Product Images Routes
+  registerAdminProductImagesRoutes(router);
 
   return router;
 } 

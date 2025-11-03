@@ -1,79 +1,100 @@
-import { IncomingMessage, ServerResponse } from 'http';
-import { AdminProductService, ProductInput } from '../services/AdminProductService';
-import { sendJSON, sendError, parseUrl } from '../utils/request-handler';
+import { IncomingMessage, ServerResponse } from "http";
+import { AdminProductService, ProductInput } from "../services/AdminProductService";
+import { sendJSON } from "../utils/request-handler";
 
 export class AdminProductController {
   private service = new AdminProductService();
 
-  // Lấy toàn bộ sản phẩm
-    async getAll(_req: IncomingMessage, res: ServerResponse) {
+  // =============================
+  // GET ALL PRODUCTS
+  // =============================
+  async getAll(_req: IncomingMessage, res: ServerResponse) {
     try {
-        const products = await this.service.getAll();
-
-        // Map lại để frontend dùng trực tiếp
-        const mapped = products.map(p => ({
+      const products = await this.service.getAll();
+      const mapped = products.map((p) => ({
         ...p,
-        collection_name: p.collection?.name || "-",       // thêm tên collection
-        final_price: p.base_price                    // hoặc tính sau khi áp dụng discount
-        }));
+        collection_name: p.collection?.name || "-",
+        final_price: p.base_price,
+      }));
 
-        sendJSON(res, 200, { success: true, data: mapped });
+      sendJSON(res, 200, { success: true, data: mapped });
     } catch (err: any) {
-        sendJSON(res, 500, { success: false, error: err.message || "Failed to load products" });
+      sendJSON(res, 500, { success: false, error: err.message || "Failed to load products" });
     }
-    }
+  }
 
-
-  // Lấy chi tiết sản phẩm theo ID
+  // =============================
+  // GET PRODUCT BY ID
+  // =============================
   async getById(_req: IncomingMessage, res: ServerResponse, id: string) {
     try {
-        const p = await this.service.getById(id);
-        if (!p) return sendJSON(res, 404, { success: false, error: "Product not found" });
+      const p = await this.service.getById(id);
+      if (!p) return sendJSON(res, 404, { success: false, error: "Product not found" });
 
-        // Map thêm fields
-        const mapped = {
+      const mapped = {
         ...p,
         variants: p.variants || [],
         images: p.images || [],
         collection_name: p.collection?.name || "-",
-        final_price: p.base_price
-        };
+        final_price: p.base_price,
+      };
 
-        sendJSON(res, 200, { success: true, data: mapped });
+      sendJSON(res, 200, { success: true, data: mapped });
     } catch (err: any) {
-        sendJSON(res, 500, { success: false, error: err.message || "Failed to load product" });
-    }
-}
-
-
-  // Tạo sản phẩm mới
-  async create(_req: IncomingMessage, res: ServerResponse, input: ProductInput) {
-    try {
-      const product = await this.service.create(input);
-      sendJSON(res, 201, product);
-    } catch (error: any) {
-      sendError(res, 500, error.message || 'Failed to create product');
+      sendJSON(res, 500, { success: false, error: err.message || "Failed to load product" });
     }
   }
 
-  // Cập nhật sản phẩm theo ID
-    async update(req: IncomingMessage & { body: Partial<ProductInput> }, res: ServerResponse, id: string) {
+  // =============================
+  // CREATE PRODUCT
+  // =============================
+  async create(_req: IncomingMessage, res: ServerResponse, input: ProductInput) {
     try {
-        const product = await this.service.update(id, req.body);
-        sendJSON(res, 200, product);
-    } catch (error: any) {
-        sendError(res, 500, error.message || 'Failed to update product');
+      const product = await this.service.create(input);
+      sendJSON(res, 201, { success: true, data: product });
+    } catch (err: any) {
+      console.error("❌ [create] Error:", err);
+      if (err.message.includes("duplicate key")) {
+        sendJSON(res, 409, {
+          success: false,
+          error: "SKU hoặc slug đã tồn tại. Vui lòng nhập giá trị khác.",
+        });
+      } else {
+        sendJSON(res, 500, { success: false, error: err.message || "Failed to create product" });
+      }
     }
+  }
+
+  // =============================
+  // UPDATE PRODUCT
+  // =============================
+  async update(req: IncomingMessage & { body: Partial<ProductInput> }, res: ServerResponse, id: string) {
+    try {
+      const product = await this.service.update(id, req.body);
+      sendJSON(res, 200, { success: true, data: product });
+    } catch (err: any) {
+      console.error("❌ [update] Error:", err);
+      if (err.message.includes("duplicate key")) {
+        sendJSON(res, 409, {
+          success: false,
+          error: "SKU hoặc slug đã tồn tại. Vui lòng nhập giá trị khác.",
+        });
+      } else {
+        sendJSON(res, 500, { success: false, error: err.message || "Failed to update product" });
+      }
     }
+  }
 
-
-  // Xóa sản phẩm theo ID
+  // =============================
+  // DELETE PRODUCT
+  // =============================
   async remove(_req: IncomingMessage, res: ServerResponse, id: string) {
     try {
       await this.service.remove(id);
-      sendJSON(res, 200, { message: 'Product deleted successfully' });
-    } catch (error: any) {
-      sendError(res, 500, error.message || 'Failed to delete product');
+      sendJSON(res, 200, { success: true, message: "Đã xoá sản phẩm thành công" });
+    } catch (err: any) {
+      console.error("❌ [remove] Error:", err);
+      sendJSON(res, 500, { success: false, error: err.message || "Failed to delete product" });
     }
   }
 }

@@ -288,6 +288,7 @@ document.addEventListener("click", async (e) => {
 });
 
 
+
 // ============================
 // PRODUCTS MANAGEMENT
 // ============================
@@ -457,8 +458,6 @@ async function showProductDetail(productId) {
     // 🔹 Nút Xoá
     document.getElementById("deleteProductBtn").addEventListener("click", async () => {
       if (!confirm("Bạn có chắc chắn muốn xoá sản phẩm này không?")) return;
-
-      try {
         const res = await fetch(`/api/admin/products/${productId}`, { method: "DELETE" });
         const result = await res.json();
         if (!result.success) throw new Error(result.error);
@@ -471,9 +470,6 @@ async function showProductDetail(productId) {
 
         // Reload bảng sản phẩm
         await loadAdminProducts();
-      } catch (err) {
-        alert("✅ Đã xoá sản phẩm!");
-      }
     });
 
     // Mở modal
@@ -486,10 +482,8 @@ async function showProductDetail(productId) {
 }
 
 
-
-
 // ============================
-// 🔹 OPEN PRODUCT FORM + SUBMIT
+// 🔹 OPEN PRODUCT FORM
 // ============================
 async function openProductForm(productId = null) {
   let productData = null;
@@ -499,7 +493,7 @@ async function openProductForm(productId = null) {
       const res = await fetch(`/api/admin/products/${productId}`);
       const result = await res.json();
       if (result.success) productData = result.data;
-    } catch (err) {
+    } catch {
       alert("Không thể tải dữ liệu sản phẩm để sửa");
       return;
     }
@@ -513,40 +507,42 @@ async function openProductForm(productId = null) {
       <div class="row g-3">
         <div class="col-md-6">
           <label class="form-label">Tên sản phẩm</label>
-          <input type="text" id="productName" class="form-control" 
-                 value="${productData?.name || ""}" required>
-          <small class="text-muted">Nhập tên sản phẩm (bắt buộc).</small>
+          <input type="text" id="productName" class="form-control" value="${productData?.name || ""}" required>
+          <small class="text-muted d-block mb-2">Nhập tên sản phẩm (bắt buộc).</small>
+
+          <label class="form-label mt-2">Slug (preview)</label>
+          <input type="text" id="productSlug" class="form-control" value="${productData?.slug || ""}" readonly>
+          <small class="text-muted d-block mb-2">Slug tự tạo theo tên sản phẩm, không sửa trực tiếp.</small>
 
           <label class="form-label mt-2">Collection</label>
           <select id="productCollection" class="form-select">
             <option value="">-- Chọn Collection --</option>
           </select>
-          <small class="text-muted">Chọn collection sản phẩm. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Chọn collection sản phẩm. Có thể để trống.</small>
 
           <label class="form-label mt-2">Giá cơ bản</label>
-          <input type="number" id="productBasePrice" class="form-control" 
-                 value="${productData?.base_price || 0}" required>
-          <small class="text-muted">Nhập giá cơ bản (bắt buộc).</small>
+          <input type="number" id="productBasePrice" class="form-control" value="${productData?.base_price || 0}" required>
+          <small class="text-muted d-block mb-2">Nhập giá cơ bản (bắt buộc).</small>
 
           <label class="form-label mt-2">Compare Price</label>
-          <input type="number" id="productComparePrice" class="form-control" 
-                 value="${productData?.compare_price || ""}">
-          <small class="text-muted">Giá so sánh, có thể để trống.</small>
+          <input type="number" id="productComparePrice" class="form-control" value="${productData?.compare_price || ""}">
+          <small class="text-muted d-block mb-2">Giá so sánh, có thể để trống.</small>
 
           <label class="form-label mt-2">SKU</label>
-          <input type="text" id="productSKU" class="form-control" 
-                 value="${productData?.sku || ""}">
-          <small class="text-muted">Mã sản phẩm, có thể để trống.</small>
-
-          <label class="form-label mt-2">Slug</label>
-          <input type="text" id="productSlug" class="form-control" 
-                 value="${productData?.slug || ""}">
-          <small class="text-muted">Tên hiển thị trên URL, có thể để trống.</small>
+          <input type="text" id="productSKU" class="form-control" value="${productData?.sku || ""}">
+          <small class="text-muted d-block mb-2">Mã sản phẩm, có thể để trống.</small>
 
           <label class="form-label mt-2">Category</label>
-          <input type="text" id="productCategory" class="form-control" 
-                 value="${productData?.category?.name || ""}">
-          <small class="text-muted">Tên danh mục, có thể để trống.</small>
+          <input type="text" id="productCategory" class="form-control" value="${productData?.category?.name || ""}">
+          <small class="text-muted d-block mb-2">Tên danh mục, có thể để trống.</small>
+
+          <label class="form-label mt-2">Mô tả</label>
+          <textarea id="productDescription" class="form-control" rows="2">${productData?.description || ""}</textarea>
+          <small class="text-muted d-block mb-2">Mô tả chi tiết, có thể để trống.</small>
+
+          <label class="form-label mt-2">Mô tả ngắn</label>
+          <textarea id="productShortDescription" class="form-control" rows="2">${productData?.short_description || ""}</textarea>
+          <small class="text-muted d-block mb-2">Mô tả ngắn, có thể để trống.</small>
         </div>
 
         <div class="col-md-6">
@@ -555,31 +551,27 @@ async function openProductForm(productId = null) {
           <div id="productImagesPreview" class="d-flex flex-wrap gap-2">
             ${(productData?.images || []).map(i => `<img src="${i.url}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;">`).join("")}
           </div>
-          <small class="text-muted">Chọn hình sản phẩm, có thể để trống và thêm sau.</small>
-
-          <label class="form-label mt-2">Variants (size,color,price,inventory mỗi dòng)</label>
-          <textarea id="productVariants" class="form-control" rows="5">${(productData?.variants || []).map(v => `${v.size || ""},${v.color || ""},${v.price || ""},${v.inventory_quantity || ""}`).join("\n")}</textarea>
-          <small class="text-muted">Mỗi variant một dòng: size,color,price,inventory. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Chọn hình sản phẩm, có thể để trống và thêm sau.</small>
 
           <label class="form-label mt-2">Thành phần (JSON)</label>
           <textarea id="productMaterial" class="form-control" rows="3">${JSON.stringify(productData?.material_composition || {})}</textarea>
-          <small class="text-muted">Nhập JSON. Ví dụ: {"cotton":50,"polyester":50}. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: {"cotton":50,"polyester":50}. Có thể để trống.</small>
 
           <label class="form-label mt-2">Hướng dẫn bảo quản</label>
           <textarea id="productCare" class="form-control" rows="2">${productData?.care_instructions || ""}</textarea>
-          <small class="text-muted">Ví dụ: Giặt tay, phơi nơi thoáng. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Giặt tay, phơi nơi thoáng. Có thể để trống.</small>
 
           <label class="form-label mt-2">Sustainability Notes</label>
           <textarea id="productSustainability" class="form-control" rows="2">${productData?.sustainability_notes || ""}</textarea>
-          <small class="text-muted">Ví dụ: Eco-friendly materials. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Eco-friendly materials. Có thể để trống.</small>
 
           <label class="form-label mt-2">Phương pháp sản xuất</label>
           <textarea id="productProduction" class="form-control" rows="2">${productData?.production_method || ""}</textarea>
-          <small class="text-muted">Ví dụ: Handmade. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Handmade. Có thể để trống.</small>
 
           <label class="form-label mt-2">Chứng nhận (phân tách bằng ,)</label>
           <input type="text" id="productCertifications" class="form-control" value="${(productData?.certification_labels || []).join(", ")}">
-          <small class="text-muted">Ví dụ: OEKO-TEX, GOTS. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: OEKO-TEX, GOTS. Có thể để trống.</small>
         </div>
       </div>
 
@@ -623,79 +615,129 @@ async function openProductForm(productId = null) {
     });
   });
 
+  // Tạo slug tự động
+  const nameInput = modalBody.querySelector("#productName");
+  const slugInput = modalBody.querySelector("#productSlug");
+  nameInput.addEventListener("input", () => {
+    const slug = nameInput.value
+      .toLowerCase()
+      .trim()
+      .replace(/[\s\W-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+    slugInput.value = slug;
+  });
+
   // Submit form
   const formEl = modalBody.querySelector("#productForm");
-  formEl.addEventListener("submit", async (e) => {
+  formEl.onsubmit = async e => {
     e.preventDefault();
 
-    const payload = {
-      name: formEl.querySelector("#productName").value.trim(),
-      sku: formEl.querySelector("#productSKU").value.trim() || null,
-      slug: formEl.querySelector("#productSlug").value.trim() || null,
-      description: null,
-      short_description: null,
-      category_id: formEl.querySelector("#productCategory").value.trim() || null,
-      collection_id: formEl.querySelector("#productCollection").value || null,
-      base_price: Number(formEl.querySelector("#productBasePrice").value) || 0,
-      compare_price: formEl.querySelector("#productComparePrice").value ? Number(formEl.querySelector("#productComparePrice").value) : null,
+    const productId = formEl.dataset.productId || null;
+    const formData = {
+      name: nameInput.value.trim(),
+      sku: modalBody.querySelector("#productSKU").value.trim() || "",
+      slug: slugInput.value,
+      collection_id: modalBody.querySelector("#productCollection").value || null,
+      base_price: Number(modalBody.querySelector("#productBasePrice").value),
+      compare_price: modalBody.querySelector("#productComparePrice").value
+        ? Number(modalBody.querySelector("#productComparePrice").value)
+        : null,
+      description: modalBody.querySelector("#productDescription").value || null,
+      short_description: modalBody.querySelector("#productShortDescription").value || null,
       material_composition: (() => {
-        try {
-          const val = formEl.querySelector("#productMaterial").value.trim();
-          return val ? JSON.parse(val) : null;
-        } catch {
-          return null;
-        }
+        try { return JSON.parse(modalBody.querySelector("#productMaterial").value); } 
+        catch { return null; }
       })(),
-      care_instructions: formEl.querySelector("#productCare").value.trim() || null,
-      sustainability_notes: formEl.querySelector("#productSustainability").value.trim() || null,
-      production_method: formEl.querySelector("#productProduction").value.trim() || null,
-      certification_labels: formEl.querySelector("#productCertifications").value.split(",").map(s => s.trim()).filter(Boolean) || null,
-      is_featured: false,
+      care_instructions: modalBody.querySelector("#productCare").value || null,
+      sustainability_notes: modalBody.querySelector("#productSustainability").value || null,
+      production_method: modalBody.querySelector("#productProduction").value || null,
+      certification_labels: modalBody.querySelector("#productCertifications").value
+        ? modalBody.querySelector("#productCertifications").value.split(",").map(s => s.trim())
+        : null,
       featured_image_url: null,
-      weight_value: null,
-      weight_unit: null,
-      status: 'active',
-      low_stock_threshold: null,
-      variants: formEl.querySelector("#productVariants").value
-        .split("\n")
-        .map(line => {
-          const [size, color, price, inventory] = line.split(",").map(s => s.trim());
-          return { size, color, price: price ? Number(price) : null, inventory_quantity: inventory ? Number(inventory) : null };
-        }).filter(v => v.size || v.color || v.price || v.inventory_quantity)
+      status: "active",
+      is_featured: false,
+      low_stock_threshold: null
     };
 
     try {
-      const url = productId ? `/api/admin/products/${productId}` : `/api/admin/products`;
-      const method = productId ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      const result = await res.json();
-      if (res.ok) {
-        alert(`Sản phẩm ${productId ? "cập nhật" : "thêm mới"} thành công`);
-        location.reload();
-      } else {
-        alert("Lỗi: " + (result.error || "Không thể lưu sản phẩm"));
-      }
-    } catch (err) {
-      alert("Lỗi khi gửi request: " + err.message);
-    }
-  });
+      let res, result, newProductId;
 
-  // Mở modal
+      if (!productId) {
+        res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+      } else {
+        res = await fetch(`/api/admin/products/${productId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData)
+        });
+      }
+      
+      result = await res.json();
+      if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
+        if (result.error) {
+          throw new Error(result.error);
+        }
+      newProductId = productId || result.data.id;
+
+      // Upload ảnh nếu có file
+      const files = Array.from(fileInput.files);
+      if (files.length > 0) {
+        for (const file of files) {
+          const filePath = `${newProductId}/${Date.now()}_${file.name}`;
+          const { data, error } = await supabase
+            .storage
+            .from("product-images")
+            .upload(filePath, file);
+
+          if (!error) {
+            await fetch("/api/admin/product-images", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ product_id: newProductId, url: data.path })
+            });
+          }
+        }
+      }
+
+      alert(`✅ Sản phẩm ${productId ? "cập nhật" : "thêm mới"} thành công!`);
+      bootstrap.Modal.getInstance(modalEl).hide();
+      loadAdminProducts();
+    } catch (err) {
+      console.error(err);
+      console.error("❌ Lưu sản phẩm lỗi:", err);
+      alert("❌ Lỗi khi lưu sản phẩm: " + (err.message || "Không xác định"));
+    }
+  };
+
   new bootstrap.Modal(modalEl).show();
 }
 
-// addButton event to open product form
-document.addEventListener("DOMContentLoaded", () => {
-  const addBtn = document.getElementById("addProductBtn");
 
-  if (addBtn) {
-    addBtn.addEventListener("click", () => {
-      // Gọi hàm mở form sản phẩm, không truyền productId => mở form thêm mới
-      openProductForm();
-    });
+
+
+
+// ============================
+// 🔹 EVENT LISTENER FORM SUBMIT
+// ============================
+document.addEventListener("submit", (e) => {
+  if (e.target && e.target.id === "productForm") {
+    submitProductForm(e);
   }
 });
+
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "addProductBtn") {
+    console.log("🟢 Nút Thêm sản phẩm được click");
+    openProductForm();
+  }
+});
+
+

@@ -1,3 +1,5 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 // Environment configuration
 const ENV = {
   // Detect if running locally
@@ -32,3 +34,18 @@ console.log('Environment:', {
   baseUrl: ENV.getBaseUrl(),
   apiUrl: ENV.getApiUrl()
 });
+
+// ==============================
+// 🔹 Supabase Initialization
+// ==============================
+const SUPABASE_URL = "https://ktapuasvoisugsrppczx.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0YXB1YXN2b2lzdWdzcnBwY3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NjYzODMsImV4cCI6MjA3NTE0MjM4M30.hypmyvPXXgzYsG7MtbsvCehjHE23fbxS-sSGa-5DJFY";
+
+// Đảm bảo thư viện Supabase đã được load trước (từ CDN)
+if (window.supabase) {
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.supabase = supabaseClient;
+  console.log("✅ Supabase initialized:", supabaseClient);
+} else {
+  console.error("❌ Supabase SDK not loaded. Check your <script src> for @supabase/supabase-js.");
+}
