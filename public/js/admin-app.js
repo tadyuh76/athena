@@ -355,26 +355,54 @@ async function loadAdminProducts() {
   }
 }
 
+// 🔹 Hàm lấy variants từ bảng product_variants
+async function getProductVariants(productId) {
+  try {
+    const { data, error } = await supabase
+      .from('product_variants')
+      .select('id, size, color, color_hex, price, inventory_quantity')
+      .eq('product_id', productId);
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (err) {
+    console.error('Lỗi lấy variants:', err);
+    return [];
+  }
+}
+
 // ============================
-// XEM CHI TIẾT SẢN PHẨM
+// Show Product Detail
 // ============================
 async function showProductDetail(productId) {
   try {
-    const res = await fetch(`/api/admin/products/${productId}`);
-    if (!res.ok) throw new Error("Không thể tải thông tin sản phẩm");
-    
-    const result = await res.json();
-    if (!result.success || !result.data) throw new Error("Dữ liệu không hợp lệ");
+    // 🔹 Fetch sản phẩm
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select(`*`)
+      .eq('id', productId)
+      .single();
 
-    const p = result.data;
+    if (productError) throw productError;
 
-    // Lấy danh sách images và variants
-    const images = (p.images || []).map(img => img.url);
-    const variants = p.variants || [];
+    const p = productData;
+
+    // 🔹 Fetch variants đầy đủ, bao gồm SKU
+    const { data: variantsData, error: variantsError } = await supabase
+      .from('product_variants')
+      .select('id, size, color, color_hex, price, inventory_quantity, sku')
+      .eq('product_id', productId);
+
+    if (variantsError) throw variantsError;
+
+    const variants = variantsData || [];
+
     const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
     const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+    const images = (p.images || []).map(img => img.url);
 
-    // Hiển thị modal
+    // 🔹 Hiển thị modal
     const modalBody = document.querySelector("#productDetailModal .modal-body");
     modalBody.innerHTML = `
       <div class="row g-5">
@@ -383,7 +411,6 @@ async function showProductDetail(productId) {
             ${images.length ? images.map(url => `<img src="${url}" alt="${p.name}" style="width:500px;height:fit;object-fit:cover;">`).join("") : `<div class="text-muted">Không có hình ảnh</div>`}
           </div>
         </div>
-
         <div class="col-md-6">
           <div class="product-info">
             <div class="product-header mb-3">
@@ -414,15 +441,29 @@ async function showProductDetail(productId) {
 
             <hr>
             <h5>Variants</h5>
-            <table class="table table-sm table-bordered">
-              <thead><tr><th>Size</th><th>Màu</th><th>Giá</th><th>Tồn kho</th></tr></thead>
+            <button class="btn btn-sm btn-primary" id="editVariantsBtn">Cập nhật</button>
+            <table class="table table-sm table-bordered" id="variantsTable">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Màu</th>
+                  <th>Code màu</th>
+                  <th>Giá</th>
+                  <th>Tồn kho</th>
+                  <th>SKU</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
               <tbody>
                 ${variants.map(v => `
-                  <tr>
-                    <td>${v.size || "-"}</td>
-                    <td>${v.color || "-"}</td>
-                    <td>${v.price ? v.price.toLocaleString("en-US") + " USD" : "-"}</td>
-                    <td>${v.inventory_quantity ?? "-"}</td>
+                  <tr data-id="${v.id || ""}">
+                    <td>${v.size || ""}</td>
+                    <td>${v.color || ""}</td>
+                    <td>${v.color_hex || ""}</td>
+                    <td>${v.price || ""}</td>
+                    <td>${v.inventory_quantity || ""}</td>
+                    <td>${v.sku || ""}</td>
+                    <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
                   </tr>
                 `).join("")}
               </tbody>
@@ -449,32 +490,22 @@ async function showProductDetail(productId) {
       </div>
     `;
 
-    // 🔹 Nút Sửa
-    document.getElementById("editProductBtn").addEventListener("click", () => {
-      // Mở form Thêm/Sửa chung, prefill dữ liệu
-      openProductForm(productId); // bạn sẽ viết hàm này giống collection
-    });
-
-    // 🔹 Nút Xoá
+    // 🔹 Nút Sửa/Sửa variants/Xoá
+    document.getElementById("editProductBtn").addEventListener("click", () => openProductForm(productId));
     document.getElementById("deleteProductBtn").addEventListener("click", async () => {
       if (!confirm("Bạn có chắc chắn muốn xoá sản phẩm này không?")) return;
-        const res = await fetch(`/api/admin/products/${productId}`, { method: "DELETE" });
-        const result = await res.json();
-        if (!result.success) throw new Error(result.error);
-
-        alert("✅ Đã xoá sản phẩm!");
-        // Đóng modal
-        const modalEl = document.getElementById("productDetailModal");
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        modalInstance.hide();
-
-        // Reload bảng sản phẩm
-        await loadAdminProducts();
+      const { error } = await supabase.from('products').delete().eq('id', productId);
+      if (error) throw error;
+      alert("✅ Đã xoá sản phẩm!");
+      bootstrap.Modal.getInstance(document.getElementById("productDetailModal")).hide();
+      await loadAdminProducts();
     });
 
-    // Mở modal
-    new bootstrap.Modal(document.getElementById("productDetailModal")).show();
+    document.getElementById("editVariantsBtn").addEventListener("click", () => {
+      openVariantsModal(productId, variants);
+    });
 
+    new bootstrap.Modal(document.getElementById("productDetailModal")).show();
   } catch (err) {
     alert("⚠️ Lỗi: " + err.message);
     console.error(err);
@@ -591,11 +622,12 @@ async function openProductForm(productId = null) {
     </form>
   `;
 
-  // Load collection list
+  // Load collection list vào select
   const collectionRes = await fetch("/api/admin/collections");
   const collectionData = await collectionRes.json();
   if (collectionData.success && Array.isArray(collectionData.data)) {
     const select = modalBody.querySelector("#productCollection");
+    select.innerHTML = `<option value="">-- Chọn Collection --</option>`; // reset
     collectionData.data.forEach(c => {
       const opt = document.createElement("option");
       opt.value = c.id;
@@ -604,6 +636,7 @@ async function openProductForm(productId = null) {
       select.appendChild(opt);
     });
   }
+
 
   // Tạo slug tự động
   const nameInput = modalBody.querySelector("#productName");
@@ -792,3 +825,153 @@ const addProductBtn = document.getElementById("addProductBtn");
 if (addProductBtn) {
   addProductBtn.addEventListener("click", () => openProductForm());
 }
+
+// ============================
+// MODAL QUẢN LÝ VARIANTS
+// ============================
+function openVariantsModal(productId, variants) {
+  const modalHtml = `
+    <div class="modal fade" id="variantsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Quản lý Variants</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="d-flex justify-content-end mb-2">
+              <button class="btn btn-sm btn-success" id="addVariantBtn">Thêm Variant</button>
+            </div>
+            <table class="table table-sm table-bordered" id="variantsEditTable">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Màu</th>
+                  <th>Code màu</th>
+                  <th>Giá</th>
+                  <th>Tồn kho</th>
+                  <th>SKU</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${variants.map(v => `
+                  <tr data-id="${v.id || ""}">
+                    <td><input type="text" class="form-control form-control-sm size" value="${v.size || ""}"></td>
+                    <td><input type="text" class="form-control form-control-sm color" value="${v.color || ""}"></td>
+                    <td><input type="text" class="form-control form-control-sm color-hex" value="${v.color_hex || ""}"></td>
+                    <td><input type="number" class="form-control form-control-sm price" value="${v.price || ""}"></td>
+                    <td><input type="number" class="form-control form-control-sm inventory" value="${v.inventory_quantity || ""}"></td>
+                    <td><input type="text" class="form-control form-control-sm sku" value="${v.sku || ""}"></td>
+                    <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+            <button class="btn btn-primary" id="saveVariantsBtn">Lưu</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+  const modalEl = document.getElementById("variantsModal");
+  const modalInstance = new bootstrap.Modal(modalEl);
+  modalInstance.show();
+
+  // 🔹 Thêm row mới
+  modalEl.querySelector("#addVariantBtn").addEventListener("click", () => {
+    const tbody = modalEl.querySelector("#variantsEditTable tbody");
+    const newRow = document.createElement("tr");
+    newRow.innerHTML = `
+      <td><input type="text" class="form-control form-control-sm size"></td>
+      <td><input type="text" class="form-control form-control-sm color"></td>
+      <td><input type="text" class="form-control form-control-sm color-hex"></td>
+      <td><input type="number" class="form-control form-control-sm price"></td>
+      <td><input type="number" class="form-control form-control-sm inventory"></td>
+      <td><input type="text" class="form-control form-control-sm sku"></td>
+      <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
+    `;
+    tbody.appendChild(newRow);
+  });
+
+  // 🔹 Xoá row
+  modalEl.addEventListener("click", e => {
+    if (e.target.classList.contains("delete-variant-btn")) {
+      e.target.closest("tr").remove();
+    }
+  });
+
+  // 🔹 Lưu variants lên backend
+  modalEl.querySelector("#saveVariantsBtn").addEventListener("click", async () => {
+    const rows = Array.from(modalEl.querySelectorAll("#variantsEditTable tbody tr"));
+    const newVariants = [];
+    const updateVariants = [];
+
+    rows.forEach(row => {
+      const variant = {
+        size: row.querySelector(".size").value.trim(),
+        color: row.querySelector(".color").value.trim(),
+        color_hex: row.querySelector(".color-hex").value.trim(),
+        price: Number(row.querySelector(".price").value) || 0,
+        inventory_quantity: Number(row.querySelector(".inventory").value) || 0,
+        sku: row.querySelector(".sku").value.trim(),
+        product_id: productId
+      };
+
+      if (row.dataset.id) {
+        // Row cũ, cần update
+        variant.id = row.dataset.id;
+        updateVariants.push(variant);
+      } else {
+        // Row mới, insert
+        newVariants.push(variant);
+      }
+    });
+
+    try {
+      // Insert mới
+      if (newVariants.length) {
+        const { error: insertError } = await supabase
+          .from("product_variants")
+          .insert(newVariants);
+
+        if (insertError) throw insertError;
+      }
+
+      // Update cũ
+      for (const v of updateVariants) {
+        const { error: updateError } = await supabase
+          .from("product_variants")
+          .update({
+            size: v.size,
+            color: v.color,
+            color_hex: v.color_hex,
+            price: v.price,
+            inventory_quantity: v.inventory_quantity,
+            sku: v.sku
+          })
+          .eq("id", v.id);
+
+        if (updateError) throw updateError;
+      }
+
+      alert("✅ Lưu variants thành công!");
+      modalInstance.hide();
+      modalEl.remove();
+
+      // Reload chi tiết sản phẩm
+      showProductDetail(productId);
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  });
+
+  // Remove modal khỏi DOM khi đóng
+  modalEl.addEventListener("hidden.bs.modal", () => modalEl.remove());
+}
+
