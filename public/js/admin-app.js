@@ -131,8 +131,8 @@ async function loadCollections() {
   // Hiển thị loading
   section.innerHTML = `
     <div class="admin-header d-flex justify-content-between align-items-center">
-      <h1>Collection Management</h1>
-      <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Collection</button>
+      <h1>Quản lý Bộ sưu tập</h1>
+      <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Bộ sưu tập</button>
     </div>
     <p>Đang tải dữ liệu...</p>
   `;
@@ -145,8 +145,8 @@ async function loadCollections() {
 
     const html = `
       <div class="admin-header d-flex justify-content-between align-items-center">
-        <h1>Collection Management</h1>
-        <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Collection</button>
+        <h1>Quản lý Bộ sưu tập</h1>
+        <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Bộ sưu tập</button>
       </div>
 
       <table class="table table-striped mt-4">
@@ -193,13 +193,13 @@ async function openCollectionForm(existing = null) {
   // Tạo form HTML
   section.innerHTML = `
     <div class="admin-header d-flex justify-content-between align-items-center">
-      <h1>${existing ? "Chỉnh sửa" : "Thêm"} Collection</h1>
+      <h1>${existing ? "Chỉnh sửa" : "Thêm"} Bộ sưu tập</h1>
       <button id="backToCollections" class="btn btn-secondary">← Quay lại</button>
     </div>
 
     <form id="collectionForm" class="mt-4" style="max-width:600px;">
       <div class="mb-3">
-        <label class="form-label">Tên Collection</label>
+        <label class="form-label">Tên Bộ sưu tập</label>
         <input type="text" id="collectionName" class="form-control" required 
           value="${existing ? existing.name : ""}">
       </div>
@@ -554,17 +554,17 @@ async function openProductForm(productId = null) {
           </select>
           <small class="text-muted d-block mb-2">Chọn collection sản phẩm. Có thể để trống.</small>
 
-          <label class="form-label mt-2">Giá cơ bản</label>
+          <label class="form-label mt-2">Giá bán</label>
           <input type="number" id="productBasePrice" class="form-control" value="${productData?.base_price || 0}" required>
-          <small class="text-muted d-block mb-2">Nhập giá cơ bản (bắt buộc).</small>
+          <small class="text-muted d-block mb-2">Nhập giá bán (bắt buộc).</small>
 
-          <label class="form-label mt-2">Compare Price</label>
+          <label class="form-label mt-2">Giá cơ bản</label>
           <input type="number" id="productComparePrice" class="form-control" value="${productData?.compare_price || ""}">
-          <small class="text-muted d-block mb-2">Giá so sánh, có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Giá cơ bản, có thể để trống.</small>
 
           <label class="form-label mt-2">SKU</label>
           <input type="text" id="productSKU" class="form-control" value="${productData?.sku || ""}">
-          <small class="text-muted d-block mb-2">Mã sản phẩm, có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Mã sản phẩm (bắt buộc).</small>
 
           <label class="form-label mt-2">Category</label>
           <input type="text" id="productCategory" class="form-control" value="${productData?.category?.name || ""}">
@@ -594,10 +594,10 @@ async function openProductForm(productId = null) {
             </div>
           </div>
           <small class="text-muted d-block mb-2">
-            Chọn ảnh có sẵn trong thư mục /public/images
+            Chọn ảnh có sẵn trong thư mục /images
           </small>
 
-          <label class="form-label mt-2">Thành phần (JSON)</label>
+          <label class="form-label mt-2">Thành phần</label>
           <textarea id="productMaterial" class="form-control" rows="3">${JSON.stringify(productData?.material_composition || {})}</textarea>
           <small class="text-muted d-block mb-2">Ví dụ: {"cotton":50,"polyester":50}. Có thể để trống.</small>
 
@@ -605,9 +605,9 @@ async function openProductForm(productId = null) {
           <textarea id="productCare" class="form-control" rows="2">${productData?.care_instructions || ""}</textarea>
           <small class="text-muted d-block mb-2">Ví dụ: Giặt tay, phơi nơi thoáng. Có thể để trống.</small>
 
-          <label class="form-label mt-2">Sustainability Notes</label>
+          <label class="form-label mt-2">Sustainability</label>
           <textarea id="productSustainability" class="form-control" rows="2">${productData?.sustainability_notes || ""}</textarea>
-          <small class="text-muted d-block mb-2">Ví dụ: Eco-friendly materials. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Vật liệu thân thiện với môi trường. Có thể để trống.</small>
 
           <label class="form-label mt-2">Phương pháp sản xuất</label>
           <textarea id="productProduction" class="form-control" rows="2">${productData?.production_method || ""}</textarea>
@@ -983,7 +983,7 @@ async function loadOrders({ q = "", status = "", limit = 50, offset = 0 } = {}) 
   const section = document.getElementById("ordersSection");
   section.innerHTML = `
     <div class="admin-header d-flex justify-content-between align-items-center">
-      <h1>Order Management</h1>
+      <h1>Quản lý đặt hàng</h1>
       <div class="d-flex gap-2">
         <input id="ordersSearch" class="form-control form-control-sm" placeholder="Tìm theo mã/khách/email...">
         <select id="ordersFilterStatus" class="form-select form-select-sm">
@@ -1000,7 +1000,7 @@ async function loadOrders({ q = "", status = "", limit = 50, offset = 0 } = {}) 
     <div class="mt-3 table-responsive">
       <table class="table table-sm table-striped" id="ordersTable">
         <thead>
-          <tr><th>Mã đơn</th><th>Khách</th><th>Ngày</th><th>Tổng</th><th>Trạng thái</th><th>Hành động</th></tr>
+          <tr><th>Mã đơn</th><th>Email</th><th>Ngày</th><th>Tổng</th><th>Trạng thái</th><th>Hành động</th></tr>
         </thead>
         <tbody><tr><td colspan="6" class="text-center text-muted">Đang tải...</td></tr></tbody>
       </table>
