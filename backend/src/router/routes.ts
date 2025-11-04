@@ -13,6 +13,7 @@ import { CollectionController } from "../controllers/CollectionController";
 import { registerAdminProductRoutes } from "./admin/adminProducts";
 import { registerAdminProductImagesRoutes } from "./admin/adminProductImages";
 import { registerAdminImageBrowser } from "./admin/adminImageBrowser";
+import { registerPublicOrderRoutes } from "./admin/adminOrders";
 
 
 export function setupRoutes(): Router {
@@ -148,7 +149,9 @@ export function setupRoutes(): Router {
   // Register Admin Image Browser Routes
   registerAdminImageBrowser(router);
 
-
+  // Register Admin Order Routes
+  registerPublicOrderRoutes(router);  
+  
 
   return router;
 } 
