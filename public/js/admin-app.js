@@ -11,6 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Xóa token + thông tin người dùng trong localStorage / sessionStorage
         localStorage.removeItem("access_token");
         localStorage.removeItem("user_role");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user");
         sessionStorage.clear();
 
         // Quay lại trang login
@@ -975,3 +978,223 @@ function openVariantsModal(productId, variants) {
   modalEl.addEventListener("hidden.bs.modal", () => modalEl.remove());
 }
 
+// ===== Orders management (frontend) =====
+async function loadOrders({ q = "", status = "", limit = 50, offset = 0 } = {}) {
+  const section = document.getElementById("ordersSection");
+  section.innerHTML = `
+    <div class="admin-header d-flex justify-content-between align-items-center">
+      <h1>Order Management</h1>
+      <div class="d-flex gap-2">
+        <input id="ordersSearch" class="form-control form-control-sm" placeholder="Tìm theo mã/khách/email...">
+        <select id="ordersFilterStatus" class="form-select form-select-sm">
+          <option value="">Tất cả trạng thái</option>
+          <option value="pending">Pending</option>
+          <option value="processing">Processing</option>
+          <option value="shipped">Shipped</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Canceled</option>
+        </select>
+        <button id="ordersRefreshBtn" class="btn btn-sm btn-dark">Tìm</button>
+      </div>
+    </div>
+    <div class="mt-3 table-responsive">
+      <table class="table table-sm table-striped" id="ordersTable">
+        <thead>
+          <tr><th>Mã đơn</th><th>Khách</th><th>Ngày</th><th>Tổng</th><th>Trạng thái</th><th>Hành động</th></tr>
+        </thead>
+        <tbody><tr><td colspan="6" class="text-center text-muted">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+  `;
+
+  // set current search/filter
+  section.querySelector("#ordersSearch").value = q;
+  section.querySelector("#ordersFilterStatus").value = status;
+
+  section.querySelector("#ordersRefreshBtn").addEventListener("click", () => {
+    const qv = section.querySelector("#ordersSearch").value.trim();
+    const s = section.querySelector("#ordersFilterStatus").value;
+    loadOrders({ q: qv, status: s, limit, offset });
+  });
+
+  try {
+    const qs = new URLSearchParams();
+    if (q) qs.set("q", q);
+    if (status) qs.set("status", status);
+    qs.set("limit", limit);
+    qs.set("offset", offset);
+
+    const token = localStorage.getItem("adminToken");
+    const res = await fetch(`/api/orders?${qs.toString()}`);
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || "Lỗi khi tải đơn hàng");
+
+    const rows = result.data;
+    const tbody = section.querySelector("#ordersTable tbody");
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Không có đơn hàng</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(o => `
+      <tr>
+        <td><a href="#" class="order-detail-link" data-id="${o.id}">${o.order_number}</a></td>
+        <td>${o.customer_email || o.customer_phone || (o.user_id ? o.user_id : "-")}</td>
+        <td>${new Date(o.created_at).toLocaleString()}</td>
+        <td>${Number(o.total_amount || 0).toLocaleString("vi-VN")} ₫</td>
+        <td>${o.status || "-"}</td>
+        <td>
+          <button class="btn btn-sm btn-primary view-order-btn" data-id="${o.id}">Chi tiết</button>
+        </td>
+      </tr>
+    `).join("");
+
+    // event for detail links & buttons
+    section.querySelectorAll(".view-order-btn, .order-detail-link").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        const id = el.dataset.id;
+        showOrderDetail(id);
+      });
+    });
+
+  } catch (err) {
+    console.error("Load orders error:", err);
+    const tbody = section.querySelector("#ordersTable tbody");
+    tbody.innerHTML = `<tr><td colspan="6" class="text-danger">${err.message}</td></tr>`;
+  }
+}
+
+// Call loadOrders when admin clicks Orders menu (hook into your navigation)
+const ordersLink = document.querySelector(".sidebar-menu a[href='#orders']");
+if (ordersLink) {
+  ordersLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    // show orders section
+    document.querySelectorAll("#dashboardSection, #collectionsSection, #productsSection, #ordersSection")
+      .forEach(s => s.style.display = "none");
+    document.getElementById("ordersSection").style.display = "block";
+    loadOrders();
+  });
+}
+
+// ===== Order detail modal / update status =====
+async function showOrderDetail(orderId) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}`);
+    const result = await res.json();
+    if (!res.ok || !result.success) throw new Error(result.error || "Không tải được order");
+
+    const o = result.data;
+
+    // build items html
+    const itemsHtml = (o.order_items || []).map(it => `
+      <tr>
+        <td style="width:60px"><img src="${it.product_image_url || '/images/no-image.png'}" style="width:50px;height:50px;object-fit:cover;border-radius:4px"></td>
+        <td>${it.product_name}</td>
+        <td>${it.product_sku}</td>
+        <td>${it.variant_title || ""}</td>
+        <td>${it.quantity}</td>
+        <td>${Number(it.unit_price).toLocaleString("vi-VN")} ₫</td>
+        <td>${Number(it.total_price).toLocaleString("vi-VN")} ₫</td>
+      </tr>
+    `).join("");
+
+    // address: choose shipping (type = shipping) otherwise first
+    const address = (o.order_addresses || [])[0] || null;
+    const addressHtml = address ? `
+      <p><strong>${address.first_name} ${address.last_name}</strong></p>
+      <p>${address.address_line1} ${address.address_line2 || ""}</p>
+      <p>${address.city} ${address.state_province || ""} ${address.postal_code || ""}</p>
+      <p>${address.country_code}</p>
+      <p>Phone: ${address.phone}</p>
+    ` : "<p class='text-muted'>Không có địa chỉ</p>";
+
+    // modal html
+    const modalHtml = `
+      <div class="modal fade" id="orderDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">Chi tiết đơn ${o.order_number}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <h6>Items</h6>
+                  <div class="table-responsive">
+                    <table class="table table-sm">
+                      <thead><tr><th></th><th>Sản phẩm</th><th>SKU</th><th>Variant</th><th>Số lượng</th><th>Giá</th><th>Tổng</th></tr></thead>
+                      <tbody>${itemsHtml || "<tr><td colspan='7' class='text-muted'>Không có items</td></tr>"}</tbody>
+                    </table>
+                  </div>
+                  <hr>
+                  <h6>Ghi chú khách</h6>
+                  <p>${o.customer_notes || "<span class='text-muted'>Không có</span>"}</p>
+                </div>
+                <div class="col-md-4">
+                  <h6>Thanh toán & Giao hàng</h6>
+                  <p><strong>Tổng:</strong> ${Number(o.total_amount || 0).toLocaleString("vi-VN")} ₫</p>
+                  <p><strong>Trạng thái đơn:</strong>
+                    <select id="orderStatusSelect" class="form-select form-select-sm">
+                      <option value="pending">Pending</option>
+                      <option value="processing">Processing</option>
+                      <option value="shipped">Shipped</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Canceled</option>
+                    </select>
+                  </p>
+                  <p><strong>Payment status:</strong> ${o.payment_status || "-"}</p>
+                  <hr>
+                  <h6>Địa chỉ</h6>
+                  ${addressHtml}
+                  <hr>
+                  <p><small class="text-muted">Created: ${new Date(o.created_at).toLocaleString()}</small></p>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+              <button class="btn btn-primary" id="saveOrderStatusBtn">Cập nhật trạng thái</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // append modal
+    document.body.insertAdjacentHTML("beforeend", modalHtml);
+    const modalEl = document.getElementById("orderDetailModal");
+    const bsModal = new bootstrap.Modal(modalEl);
+    // populate current status
+    modalEl.querySelector("#orderStatusSelect").value = o.status || "";
+
+    // save button
+    modalEl.querySelector("#saveOrderStatusBtn").addEventListener("click", async () => {
+      const newStatus = modalEl.querySelector("#orderStatusSelect").value;
+      try {
+        const r = await fetch(`/api/orders/${orderId}`, {
+          method: "PUT",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ status: newStatus })
+        });
+        const rr = await r.json();
+        if (!r.ok || !rr.success) throw new Error(rr.error || "Lỗi cập nhật");
+
+        alert("✅ Đã cập nhật trạng thái");
+        bsModal.hide();
+        modalEl.remove();
+        // reload orders and order detail area
+        loadOrders();
+      } catch (err) {
+        alert("❌ " + err.message);
+      }
+    });
+
+    bsModal.show();
+    modalEl.addEventListener("hidden.bs.modal", () => modalEl.remove());
+  } catch (err) {
+    alert("Không tải được chi tiết đơn: " + (err.message || err));
+  }
+}

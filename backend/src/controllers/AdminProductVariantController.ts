@@ -5,7 +5,7 @@ const service = new AdminProductVariantService();
 
 export class AdminProductVariantController {
   // Lấy variants theo product
-  async getByProduct(req: any, res: any, productId: string) {
+  async getByProduct(_req: any, res: any, productId: string) {
     try {
       const variants = await service.getByProduct(productId);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -17,7 +17,7 @@ export class AdminProductVariantController {
   }
 
   // Upsert nhiều variants
-  async upsert(req: any, res: any, variants: ProductVariantInput[]) {
+  async upsert(_req: any, res: any, variants: ProductVariantInput[]) {
     try {
       const result = await service.upsert(variants);
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -29,7 +29,7 @@ export class AdminProductVariantController {
   }
 
   // Xóa variant
-  async remove(req: any, res: any, id: string) {
+  async remove(_req: any, res: any, id: string) {
     try {
       const result = await service.remove(id);
       res.writeHead(200, { "Content-Type": "application/json" });
