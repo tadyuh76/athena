@@ -359,62 +359,8 @@ export class CartService {
     }
   }
 
-  showNotification(message, type = "success") {
-    // Create toast container if it doesn't exist
-    let toastContainer = document.getElementById("toastContainer");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toastContainer";
-      toastContainer.className =
-        "toast-container position-fixed top-0 end-0 p-3";
-      toastContainer.style.zIndex = "1055";
-      document.body.appendChild(toastContainer);
-    }
-
-    const toastId = "cart-toast-" + Date.now();
-    const bgClass =
-      type === "success"
-        ? "bg-success"
-        : type === "warning"
-        ? "bg-warning"
-        : type === "danger"
-        ? "bg-danger"
-        : "bg-info";
-    const icon = type === "success" ? "bi-cart-check-fill" : "bi-cart-x-fill";
-
-    const toastHTML = `
-      <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" 
-           id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-          <div class="toast-body d-flex align-items-center">
-            <i class="bi ${icon} me-2"></i>
-            ${message}
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" 
-                  data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-      </div>
-    `;
-
-    toastContainer.insertAdjacentHTML("beforeend", toastHTML);
-
-    const toastElement = document.getElementById(toastId);
-    if (window.bootstrap) {
-      const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
-      toast.show();
-
-      toastElement.addEventListener("hidden.bs.toast", () => {
-        toastElement.remove();
-      });
-    } else {
-      // Fallback without Bootstrap
-      toastElement.style.display = "block";
-      setTimeout(() => {
-        toastElement.style.opacity = "0";
-        setTimeout(() => toastElement.remove(), 300);
-      }, 3000);
-    }
-  }
+  // NOTE: Toast notifications removed from service layer per CLAUDE.md guidelines
+  // Page scripts should handle user notifications directly
 
   formatPrice(price) {
     return new Intl.NumberFormat("en-US", {

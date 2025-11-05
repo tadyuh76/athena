@@ -265,37 +265,11 @@ async function processPayPalPayment(formData) {
     window.location.href = "/order-confirmation.html";
     return;
   } catch (err) {
-    // Backend call failed - create a local mock order and continue (guest/offline flow)
-    console.warn("Creating local mock order due to failure:", err);
-    const items = cart.items || [];
-    const order = {
-      id: "local_" + Date.now(),
-      order_number: "LOCAL-" + Date.now(),
-      total:
-        cartSummary.total ||
-        items.reduce(
-          (s, it) => s + (it.price_at_time || 0) * (it.quantity || 0),
-          0
-        ),
-      total_amount:
-        cartSummary.total ||
-        items.reduce(
-          (s, it) => s + (it.price_at_time || 0) * (it.quantity || 0),
-          0
-        ),
-      shippingInfo: formData,
-      items,
-      created_at: new Date().toISOString(),
-    };
-
-    try {
-      await cartService.clearCart();
-    } catch (clearErr) {
-      console.warn("Failed to clear cart after local order:", clearErr);
-    }
-
-    localStorage.setItem("lastOrder", JSON.stringify(order));
-    window.location.href = "/order-confirmation.html";
+    // Backend call failed - show error to user
+    console.error("Order creation failed:", err);
+    showError("Failed to create order. Please try again or contact support.");
+    submitButton.disabled = false;
+    submitButton.textContent = "Place Order";
     return;
   }
 }
@@ -345,42 +319,13 @@ async function processStripePayment(formData) {
 
     localStorage.setItem("lastOrder", JSON.stringify(data.order || data));
     window.location.href = "/order-confirmation.html";
-    return;
   } catch (err) {
-    console.warn("Creating local mock order due to failure:", err);
-    const items = cart.items || [];
-    const order = {
-      id: "local_" + Date.now(),
-      order_number: "LOCAL-" + Date.now(),
-      total:
-        cartSummary.total ||
-        items.reduce(
-          (s, it) => s + (it.price_at_time || 0) * (it.quantity || 0),
-          0
-        ),
-      total_amount:
-        cartSummary.total ||
-        items.reduce(
-          (s, it) => s + (it.price_at_time || 0) * (it.quantity || 0),
-          0
-        ),
-      shippingInfo: formData,
-      items,
-      created_at: new Date().toISOString(),
-    };
-
-    try {
-      await cartService.clearCart();
-    } catch (clearErr) {
-      console.warn("Failed to clear cart after local order:", clearErr);
-    }
-
-    localStorage.setItem("lastOrder", JSON.stringify(order));
-    window.location.href = "/order-confirmation.html";
-    return;
+    // Backend call failed - show error to user
+    console.error("Order creation failed:", err);
+    showError("Failed to create order. Please try again or contact support.");
+    submitButton.disabled = false;
+    submitButton.textContent = "Place Order";
   }
-  localStorage.setItem("lastOrder", JSON.stringify(data.order || data));
-  window.location.href = "/order-confirmation.html";
 }
 
 // Show error message

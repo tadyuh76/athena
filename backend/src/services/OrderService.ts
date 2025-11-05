@@ -1,5 +1,5 @@
-import { supabase, supabaseAdmin } from "../utils/supabase";
-import { Order, OrderItem, CartItem, ProductVariant, UserAddress } from "../types/database.types";
+import { supabaseAdmin } from "../utils/supabase";
+import { Order } from "../types/database.types";
 
 export class OrderService {
     // Phương thức giả định để lấy tất cả đơn hàng (dùng cho Admin)

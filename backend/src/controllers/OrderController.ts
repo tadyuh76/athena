@@ -1,7 +1,7 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import { ServerResponse } from 'http';
 import { OrderService } from '../services/OrderService';
 import { AuthRequest } from '../middleware/auth';
-import { parseBody, sendJSON, sendError } from '../utils/request-handler';
+import { sendJSON, sendError } from '../utils/request-handler';
 
 export class OrderController {
   private orderService: OrderService;

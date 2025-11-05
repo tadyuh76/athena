@@ -10,25 +10,27 @@ export function registerAdminProductImagesRoutes(router: Router) {
   // ======================
   router.get("/api/admin/product-images", async (_req, res) => {
     try {
-      const dirPath = path.join(process.cwd(), "..", "public", "images");
-      console.log("Đường dẫn đang dùng:", dirPath);
+      // Use environment variable for images path, with fallback
+      const imagesPath = process.env.IMAGES_PATH || path.join(process.cwd(), "public", "images");
+
       // Kiểm tra thư mục tồn tại
-      if (!fs.existsSync(dirPath)) {
-        return sendError(res, 404, "Thư mục public/images không tồn tại");
+      if (!fs.existsSync(imagesPath)) {
+        console.warn(`Images directory not found at: ${imagesPath}`);
+        return sendJSON(res, 200, []); // Return empty array instead of error
       }
 
       // Đọc tất cả file ảnh
-      const files = fs.readdirSync(dirPath);
+      const files = fs.readdirSync(imagesPath);
       const urls = files
         .filter((file) => /\.(jpg|jpeg|png|gif|webp)$/i.test(file))
         .map((file) => `/images/${file}`);
 
       sendJSON(res, 200, urls);
     } catch (err: any) {
-      console.error("❌ Lỗi đọc thư mục ảnh:", err);
-      sendError(res, 500, "Không thể đọc danh sách ảnh từ thư mục public/images");
+      console.error("Error reading images directory:", err);
+      sendError(res, 500, "Failed to read images directory");
     }
-  });
+  }, [Router.requireRole(['admin', 'staff'])]);
 
   // ======================
   // 🟢 POST: Thêm ảnh vào bảng product_images (nếu bạn vẫn cần)
@@ -53,5 +55,5 @@ export function registerAdminProductImagesRoutes(router: Router) {
     } catch (err: any) {
       sendError(res, 500, err.message || "Failed to insert product image");
     }
-  });
+  }, [Router.requireRole(['admin', 'staff'])]);
 }

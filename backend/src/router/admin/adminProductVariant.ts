@@ -9,7 +9,7 @@ export function registerAdminProductVariantRoutes(router: Router) {
   // GET variants by product
   router.get("/api/admin/products/:id/variants", (req, res, params) => {
     return controller.getByProduct(req, res, params.id);
-  });
+  }, [Router.requireRole(['admin', 'staff'])]);
 
   // POST upsert variants
   router.post("/api/admin/products/:id/variants", async (req: any, res: any) => {
@@ -21,10 +21,10 @@ export function registerAdminProductVariantRoutes(router: Router) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: err.message || "Failed to parse body" }));
     }
-  });
+  }, [Router.requireRole(['admin', 'staff'])]);
 
   // DELETE variant
   router.delete("/api/admin/products/:productId/variants/:id", (req, res, params) => {
     return controller.remove(req, res, params.id);
-  });
+  }, [Router.requireRole(['admin', 'staff'])]);
 }

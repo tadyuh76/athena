@@ -47,24 +47,87 @@ export class ProductVariantModel extends BaseModel<ProductVariant> {
   }
 
   /**
-   * Reserve inventory for a variant
+   * Reserve inventory for a variant atomically (prevents race conditions)
+   * Uses optimistic locking with retry mechanism
    */
-  async reserveInventory(variantId: string, quantity: number, durationMinutes: number = 15): Promise<Date> {
-    try {
-      const { data, error } = await this.adminClient
-        .rpc('reserve_inventory', {
-          p_variant_id: variantId,
-          p_quantity: quantity,
-          p_duration_minutes: durationMinutes
-        });
+  async reserveInventoryAtomic(variantId: string, quantity: number, _durationMinutes: number = 15): Promise<boolean> {
+    const maxRetries = 3;
+    let retries = 0;
 
-      if (error) {
-        throw error;
+    while (retries < maxRetries) {
+      try {
+        // 1. Get current variant data
+        const variant = await this.findById(variantId);
+        if (!variant) {
+          throw new Error('Variant not found');
+        }
+
+        // 2. Check if enough inventory is available
+        const available = variant.inventory_quantity - variant.reserved_quantity;
+        if (available < quantity) {
+          return false;
+        }
+
+        // 3. Try to update with optimistic locking (checking updated_at hasn't changed)
+        const { error } = await this.adminClient
+          .from(this.tableName)
+          .update({
+            reserved_quantity: variant.reserved_quantity + quantity,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', variantId)
+          .eq('updated_at', variant.updated_at) // Optimistic lock
+          .select()
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // No rows updated - concurrent modification detected, retry
+            retries++;
+            await new Promise(resolve => setTimeout(resolve, 50 * retries)); // Exponential backoff
+            continue;
+          }
+          throw error;
+        }
+
+        // Success
+        return true;
+      } catch (error) {
+        if (retries === maxRetries - 1) {
+          throw new Error(`Failed to reserve inventory after ${maxRetries} retries: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 50 * retries));
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Release reserved inventory atomically
+   */
+  async releaseReservedInventory(variantId: string, quantity: number): Promise<void> {
+    try {
+      // Get current variant
+      const variant = await this.findById(variantId);
+      if (!variant) {
+        throw new Error('Variant not found');
       }
 
-      return new Date(data);
+      // Update reserved quantity (ensure it doesn't go below 0)
+      const newReservedQuantity = Math.max(0, variant.reserved_quantity - quantity);
+
+      await this.adminClient
+        .from(this.tableName)
+        .update({
+          reserved_quantity: newReservedQuantity,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', variantId);
+
     } catch (error) {
-      throw new Error(`Failed to reserve inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Failed to release reserved inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

@@ -7,6 +7,7 @@ exports.supabaseAdmin = exports.supabase = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
+dotenv_1.default.config();
 const isDev = __dirname.includes('/src/');
 const envPath = isDev
     ? path_1.default.resolve(__dirname, '../../../.env')

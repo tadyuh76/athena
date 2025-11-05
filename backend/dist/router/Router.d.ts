@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { AuthRequest, requireAuth, optionalAuth } from '../middleware/auth';
+import { AuthRequest, requireAuth, optionalAuth, requireRole } from '../middleware/auth';
 export type RouteHandler = (req: IncomingMessage | AuthRequest, res: ServerResponse, params?: any) => Promise<void>;
 export interface Route {
     method: string;
@@ -17,5 +17,6 @@ export declare class Router {
     handle(req: IncomingMessage, res: ServerResponse): Promise<boolean>;
     static requireAuth: typeof requireAuth;
     static optionalAuth: typeof optionalAuth;
+    static requireRole: typeof requireRole;
 }
 //# sourceMappingURL=Router.d.ts.map

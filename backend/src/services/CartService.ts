@@ -1,4 +1,3 @@
-import { supabaseAdmin } from "../utils/supabase";
 import { CartModel, CartItemWithDetails } from "../models/CartModel";
 import { ProductVariantModel } from "../models/ProductVariantModel";
 import { CartItem } from "../types/database.types";
@@ -109,7 +108,7 @@ export class CartService {
         );
       }
 
-      // Get variant details for pricing and inventory check
+      // Get variant details for pricing
       console.log('[CartService.addItem] Fetching variant details...');
       const variant = await this.variantModel.findById(variantId);
 
@@ -122,17 +121,19 @@ export class CartService {
 
       const price = variant.price || 0;
 
-      // Check inventory
-      const available = variant.inventory_quantity - variant.reserved_quantity;
-      console.log('[CartService.addItem] Available inventory:', available);
-      if (available < quantity) {
+      // Atomically reserve inventory (prevents race conditions)
+      console.log('[CartService.addItem] Attempting to reserve inventory atomically...');
+      const reservationSuccess = await this.variantModel.reserveInventoryAtomic(variantId, quantity, 15);
+
+      if (!reservationSuccess) {
+        const available = await this.variantModel.getAvailableQuantity(variantId);
         console.error('[CartService.addItem] Insufficient inventory');
         throw new Error(`Only ${available} items available`);
       }
 
       // Reserve inventory
       const reservationExpiry = new Date(Date.now() + 15 * 60 * 1000);
-      console.log('[CartService.addItem] Adding item to cart...');
+      console.log('[CartService.addItem] Inventory reserved successfully, adding item to cart...');
 
       // Add item to cart
       const cartItem = await this.cartModel.create({
@@ -144,12 +145,6 @@ export class CartService {
         price_at_time: price,
         inventory_reserved_until: reservationExpiry as any,
       });
-
-      console.log('[CartService.addItem] Item added, updating reserved quantity...');
-      // Update variant reserved quantity
-      await this.variantModel.update(variantId, {
-        reserved_quantity: variant.reserved_quantity + quantity,
-      } as any, true);
 
       console.log('[CartService.addItem] Success! Cart item ID:', cartItem.id);
       return cartItem;
@@ -167,55 +162,84 @@ export class CartService {
     itemId: string,
     quantity: number
   ): Promise<CartItem> {
-    try {
-      if (quantity <= 0) {
-        await this.removeItem(itemId);
-        throw new Error("Item removed from cart");
-      }
+    const maxRetries = 3;
+    let retries = 0;
 
-      // Get current item to check inventory
-      const currentItem = await this.cartModel.findByIdWithVariant(itemId);
-
-      if (!currentItem) {
-        throw new Error("Cart item not found");
-      }
-
-      const variant = currentItem.variant;
-      if (!variant) {
-        throw new Error("Variant not found");
-      }
-
-      const currentQuantity = currentItem.quantity;
-      const quantityDiff = quantity - currentQuantity;
-
-      // Check inventory if increasing quantity
-      if (quantityDiff > 0) {
-        const available =
-          variant.inventory_quantity - variant.reserved_quantity;
-        if (available < quantityDiff) {
-          throw new Error(`Only ${available} additional items available`);
+    while (retries < maxRetries) {
+      try {
+        if (quantity <= 0) {
+          await this.removeItem(itemId);
+          throw new Error("Item removed from cart");
         }
+
+        // Get current cart item with variant
+        const currentItem = await this.cartModel.findByIdWithVariant(itemId);
+        if (!currentItem) {
+          throw new Error("Cart item not found");
+        }
+
+        const variant = currentItem.variant;
+        if (!variant) {
+          throw new Error("Variant not found");
+        }
+
+        const currentQuantity = currentItem.quantity;
+        const quantityDiff = quantity - currentQuantity;
+
+        // If increasing quantity, check inventory availability
+        if (quantityDiff > 0) {
+          const available = variant.inventory_quantity - variant.reserved_quantity;
+          if (available < quantityDiff) {
+            throw new Error(`Only ${available} additional items available`);
+          }
+
+          // Try to reserve the additional inventory first
+          const reserved = await this.variantModel.reserveInventoryAtomic(
+            variant.id,
+            quantityDiff,
+            15
+          );
+
+          if (!reserved) {
+            const currentAvailable = await this.variantModel.getAvailableQuantity(variant.id);
+            throw new Error(`Only ${currentAvailable} additional items available`);
+          }
+
+          // Release the old reservation
+          await this.variantModel.releaseReservedInventory(variant.id, currentQuantity);
+        } else if (quantityDiff < 0) {
+          // Decreasing quantity - release the difference
+          await this.variantModel.releaseReservedInventory(variant.id, Math.abs(quantityDiff));
+        }
+
+        // Update cart item quantity
+        const updatedItem = await this.cartModel.update(itemId, {
+          quantity,
+          updated_at: new Date().toISOString(),
+        } as any);
+
+        return updatedItem;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+
+        // Don't retry on user-facing errors
+        if (errorMessage.includes("additional items available") ||
+            errorMessage.includes("not found") ||
+            errorMessage.includes("removed from cart")) {
+          throw new Error(`Failed to update cart item: ${errorMessage}`);
+        }
+
+        // Retry on transient errors
+        if (retries === maxRetries - 1) {
+          throw new Error(`Failed to update cart item after ${maxRetries} retries: ${errorMessage}`);
+        }
+
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 50 * retries));
       }
-
-      // Update cart item
-      const updatedItem = await this.cartModel.update(itemId, {
-        quantity,
-        updated_at: new Date().toISOString(),
-      } as any);
-
-      // Update variant reserved quantity
-      await this.variantModel.update(variant.id, {
-        reserved_quantity: variant.reserved_quantity + quantityDiff,
-      } as any, true);
-
-      return updatedItem;
-    } catch (error) {
-      throw new Error(
-        `Failed to update cart item: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
     }
+
+    throw new Error("Failed to update cart item: Maximum retries exceeded");
   }
 
   async removeItem(itemId: string): Promise<void> {
@@ -232,14 +256,9 @@ export class CartService {
       // Remove item from cart
       await this.cartModel.delete(itemId);
 
-      // Release reserved inventory
+      // Release reserved inventory atomically
       if (variant) {
-        await this.variantModel.update(variant.id, {
-          reserved_quantity: Math.max(
-            0,
-            variant.reserved_quantity - currentItem.quantity
-          ),
-        } as any, true);
+        await this.variantModel.releaseReservedInventory(variant.id, currentItem.quantity);
       }
     } catch (error) {
       throw new Error(
@@ -268,16 +287,11 @@ export class CartService {
       }
 
       if (items && items.length > 0) {
-        // Release reserved inventory for all items
+        // Release reserved inventory for all items atomically
         for (const item of items) {
           const variant = item.variant;
           if (variant) {
-            await this.variantModel.update(variant.id, {
-              reserved_quantity: Math.max(
-                0,
-                variant.reserved_quantity - item.quantity
-              ),
-            } as any, true);
+            await this.variantModel.releaseReservedInventory(variant.id, item.quantity);
           }
         }
 
@@ -410,21 +424,9 @@ export class CartService {
         return;
       }
 
-      // Release reserved inventory for expired items
+      // Release reserved inventory for expired items atomically
       for (const item of expiredItems) {
-        // Get fresh variant data to ensure accuracy
-        const variant = await this.variantModel.findById(item.variant_id);
-        if (variant) {
-          await supabaseAdmin
-            .from("product_variants")
-            .update({
-              reserved_quantity: Math.max(
-                0,
-                variant.reserved_quantity - item.quantity
-              ),
-            })
-            .eq("id", variant.id);
-        }
+        await this.variantModel.releaseReservedInventory(item.variant_id, item.quantity);
       }
 
       // Clear the reservation timestamp on expired items

@@ -53,6 +53,7 @@ class Router {
     }
     static requireAuth = auth_1.requireAuth;
     static optionalAuth = auth_1.optionalAuth;
+    static requireRole = auth_1.requireRole;
 }
 exports.Router = Router;
 //# sourceMappingURL=Router.js.map

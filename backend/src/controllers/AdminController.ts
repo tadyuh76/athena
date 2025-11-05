@@ -1,9 +1,10 @@
 import { ServerResponse } from 'http';
-import { AuthRequest, sendJSON, sendError } from '../utils/request-handler';
-import { getAdminDashboard } from '../router/admin/dashboard'; // ✅ Import đúng file bạn đã viết
+import { sendJSON, sendError } from '../utils/request-handler';
+import { AuthRequest } from '../middleware/auth';
+import { getAdminDashboard } from '../router/admin/dashboard';
 
 export class AdminController {
-    async getDashboardSummary(req: AuthRequest, res: ServerResponse) {
+    async getDashboardSummary(_req: AuthRequest, res: ServerResponse) {
         try {
             const result = await getAdminDashboard(); // ✅ Gọi hàm thật từ Supabase
 

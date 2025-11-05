@@ -96,7 +96,7 @@ export class ProductService {
     return this.variantModel.checkInventory(variantId, quantity);
   }
 
-  async reserveInventory(variantId: string, quantity: number, durationMinutes: number = 15): Promise<Date> {
-    return this.variantModel.reserveInventory(variantId, quantity, durationMinutes);
+  async reserveInventory(variantId: string, quantity: number, durationMinutes: number = 15): Promise<boolean> {
+    return this.variantModel.reserveInventoryAtomic(variantId, quantity, durationMinutes);
   }
 }

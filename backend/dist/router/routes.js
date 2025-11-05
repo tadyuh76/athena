@@ -6,14 +6,22 @@ const AuthController_1 = require("../controllers/AuthController");
 const ProductController_1 = require("../controllers/ProductController");
 const CartController_1 = require("../controllers/CartController");
 const WishlistController_1 = require("../controllers/WishlistController");
+const OrderController_1 = require("../controllers/OrderController");
 const ReviewController_1 = require("../controllers/ReviewController");
 const request_handler_1 = require("../utils/request-handler");
+const supabase_1 = require("../utils/supabase");
+const CollectionController_1 = require("../controllers/CollectionController");
+const adminProducts_1 = require("./admin/adminProducts");
+const adminProductImages_1 = require("./admin/adminProductImages");
+const adminImageBrowser_1 = require("./admin/adminImageBrowser");
+const adminProductVariant_1 = require("./admin/adminProductVariant");
 function setupRoutes() {
     const router = new Router_1.Router();
     const authController = new AuthController_1.AuthController();
     const productController = new ProductController_1.ProductController();
     const cartController = new CartController_1.CartController();
     const wishlistController = new WishlistController_1.WishlistController();
+    const orderController = new OrderController_1.OrderController();
     const reviewController = new ReviewController_1.ReviewController();
     router.post('/api/auth/register', (req, res) => authController.register(req, res));
     router.post('/api/auth/login', (req, res) => authController.login(req, res));
@@ -43,6 +51,8 @@ function setupRoutes() {
     router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router_1.Router.requireAuth]);
     router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/admin/orders', (req, res) => orderController.getAllOrders(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
     router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router_1.Router.requireAuth]);
     router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router_1.Router.requireAuth]);
@@ -54,6 +64,48 @@ function setupRoutes() {
     router.get('/api/health', async (_req, res) => {
         (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     });
+    router.get("/api/admin/dashboard", async (_req, res) => {
+        try {
+            const { data: orders, error: ordersError } = await supabase_1.supabase
+                .from("orders")
+                .select("subtotal, tax_amount, shipping_amount, discount_amount, total_amount");
+            if (ordersError)
+                throw ordersError;
+            const totalOrders = orders?.length || 0;
+            const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+            const { count: totalCollections, error: collectionsError } = await supabase_1.supabase
+                .from("product_collections")
+                .select("*", { count: "exact", head: true });
+            if (collectionsError)
+                throw collectionsError;
+            const { count: totalProducts, error: productsError } = await supabase_1.supabase
+                .from("products")
+                .select("*", { count: "exact", head: true });
+            if (productsError)
+                throw productsError;
+            const responseBody = JSON.stringify({
+                totalRevenue,
+                totalOrders,
+                totalCollections: totalCollections ?? 0,
+                totalProducts: totalProducts ?? 0,
+            });
+            res.writeHead(200, { "Content-Type": "application/json" });
+            res.end(responseBody);
+        }
+        catch (error) {
+            console.error("Dashboard API Error:", error);
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ message: "Error loading admin dashboard" }));
+        }
+    });
+    router.get("/api/admin/collections", CollectionController_1.CollectionController.getAll, [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post("/api/admin/collections", CollectionController_1.CollectionController.create, [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.put("/api/admin/collections/:id", CollectionController_1.CollectionController.update, [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.delete("/api/admin/collections/:id", CollectionController_1.CollectionController.remove, [Router_1.Router.requireRole(['admin', 'staff'])]);
+    (0, adminProducts_1.registerAdminProductRoutes)(router);
+    (0, adminProductVariant_1.registerAdminProductVariantRoutes)(router);
+    (0, adminProductImages_1.registerAdminProductImagesRoutes)(router);
+    (0, adminImageBrowser_1.registerAdminImageBrowser)(router);
     return router;
 }
 //# sourceMappingURL=routes.js.map

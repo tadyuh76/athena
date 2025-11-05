@@ -1,42 +1,41 @@
 // src/controllers/AdminProductVariantController.ts
 import { AdminProductVariantService, ProductVariantInput } from "../services/AdminProductVariantService";
+import { sendJSON, sendError } from "../utils/request-handler";
+import { IncomingMessage, ServerResponse } from "http";
 
 const service = new AdminProductVariantService();
 
 export class AdminProductVariantController {
-  // Lấy variants theo product
-  async getByProduct(req: any, res: any, productId: string) {
+  // Get variants by product
+  async getByProduct(_req: IncomingMessage, res: ServerResponse, productId: string) {
     try {
       const variants = await service.getByProduct(productId);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ data: variants }));
+      sendJSON(res, 200, { success: true, data: variants });
     } catch (err: any) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: err.message }));
+      console.error('[AdminProductVariantController.getByProduct] Error:', err);
+      sendError(res, 500, err.message || 'Failed to get product variants');
     }
   }
 
-  // Upsert nhiều variants
-  async upsert(req: any, res: any, variants: ProductVariantInput[]) {
+  // Upsert multiple variants
+  async upsert(_req: IncomingMessage, res: ServerResponse, variants: ProductVariantInput[]) {
     try {
       const result = await service.upsert(variants);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ data: result }));
+      sendJSON(res, 200, { success: true, data: result });
     } catch (err: any) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: err.message }));
+      console.error('[AdminProductVariantController.upsert] Error:', err);
+      sendError(res, 500, err.message || 'Failed to upsert variants');
     }
   }
 
-  // Xóa variant
-  async remove(req: any, res: any, id: string) {
+  // Delete variant
+  async remove(_req: IncomingMessage, res: ServerResponse, id: string) {
     try {
-      const result = await service.remove(id);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ data: result }));
+      await service.remove(id);
+      sendJSON(res, 200, { success: true, message: 'Variant deleted successfully' });
     } catch (err: any) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: err.message }));
+      console.error('[AdminProductVariantController.remove] Error:', err);
+      sendError(res, 500, err.message || 'Failed to delete variant');
     }
   }
 }

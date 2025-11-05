@@ -4,15 +4,14 @@ import { ProductController } from '../controllers/ProductController';
 import { CartController } from '../controllers/CartController';
 import { WishlistController } from '../controllers/WishlistController';
 import { OrderController } from '../controllers/OrderController';
-import { AdminController } from '../controllers/AdminController';
 import { ReviewController } from '../controllers/ReviewController';
 import { sendJSON } from '../utils/request-handler';
-import { getAdminDashboard } from "./admin/dashboard";
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
 import { registerAdminProductRoutes } from "./admin/adminProducts";
 import { registerAdminProductImagesRoutes } from "./admin/adminProductImages";
 import { registerAdminImageBrowser } from "./admin/adminImageBrowser";
+import { registerAdminProductVariantRoutes } from "./admin/adminProductVariant";
 
 
 export function setupRoutes(): Router {
@@ -23,7 +22,6 @@ export function setupRoutes(): Router {
   const cartController = new CartController();
   const wishlistController = new WishlistController();
   const orderController = new OrderController();
-  const adminController = new AdminController();
   const reviewController = new ReviewController();
 
   // Auth routes
@@ -88,9 +86,9 @@ export function setupRoutes(): Router {
   });
 
   // Admin Dashboard route
-  router.get("/api/admin/dashboard", async (req, res) => {
+  router.get("/api/admin/dashboard", async (_req, res) => {
     try {
-      // 🧾 Lấy dữ liệu orders
+      // Get orders data
       const { data: orders, error: ordersError } = await supabase
         .from("orders")
         .select("subtotal, tax_amount, shipping_amount, discount_amount, total_amount");
@@ -134,13 +132,16 @@ export function setupRoutes(): Router {
   });
 
   // Collection routes
-  router.get("/api/admin/collections", CollectionController.getAll);
-  router.post("/api/admin/collections", CollectionController.create);
-  router.put("/api/admin/collections/:id", CollectionController.update);
-  router.delete("/api/admin/collections/:id", CollectionController.remove);
+  router.get("/api/admin/collections", CollectionController.getAll, [Router.requireRole(['admin', 'staff'])]);
+  router.post("/api/admin/collections", CollectionController.create, [Router.requireRole(['admin', 'staff'])]);
+  router.put("/api/admin/collections/:id", CollectionController.update, [Router.requireRole(['admin', 'staff'])]);
+  router.delete("/api/admin/collections/:id", CollectionController.remove, [Router.requireRole(['admin', 'staff'])]);
 
   // Register Admin Product Routes
   registerAdminProductRoutes(router);
+
+  // Register Admin Product Variant Routes
+  registerAdminProductVariantRoutes(router);
 
   // Register Admin Product Images Routes
   registerAdminProductImagesRoutes(router);

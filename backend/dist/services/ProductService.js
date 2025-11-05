@@ -78,7 +78,7 @@ class ProductService {
         return this.variantModel.checkInventory(variantId, quantity);
     }
     async reserveInventory(variantId, quantity, durationMinutes = 15) {
-        return this.variantModel.reserveInventory(variantId, quantity, durationMinutes);
+        return this.variantModel.reserveInventoryAtomic(variantId, quantity, durationMinutes);
     }
 }
 exports.ProductService = ProductService;

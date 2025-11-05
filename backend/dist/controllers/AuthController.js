@@ -1,5 +1,4 @@
-netstat -ano | findstr ;3000
-netstat -ano | findstr ;3001;"use strict";
+"use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const url_1 = require("url");

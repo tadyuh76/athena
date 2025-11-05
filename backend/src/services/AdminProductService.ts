@@ -1,4 +1,5 @@
-import { supabaseAdmin as supabase } from '../utils/supabase';
+import { ProductModel, ProductWithVariants } from '../models/ProductModel';
+import { Product } from '../types/database.types';
 
 export interface ProductInput {
   name: string;
@@ -24,9 +25,13 @@ export interface ProductInput {
 }
 
 export class AdminProductService {
-  private table = 'products';
+  private productModel: ProductModel;
 
-  async create(input: ProductInput): Promise<any> {
+  constructor() {
+    this.productModel = new ProductModel();
+  }
+
+  async create(input: ProductInput): Promise<Product> {
     const sanitizedInput = {
       name: input.name,
       sku: input.sku || '',
@@ -54,19 +59,13 @@ export class AdminProductService {
       status: input.status ?? 'active',
       is_featured: input.is_featured ?? false,
       low_stock_threshold: input.low_stock_threshold ?? null,
-    };
+    } as Partial<Product>;
 
-    const { data, error } = await supabase
-      .from(this.table)
-      .insert([sanitizedInput])
-      .select()
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data;
+    const product = await this.productModel.create(sanitizedInput);
+    return product;
   }
 
-  async update(id: string, input: Partial<ProductInput>): Promise<any> {
+  async update(id: string, input: Partial<ProductInput>): Promise<Product> {
     const sanitizedInput = {
       ...input,
       sku: input.sku ?? '',
@@ -92,43 +91,28 @@ export class AdminProductService {
       status: input.status ?? 'active',
       is_featured: input.is_featured ?? false,
       low_stock_threshold: input.low_stock_threshold ?? null,
-    };
+    } as Partial<Product>;
 
-    const { data: productData, error: productError } = await supabase
-      .from(this.table)
-      .update(sanitizedInput)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (productError) throw new Error(productError.message);
-
-    return productData;
+    const product = await this.productModel.update(id, sanitizedInput);
+    return product;
   }
 
-  async getAll(): Promise<any[]> {
-    const { data, error } = await supabase
-      .from(this.table)
-      .select(`*, category:product_categories(*), collection:product_collections(*), images:product_images(*)`)
-      .order('created_at', { ascending: false });
-
-    if (error) throw new Error(error.message);
-    return data || [];
+  async getAll(): Promise<ProductWithVariants[]> {
+    // Use ProductModel's findWithFilters to get all products with relations
+    const result = await this.productModel.findWithFilters(
+      { status: undefined }, // Get all statuses for admin
+      1,
+      1000 // Large limit for admin view
+    );
+    return result.products;
   }
 
-  async getById(id: string): Promise<any | null> {
-    const { data, error } = await supabase
-      .from(this.table)
-      .select(`*, category:product_categories(*), collection:product_collections(*), images:product_images(*)`)
-      .eq('id', id)
-      .single();
-
-    if (error) throw new Error(error.message);
-    return data;
+  async getById(id: string): Promise<ProductWithVariants | null> {
+    const product = await this.productModel.findByIdWithRelations(id);
+    return product;
   }
 
   async remove(id: string): Promise<void> {
-    const { error } = await supabase.from(this.table).delete().eq('id', id);
-    if (error) throw new Error(error.message);
+    await this.productModel.delete(id, true); // Use admin client
   }
 }

@@ -18,6 +18,6 @@ export declare class ProductService {
     getCategories(): Promise<ProductCategory[]>;
     getCollections(): Promise<ProductCollection[]>;
     checkInventory(variantId: string, quantity: number): Promise<boolean>;
-    reserveInventory(variantId: string, quantity: number, durationMinutes?: number): Promise<Date>;
+    reserveInventory(variantId: string, quantity: number, durationMinutes?: number): Promise<boolean>;
 }
 //# sourceMappingURL=ProductService.d.ts.map
