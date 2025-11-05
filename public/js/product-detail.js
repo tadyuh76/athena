@@ -81,9 +81,9 @@ async function loadProduct(productId) {
   container.innerHTML = `
     <div class="col-12 text-center py-5">
       <div class="spinner-border text-secondary" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden">Đang tải...</span>
       </div>
-      <div class="mt-3 text-muted">Loading product details...</div>
+      <div class="mt-3 text-muted">Đang tải thông tin sản phẩm...</div>
     </div>
   `;
 
@@ -91,7 +91,7 @@ async function loadProduct(productId) {
     currentProduct = await productService.getProductById(productId);
 
     if (!currentProduct) {
-      throw new Error("Product not found");
+      throw new Error("Không tìm thấy sản phẩm");
     }
 
     // Set default variant
@@ -119,9 +119,9 @@ async function loadProduct(productId) {
     container.innerHTML = `
       <div class="col-12 text-center py-5">
         <div class="alert alert-danger">
-          <h4>Product Not Found</h4>
-          <p>The product you're looking for doesn't exist or has been removed.</p>
-          <a href="/products.html" class="btn btn-dark">Browse Products</a>
+          <h4>Không Tìm Thấy Sản Phẩm</h4>
+          <p>Sản phẩm bạn đang tìm không tồn tại hoặc đã bị xóa.</p>
+          <a href="/products.html" class="btn btn-dark">Xem Sản Phẩm</a>
         </div>
       </div>
     `;
@@ -477,7 +477,7 @@ window.addToCart = async function () {
 
   if (!authService.isAuthenticated()) {
     console.log('[addToCart] User not authenticated');
-    showToast('Please sign in to add items to cart', 'warning');
+    showToast('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng', 'warning');
     setTimeout(() => {
       window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.href);
     }, 1500);
@@ -486,7 +486,7 @@ window.addToCart = async function () {
 
   if (!selectedVariant) {
     console.log('[addToCart] No variant selected');
-    showToast('Please select product options first', 'warning');
+    showToast('Vui lòng chọn tùy chọn sản phẩm trước', 'warning');
     return;
   }
 
@@ -516,10 +516,10 @@ window.addToCart = async function () {
 
     console.log('[addToCart] Updating cart count...');
     await updateCartCount();
-    showToast('Added to cart!', 'success');
+    showToast('Đã thêm vào giỏ hàng!', 'success');
 
     // Update button with success state
-    button.innerHTML = '<i class="bi bi-check2 me-2"></i>Added to Cart!';
+    button.innerHTML = '<i class="bi bi-check2 me-2"></i>Đã Thêm!';
 
     // Reset button after delay
     setTimeout(() => {
@@ -532,7 +532,7 @@ window.addToCart = async function () {
 
   } catch (error) {
     console.error('[addToCart] Error:', error);
-    showToast(error.message || 'Failed to add to cart. Please try again.', 'danger');
+    showToast(error.message || 'Không thể thêm vào giỏ hàng. Vui lòng thử lại.', 'danger');
     button.disabled = false;
     button.innerHTML = originalText;
     button.style.width = '';
@@ -542,7 +542,7 @@ window.addToCart = async function () {
 
 window.toggleWishlist = async function () {
   if (!authService.isAuthenticated()) {
-    showToast('Please sign in to use wishlist', 'warning');
+    showToast('Vui lòng đăng nhập để sử dụng danh sách yêu thích', 'warning');
     return;
   }
 
@@ -556,20 +556,20 @@ window.toggleWishlist = async function () {
       wishlistItemId = null;
       button.classList.remove('active');
       icon.classList.replace('bi-heart-fill', 'bi-heart');
-      button.innerHTML = '<i class="bi bi-heart me-2"></i>Add to Wishlist';
-      showToast('Removed from wishlist', 'info');
+      button.innerHTML = '<i class="bi bi-heart me-2"></i>Thêm Vào Yêu Thích';
+      showToast('Đã xóa khỏi danh sách yêu thích', 'info');
     } else {
       const result = await wishlistService.addItem(currentProduct.id);
       isInWishlist = true;
       wishlistItemId = result.id;
       button.classList.add('active');
       icon.classList.replace('bi-heart', 'bi-heart-fill');
-      button.innerHTML = '<i class="bi bi-heart-fill me-2"></i>In Wishlist';
-      showToast('Added to wishlist!', 'success');
+      button.innerHTML = '<i class="bi bi-heart-fill me-2"></i>Trong Danh Sách';
+      showToast('Đã thêm vào danh sách yêu thích!', 'success');
     }
   } catch (error) {
     console.error('Failed to toggle wishlist:', error);
-    showToast('Failed to update wishlist', 'danger');
+    showToast('Không thể cập nhật danh sách yêu thích', 'danger');
   }
 };
 
@@ -933,7 +933,7 @@ function highlightStars(rating) {
 // Open review modal
 window.openReviewModal = async function() {
   if (!authService.isAuthenticated()) {
-    showToast('Please sign in to write a review', 'warning');
+    showToast('Vui lòng đăng nhập để viết đánh giá', 'warning');
     setTimeout(() => {
       window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.href);
     }, 1500);
@@ -944,14 +944,14 @@ window.openReviewModal = async function() {
   try {
     const eligibility = await reviewService.checkReviewEligibility(currentProduct.id);
     if (!eligibility.canReview) {
-      showToast(eligibility.reason || 'You cannot review this product', 'warning');
+      showToast(eligibility.reason || 'Bạn không thể đánh giá sản phẩm này', 'warning');
       return;
     }
 
     reviewModal.show();
   } catch (error) {
     console.error('Error checking review eligibility:', error);
-    showToast('Failed to check review eligibility', 'danger');
+    showToast('Không thể kiểm tra điều kiện đánh giá', 'danger');
   }
 };
 
@@ -962,19 +962,19 @@ async function submitReview() {
   const reviewText = document.getElementById('reviewText').value.trim();
 
   if (!rating || rating < 1 || rating > 5) {
-    showToast('Please select a rating', 'warning');
+    showToast('Vui lòng chọn số sao đánh giá', 'warning');
     return;
   }
 
   const submitBtn = document.getElementById('submitReviewBtn');
   const originalText = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang gửi...';
 
   try {
     await reviewService.createReview(currentProduct.id, rating, title, reviewText);
 
-    showToast('Review submitted successfully!', 'success');
+    showToast('Đã gửi đánh giá thành công!', 'success');
     reviewModal.hide();
     resetReviewForm();
 
@@ -982,7 +982,7 @@ async function submitReview() {
     await loadReviews(currentProduct.id);
   } catch (error) {
     console.error('Error submitting review:', error);
-    showToast(error.message || 'Failed to submit review', 'danger');
+    showToast(error.message || 'Không thể gửi đánh giá', 'danger');
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = originalText;
@@ -1001,24 +1001,24 @@ function resetReviewForm() {
 window.markReviewHelpful = async function(reviewId) {
   try {
     await reviewService.markHelpful(reviewId);
-    showToast('Thank you for your feedback!', 'success');
+    showToast('Cảm ơn phản hồi của bạn!', 'success');
 
     // Reload reviews to show updated count
     await loadReviews(currentProduct.id);
   } catch (error) {
     console.error('Error marking review as helpful:', error);
-    showToast('Failed to mark review as helpful', 'danger');
+    showToast('Không thể đánh dấu đánh giá hữu ích', 'danger');
   }
 };
 
 // Delete review
 window.deleteReview = async function(reviewId) {
   const confirmed = await Dialog.confirm(
-    'Are you sure you want to delete this review? This action cannot be undone.',
+    'Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.',
     {
-      title: 'Delete Review',
-      confirmText: 'Delete',
-      cancelText: 'Cancel',
+      title: 'Xóa Đánh Giá',
+      confirmText: 'Xóa',
+      cancelText: 'Hủy',
       confirmClass: 'btn-danger'
     }
   );
@@ -1029,12 +1029,12 @@ window.deleteReview = async function(reviewId) {
 
   try {
     await reviewService.deleteReview(reviewId);
-    showToast('Review deleted successfully', 'success');
+    showToast('Đã xóa đánh giá thành công', 'success');
 
     // Reload reviews
     await loadReviews(currentProduct.id);
   } catch (error) {
     console.error('Error deleting review:', error);
-    showToast('Failed to delete review', 'danger');
+    showToast('Không thể xóa đánh giá', 'danger');
   }
 };

@@ -57,6 +57,10 @@ function setupRoutes() {
     router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/orders/:id', (req, res, params) => orderController.getOrderById(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/admin/orders', (req, res) => orderController.getAllOrders(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/admin/orders/:id/confirm', (req, res, params) => orderController.confirmOrder(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/admin/orders/:id/ship', (req, res, params) => orderController.markAsShipped(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/admin/orders/:id/deliver', (req, res, params) => orderController.markAsDelivered(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/admin/orders/:id/cancel', (req, res, params) => orderController.cancelOrder(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.post('/api/webhooks/stripe', (req, res) => stripeWebhookController.handleWebhook(req, res));
     router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
     router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router_1.Router.requireAuth]);

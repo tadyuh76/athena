@@ -65,6 +65,8 @@ export function setupRoutes(): Router {
   // Order routes
   // CUSTOMER: Create order
   router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router.requireAuth]);
+  // CUSTOMER: Create Stripe Checkout Session
+  router.post('/api/orders/checkout-session', (req, res) => orderController.createCheckoutSession(req, res), [Router.requireAuth]);
   // CUSTOMER: Get my orders
   router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router.requireAuth]);
   // CUSTOMER/ADMIN: Get order by ID
@@ -73,6 +75,30 @@ export function setupRoutes(): Router {
   router.get(
     '/api/admin/orders',
     (req, res) => orderController.getAllOrders(req, res),
+    [Router.requireRole(['admin', 'staff'])]
+  );
+  // ADMIN: Confirm order
+  router.post(
+    '/api/admin/orders/:id/confirm',
+    (req, res, params) => orderController.confirmOrder(req, res, params.id),
+    [Router.requireRole(['admin', 'staff'])]
+  );
+  // ADMIN: Mark as shipped
+  router.post(
+    '/api/admin/orders/:id/ship',
+    (req, res, params) => orderController.markAsShipped(req, res, params.id),
+    [Router.requireRole(['admin', 'staff'])]
+  );
+  // ADMIN: Mark as delivered
+  router.post(
+    '/api/admin/orders/:id/deliver',
+    (req, res, params) => orderController.markAsDelivered(req, res, params.id),
+    [Router.requireRole(['admin', 'staff'])]
+  );
+  // ADMIN: Cancel order
+  router.post(
+    '/api/admin/orders/:id/cancel',
+    (req, res, params) => orderController.cancelOrder(req, res, params.id),
     [Router.requireRole(['admin', 'staff'])]
   );
 

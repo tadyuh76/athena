@@ -166,10 +166,8 @@ class SiteHeader extends HTMLElement {
                         </a>
                     
                     <nav id="main-nav">
-                        <a href="/products.html">Shop</a>
-                        <a href="/collections.html">Collections</a>
-                        <a href="/craft.html">Our Craft</a>
-                        <a href="/sustainability.html">Sustainability</a>
+                        <a href="/products.html">Cửa Hàng</a>
+                        <a href="/collections.html">Bộ Sưu Tập</a>
                     </nav>
 
                     <div class="nav-icons">

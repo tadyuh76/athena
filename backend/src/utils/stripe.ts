@@ -95,6 +95,54 @@ export async function confirmPaymentIntent(
 }
 
 /**
+ * Create a Stripe Checkout Session
+ */
+export async function createCheckoutSession(
+  orderId: string,
+  amount: number,
+  currency: string = 'usd',
+  customerEmail: string,
+  successUrl: string,
+  cancelUrl: string
+): Promise<Stripe.Checkout.Session> {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.');
+  }
+
+  try {
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: currency.toLowerCase(),
+            product_data: {
+              name: 'Order #' + orderId.slice(0, 8),
+              description: 'Athena Order',
+            },
+            unit_amount: Math.round(amount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      customer_email: customerEmail,
+      metadata: {
+        order_id: orderId,
+      },
+    });
+
+    return session;
+  } catch (error) {
+    throw new Error(
+      `Failed to create Stripe Checkout Session: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
+  }
+}
+
+/**
  * Construct event from webhook
  */
 export function constructWebhookEvent(

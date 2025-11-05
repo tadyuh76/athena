@@ -125,7 +125,7 @@ async function loadCategories() {
     const categories = await productService.getCategories();
 
     if (categories.length === 0) {
-      container.innerHTML = '<p class="text-muted small">No categories available</p>';
+      container.innerHTML = '<p class="text-muted small">Không có danh mục nào</p>';
       return;
     }
 
@@ -134,7 +134,7 @@ async function loadCategories() {
         <input class="form-check-input category-filter" type="radio" name="category"
                id="category-all" value="" ${!currentFilters.category_id ? 'checked' : ''}>
         <label class="form-check-label" for="category-all">
-          All Categories
+          Tất Cả Danh Mục
         </label>
       </div>
       ${categories.map(category => `
@@ -151,7 +151,7 @@ async function loadCategories() {
   } catch (error) {
     console.error("Failed to load categories:", error);
     document.getElementById("categoryFilters").innerHTML =
-      '<p class="text-danger small">Failed to load categories</p>';
+      '<p class="text-danger small">Không thể tải danh mục</p>';
   }
 }
 
@@ -164,7 +164,7 @@ async function loadCollections() {
     const collections = await productService.getCollections();
 
     if (collections.length === 0) {
-      container.innerHTML = '<p class="text-muted small">No collections available</p>';
+      container.innerHTML = '<p class="text-muted small">Không có bộ sưu tập nào</p>';
       return;
     }
 
@@ -173,7 +173,7 @@ async function loadCollections() {
         <input class="form-check-input collection-filter" type="radio" name="collection"
                id="collection-all" value="" ${!currentFilters.collection_id ? 'checked' : ''}>
         <label class="form-check-label" for="collection-all">
-          All Collections
+          Tất Cả Bộ Sưu Tập
         </label>
       </div>
       ${collections.map(collection => `
@@ -190,7 +190,7 @@ async function loadCollections() {
   } catch (error) {
     console.error("Failed to load collections:", error);
     document.getElementById("collectionFilters").innerHTML =
-      '<p class="text-danger small">Failed to load collections</p>';
+      '<p class="text-danger small">Không thể tải bộ sưu tập</p>';
   }
 }
 
@@ -226,15 +226,15 @@ async function loadProducts() {
     const { products, total, totalPages } = await productService.getProducts(filters, currentPage, 12);
 
     // Update product count
-    document.getElementById("productCount").textContent = `Showing ${products.length} of ${total} products`;
+    document.getElementById("productCount").textContent = `Hiển thị ${products.length} trong ${total} sản phẩm`;
 
     if (products.length === 0) {
       container.innerHTML = `
         <div class="col-12 text-center py-5">
           <i class="bi bi-search" style="font-size: 3rem; color: #ccc;"></i>
-          <h4 class="mt-3">No products found</h4>
-          <p class="text-muted">Try adjusting your filters or search terms</p>
-          <button class="btn btn-dark" onclick="window.clearAllFilters()">Clear Filters</button>
+          <h4 class="mt-3">Không tìm thấy sản phẩm</h4>
+          <p class="text-muted">Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm</p>
+          <button class="btn btn-dark" onclick="window.clearAllFilters()">Xóa Bộ Lọc</button>
         </div>
       `;
       return;
@@ -254,11 +254,11 @@ async function loadProducts() {
               ${authService.isAuthenticated() ? `
                 <button class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light rounded-circle wishlist-btn ${isInWishlist ? "active" : ""}"
                         onclick="window.toggleWishlist(event, '${product.id}')"
-                        title="${isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}">
+                        title="${isInWishlist ? 'Xóa khỏi danh sách yêu thích' : 'Thêm vào danh sách yêu thích'}">
                   <i class="bi ${isInWishlist ? "bi-heart-fill text-danger" : "bi-heart"}"></i>
                 </button>
               ` : ""}
-              ${!isInStock ? `<div class="position-absolute bottom-0 start-0 end-0 bg-secondary bg-opacity-75 text-white text-center py-2">Out of Stock</div>` : ""}
+              ${!isInStock ? `<div class="position-absolute bottom-0 start-0 end-0 bg-secondary bg-opacity-75 text-white text-center py-2">Hết Hàng</div>` : ""}
               <a href="/product-detail.html?id=${product.id}">
                 <img src="${primaryImage?.url || product.featured_image_url || "/images/placeholder-user.jpg"}"
                      class="card-img-top" alt="${product.name}" style="height: 350px; object-fit: cover;">
@@ -286,13 +286,13 @@ async function loadProducts() {
                 <div class="d-grid gap-2">
                   ${isInStock ? `
                     <button class="btn btn-dark btn-sm" onclick="window.quickAddToCart(event, '${product.id}')">
-                      <i class="bi bi-cart-plus me-2"></i>Quick Add
+                      <i class="bi bi-cart-plus me-2"></i>Thêm Nhanh
                     </button>
                   ` : `
-                    <button class="btn btn-secondary btn-sm" disabled>Out of Stock</button>
+                    <button class="btn btn-secondary btn-sm" disabled>Hết Hàng</button>
                   `}
                   <a href="/product-detail.html?id=${product.id}" class="btn btn-outline-dark btn-sm">
-                    View Details
+                    Xem Chi Tiết
                   </a>
                 </div>
               </div>
@@ -308,7 +308,7 @@ async function loadProducts() {
     console.error("Failed to load products:", error);
     container.innerHTML = `
       <div class="col-12 text-center py-5">
-        <p class="text-danger">Failed to load products. Please try again later.</p>
+        <p class="text-danger">Không thể tải sản phẩm. Vui lòng thử lại sau.</p>
         <small class="text-muted">${error.message}</small>
       </div>
     `;
@@ -503,7 +503,7 @@ window.toggleWishlist = async function (event, productId) {
   event.stopPropagation();
 
   if (!authService.isAuthenticated()) {
-    showToast("Please sign in to use wishlist", "warning");
+    showToast("Vui lòng đăng nhập để sử dụng danh sách yêu thích", "warning");
     return;
   }
 
@@ -519,18 +519,18 @@ window.toggleWishlist = async function (event, productId) {
       button.classList.remove("active");
       icon.classList.remove("bi-heart-fill", "text-danger");
       icon.classList.add("bi-heart");
-      showToast("Removed from wishlist", "info");
+      showToast("Đã xóa khỏi danh sách yêu thích", "info");
     } else {
       const result = await wishlistService.addItem(productId);
       wishlistItems.push(result);
       button.classList.add("active");
       icon.classList.remove("bi-heart");
       icon.classList.add("bi-heart-fill", "text-danger");
-      showToast("Added to wishlist!", "success");
+      showToast("Đã thêm vào danh sách yêu thích!", "success");
     }
   } catch (error) {
     console.error("Failed to toggle wishlist:", error);
-    showToast("Failed to update wishlist", "danger");
+    showToast("Không thể cập nhật danh sách yêu thích", "danger");
   }
 };
 
@@ -540,7 +540,7 @@ window.quickAddToCart = async function (event, productId) {
   event.stopPropagation();
 
   if (!authService.isAuthenticated()) {
-    showToast("Please sign in to add items to cart", "warning");
+    showToast("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "warning");
     setTimeout(() => {
       window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
     }, 1500);
@@ -552,12 +552,12 @@ window.quickAddToCart = async function (event, productId) {
   const originalWidth = button.offsetWidth;
   button.disabled = true;
   button.style.width = `${originalWidth}px`;
-  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
 
   try {
     const product = await productService.getProductById(productId);
     if (!product.variants || product.variants.length === 0) {
-      throw new Error("Product not available");
+      throw new Error("Sản phẩm không có sẵn");
     }
 
     // Get default or first available variant
@@ -565,15 +565,15 @@ window.quickAddToCart = async function (event, productId) {
       product.variants.find((v) => productService.getAvailableStock(v) > 0);
 
     if (!variant) {
-      throw new Error("Product out of stock");
+      throw new Error("Sản phẩm đã hết hàng");
     }
 
     await cartService.addItem(productId, variant.id, 1);
     await updateCartCount();
-    showToast("Added to cart!", "success");
+    showToast("Đã thêm vào giỏ hàng!", "success");
 
     // Update button briefly to show success
-    button.innerHTML = '<i class="bi bi-check2 me-2"></i>Added!';
+    button.innerHTML = '<i class="bi bi-check2 me-2"></i>Đã thêm!';
     setTimeout(() => {
       button.innerHTML = originalHTML;
       button.disabled = false;
@@ -581,7 +581,7 @@ window.quickAddToCart = async function (event, productId) {
     }, 2000);
   } catch (error) {
     console.error("Failed to add to cart:", error);
-    showToast(error.message || "Failed to add to cart", "danger");
+    showToast(error.message || "Không thể thêm vào giỏ hàng", "danger");
     button.innerHTML = originalHTML;
     button.disabled = false;
     button.style.width = '';

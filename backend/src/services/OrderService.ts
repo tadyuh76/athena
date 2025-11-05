@@ -2,7 +2,7 @@ import { OrderModel, CreateOrderData, OrderWithDetails } from '../models/OrderMo
 import { CartModel } from '../models/CartModel';
 import { ProductVariantModel } from '../models/ProductVariantModel';
 import { Order } from '../types/database.types';
-import { createPaymentIntent, isStripeConfigured } from '../utils/stripe';
+import { createPaymentIntent, createCheckoutSession, isStripeConfigured } from '../utils/stripe';
 import { supabaseAdmin } from '../utils/supabase';
 
 export interface CreateOrderRequest {
@@ -24,6 +24,7 @@ export interface CreateOrderResponse {
   success: boolean;
   order: OrderWithDetails;
   clientSecret?: string; // For Stripe frontend integration
+  checkoutUrl?: string; // For Stripe Checkout redirect
   message?: string;
 }
 
@@ -164,6 +165,128 @@ export class OrderService {
   }
 
   /**
+   * Create Stripe Checkout Session for order
+   */
+  async createStripeCheckoutSession(request: CreateOrderRequest, baseUrl: string): Promise<CreateOrderResponse> {
+    try {
+      // 1. Get user's cart items
+      const cartItems = request.userId
+        ? await this.cartModel.findByUserId(request.userId)
+        : [];
+
+      if (!cartItems || cartItems.length === 0) {
+        throw new Error('Cart is empty');
+      }
+
+      // 2. Calculate order totals
+      const subtotal = cartItems.reduce(
+        (sum, item) => sum + item.price_at_time * item.quantity,
+        0
+      );
+
+      const tax = subtotal * 0.085; // 8.5% tax
+      const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
+      const discount = 0;
+      const total = subtotal + tax + shipping - discount;
+
+      // 3. Validate inventory availability
+      for (const item of cartItems) {
+        const available = await this.variantModel.getAvailableQuantity(item.variant_id);
+        if (available < item.quantity) {
+          throw new Error(
+            `Insufficient inventory for ${item.product?.name}. Only ${available} available.`
+          );
+        }
+      }
+
+      // 4. Prepare order data
+      const orderData: CreateOrderData = {
+        user_id: request.userId,
+        customer_email: request.shippingInfo.email,
+        customer_phone: request.shippingInfo.phone,
+        subtotal: Math.round(subtotal * 100) / 100,
+        tax_amount: Math.round(tax * 100) / 100,
+        shipping_amount: shipping,
+        discount_amount: discount,
+        total_amount: Math.round(total * 100) / 100,
+        shipping_method: shipping === 0 ? 'Free Shipping' : 'Standard Shipping',
+        items: cartItems.map(item => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id,
+          quantity: item.quantity,
+          price_at_time: item.price_at_time,
+        })),
+        shippingAddress: {
+          type: 'shipping',
+          first_name: request.shippingInfo.firstName,
+          last_name: request.shippingInfo.lastName,
+          address_line1: request.shippingInfo.address,
+          city: request.shippingInfo.city,
+          state: request.shippingInfo.state,
+          postal_code: request.shippingInfo.zip,
+          country: 'US',
+          phone: request.shippingInfo.phone,
+        },
+      };
+
+      // 5. Create order in database
+      const order = await this.orderModel.createOrderWithDetails(orderData);
+
+      // 6. Create Stripe Checkout Session
+      if (!isStripeConfigured()) {
+        throw new Error('Stripe is not configured. Please contact support.');
+      }
+
+      const successUrl = `${baseUrl}/order-confirmation.html?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`;
+      const cancelUrl = `${baseUrl}/checkout.html`;
+
+      const session = await createCheckoutSession(
+        order.id,
+        total,
+        'usd',
+        request.shippingInfo.email,
+        successUrl,
+        cancelUrl
+      );
+
+      // 7. Store session ID in payment record
+      await supabaseAdmin.from('payments').insert({
+        order_id: order.id,
+        payment_provider: 'stripe',
+        payment_method_type: 'card',
+        payment_status: 'pending',
+        amount: order.total_amount,
+        currency_code: 'USD',
+        transaction_id: session.id,
+        metadata: {
+          checkout_session_id: session.id,
+        },
+      });
+
+      // 8. Commit inventory (decrement inventory_quantity, release reserved_quantity)
+      for (const item of cartItems) {
+        await this.commitInventory(item.variant_id, item.quantity);
+      }
+
+      // 9. Clear user's cart
+      if (request.userId) {
+        await this.cartModel.deleteByUserId(request.userId);
+      }
+
+      return {
+        success: true,
+        order,
+        checkoutUrl: session.url || undefined,
+        message: 'Order created successfully',
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
    * Commit inventory after order creation
    * Decrements inventory_quantity and resets reserved_quantity
    */
@@ -267,6 +390,155 @@ export class OrderService {
     } catch (error) {
       throw new Error(
         `Failed to update payment status: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Admin confirms order - changes status to confirmed and sets estimated delivery
+   */
+  async confirmOrder(orderId: string): Promise<OrderWithDetails> {
+    try {
+      const order = await this.orderModel.findById(orderId);
+
+      if (!order) {
+        throw new Error('Đơn hàng không tồn tại');
+      }
+
+      if (order.status !== 'processing') {
+        throw new Error('Chỉ có thể xác nhận đơn hàng đang xử lý');
+      }
+
+      // Set estimated delivery to 3 days from now
+      const estimatedDelivery = new Date();
+      estimatedDelivery.setDate(estimatedDelivery.getDate() + 3);
+
+      await supabaseAdmin
+        .from('orders')
+        .update({
+          status: 'confirmed',
+          estimated_delivery_date: estimatedDelivery.toISOString().split('T')[0],
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      return this.orderModel.findByIdWithDetails(orderId) as Promise<OrderWithDetails>;
+    } catch (error) {
+      throw new Error(
+        `Không thể xác nhận đơn hàng: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Admin marks order as shipped
+   */
+  async markAsShipped(orderId: string, trackingNumber?: string): Promise<OrderWithDetails> {
+    try {
+      const order = await this.orderModel.findById(orderId);
+
+      if (!order) {
+        throw new Error('Đơn hàng không tồn tại');
+      }
+
+      if (order.status !== 'confirmed') {
+        throw new Error('Chỉ có thể giao hàng cho đơn hàng đã xác nhận');
+      }
+
+      const updateData: any = {
+        status: 'shipped',
+        fulfillment_status: 'fulfilled',
+        updated_at: new Date().toISOString(),
+      };
+
+      if (trackingNumber) {
+        updateData.metadata = {
+          ...(order.metadata as any || {}),
+          tracking_number: trackingNumber,
+        };
+      }
+
+      await supabaseAdmin
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+      return this.orderModel.findByIdWithDetails(orderId) as Promise<OrderWithDetails>;
+    } catch (error) {
+      throw new Error(
+        `Không thể đánh dấu đã giao hàng: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Admin marks order as delivered
+   */
+  async markAsDelivered(orderId: string): Promise<OrderWithDetails> {
+    try {
+      const order = await this.orderModel.findById(orderId);
+
+      if (!order) {
+        throw new Error('Đơn hàng không tồn tại');
+      }
+
+      if (order.status !== 'shipped') {
+        throw new Error('Chỉ có thể hoàn thành đơn hàng đã giao');
+      }
+
+      await supabaseAdmin
+        .from('orders')
+        .update({
+          status: 'delivered',
+          fulfillment_status: 'fulfilled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      return this.orderModel.findByIdWithDetails(orderId) as Promise<OrderWithDetails>;
+    } catch (error) {
+      throw new Error(
+        `Không thể đánh dấu đã nhận hàng: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Admin cancels order
+   */
+  async cancelOrder(orderId: string, reason?: string): Promise<OrderWithDetails> {
+    try {
+      const order = await this.orderModel.findById(orderId);
+
+      if (!order) {
+        throw new Error('Đơn hàng không tồn tại');
+      }
+
+      if (['delivered', 'cancelled'].includes(order.status)) {
+        throw new Error('Không thể hủy đơn hàng đã giao hoặc đã hủy');
+      }
+
+      const updateData: any = {
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      };
+
+      if (reason) {
+        updateData.internal_notes = `Lý do hủy: ${reason}\n${order.internal_notes || ''}`;
+      }
+
+      await supabaseAdmin
+        .from('orders')
+        .update(updateData)
+        .eq('id', orderId);
+
+      // TODO: Refund payment if already paid
+      // TODO: Release inventory back to stock
+
+      return this.orderModel.findByIdWithDetails(orderId) as Promise<OrderWithDetails>;
+    } catch (error) {
+      throw new Error(
+        `Không thể hủy đơn hàng: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
