@@ -218,12 +218,25 @@ export class AuthService {
 
   async getUser(userId: string): Promise<User | null> {
     try {
-      // Try to get from auth.users first (no RLS on this table)
+      // Get user from public.users table (has role field)
+      const { data: publicUser, error: publicError } =
+        await supabaseAdmin
+          .from("users")
+          .select("*")
+          .eq("id", userId)
+          .single();
+
+      if (!publicError && publicUser) {
+        console.log("User fetched from public.users:", publicUser.email, "role:", publicUser.role);
+        return publicUser;
+      }
+
+      // Fallback: Try to get from auth.users if not found in public.users
       const { data: authUser, error: authError } =
         await supabaseAdmin.auth.admin.getUserById(userId);
 
       if (!authError && authUser?.user) {
-        // Create a user object from auth data
+        // Create a user object from auth data with default customer role
         const user: any = {
           id: authUser.user.id,
           email: authUser.user.email!,
@@ -233,18 +246,18 @@ export class AuthService {
           phone:
             authUser.user.phone || authUser.user.user_metadata?.phone || null,
           status: "active",
-          role: authUser.user.user_metadata?.role || "customer",
+          role: "customer", // Always default to customer for auth-only users
           created_at: authUser.user.created_at,
           updated_at: authUser.user.updated_at,
           last_login_at: authUser.user.last_sign_in_at,
           metadata: authUser.user.user_metadata || {},
         };
 
-        console.log("User fetched from auth.users:", user.email);
+        console.log("User fetched from auth.users (fallback):", user.email, "role:", user.role);
         return user;
       }
 
-      console.error("Failed to fetch user from auth.users:", authError);
+      console.error("Failed to fetch user from both public.users and auth.users");
       return null;
     } catch (err) {
       console.error("Exception fetching user:", err);

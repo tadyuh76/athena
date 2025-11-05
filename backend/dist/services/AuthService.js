@@ -163,6 +163,15 @@ class AuthService {
     }
     async getUser(userId) {
         try {
+            const { data: publicUser, error: publicError } = await supabase_1.supabaseAdmin
+                .from("users")
+                .select("*")
+                .eq("id", userId)
+                .single();
+            if (!publicError && publicUser) {
+                console.log("User fetched from public.users:", publicUser.email, "role:", publicUser.role);
+                return publicUser;
+            }
             const { data: authUser, error: authError } = await supabase_1.supabaseAdmin.auth.admin.getUserById(userId);
             if (!authError && authUser?.user) {
                 const user = {
@@ -173,16 +182,16 @@ class AuthService {
                     last_name: authUser.user.user_metadata?.last_name || "",
                     phone: authUser.user.phone || authUser.user.user_metadata?.phone || null,
                     status: "active",
-                    role: authUser.user.user_metadata?.role || "customer",
+                    role: "customer",
                     created_at: authUser.user.created_at,
                     updated_at: authUser.user.updated_at,
                     last_login_at: authUser.user.last_sign_in_at,
                     metadata: authUser.user.user_metadata || {},
                 };
-                console.log("User fetched from auth.users:", user.email);
+                console.log("User fetched from auth.users (fallback):", user.email, "role:", user.role);
                 return user;
             }
-            console.error("Failed to fetch user from auth.users:", authError);
+            console.error("Failed to fetch user from both public.users and auth.users");
             return null;
         }
         catch (err) {

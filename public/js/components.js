@@ -171,13 +171,20 @@ class SiteHeader extends HTMLElement {
                     </nav>
 
                     <div class="nav-icons">
-                        <div id="switch-container"></div> 
-                        
+                        <div id="switch-container"></div>
+
                         <a href="/cart" id="cart-link">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="9" cy="21" r="1"></circle>
                                 <circle cx="20" cy="21" r="1"></circle>
                                 <path d="m1 1 4 4 1.68 8.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                        </a>
+                        <a href="/admin.html" id="admin-link" style="display: none;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 10 12 6.16-1.26 10-6.45 10-12V7l-10-5z"></path>
+                                <path d="M12 8v4"></path>
+                                <path d="M12 16h.01"></path>
                             </svg>
                         </a>
                         <a href="#" id="auth-link">
@@ -237,6 +244,7 @@ class SiteHeader extends HTMLElement {
     // Hàm điều khiển hiển thị/ẩn Icons dựa trên Role
     const updateIconVisibility = (role) => {
         const cartLink = this.shadowRoot.getElementById('cart-link');
+        const adminLink = this.shadowRoot.getElementById('admin-link');
         const authLink = this.shadowRoot.getElementById('auth-link');
         const switchContainer = this.shadowRoot.getElementById('switch-container');
         const isCurrentlyAdmin = window.location.pathname.includes('/admin.html');
@@ -244,15 +252,19 @@ class SiteHeader extends HTMLElement {
         // Mặc định: HIỆN Icons (cho Customer/Guest)
         if (cartLink) { cartLink.style.display = 'flex'; }
         if (authLink) { authLink.style.display = 'flex'; }
+        if (adminLink) { adminLink.style.display = 'none'; }
         if (switchContainer) { switchContainer.style.display = 'none'; }
 
         if (role === 'admin' || role === 'staff') {
+            // Show admin link for admin/staff users
+            if (adminLink) { adminLink.style.display = 'flex'; }
+
             const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
             const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
 
             if (switchContainer) {
                 // HIỆN Switch Container và nút
-                switchContainer.style.display = 'flex'; 
+                switchContainer.style.display = 'flex';
                 switchContainer.innerHTML = `
                     <a href="${targetUrl}" class="switch-btn" style="background: #0f4c2f; color: white !important; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; text-decoration: none; transition: background 0.3s ease;">
                         <i class="bi bi-arrow-repeat"></i> ${buttonText}
@@ -330,17 +342,19 @@ class SiteHeader extends HTMLElement {
             const user = JSON.parse(localStorage.getItem("user") || "null");
             const role = user?.role;
             const switchContainer = this.shadowRoot.getElementById('switch-container');
-            const cartLink = this.shadowRoot.getElementById('cart-link'); 
-            const authLink = this.shadowRoot.getElementById('auth-link'); 
+            const cartLink = this.shadowRoot.getElementById('cart-link');
+            const adminLink = this.shadowRoot.getElementById('admin-link');
+            const authLink = this.shadowRoot.getElementById('auth-link');
             const isCurrentlyAdmin = window.location.pathname.includes('/admin.html');
 
             // 1. THIẾT LẬP TRẠNG THÁI MẶC ĐỊNH CHO MỌI NGƯỜI DÙNG
-            if (switchContainer) { 
+            if (switchContainer) {
                 switchContainer.innerHTML = '';
                 switchContainer.style.display = 'none';
             }
             // CUSTOMER/GUEST: LUÔN THẤY ICONS
-            if (cartLink) { cartLink.style.display = 'flex'; } 
+            if (cartLink) { cartLink.style.display = 'flex'; }
+            if (adminLink) { adminLink.style.display = 'none'; }
             if (authLink) { authLink.style.display = 'flex'; }
 
             // 2. LOGIC ADMIN/STAFF: GHI ĐÈ
@@ -349,17 +363,22 @@ class SiteHeader extends HTMLElement {
                 const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
 
                 if (switchContainer) {
-                    switchContainer.style.display = 'flex'; 
+                    switchContainer.style.display = 'flex';
                     switchContainer.innerHTML = `
                         <a href="${targetUrl}" class="switch-btn" style="background: #0f4c2f; color: white !important; padding: 5px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; text-decoration: none; transition: background 0.3s ease;">
                             <i class="bi bi-arrow-repeat"></i> ${buttonText}
                         </a>
                     `;
                 }
-                
+
+                // Show admin link for admin/staff, hide on admin page
+                if (adminLink) {
+                    adminLink.style.display = isCurrentlyAdmin ? 'none' : 'flex';
+                }
+
                 // ẨN ICONS GỐC
-                if (cartLink) { cartLink.style.display = 'none'; } 
-                if (authLink) { authLink.style.display = 'none'; } 
+                if (cartLink) { cartLink.style.display = 'none'; }
+                if (authLink) { authLink.style.display = 'none'; }
             }
         };
         updateSwitchButton();
