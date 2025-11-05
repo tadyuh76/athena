@@ -553,40 +553,40 @@ class SiteFooter extends HTMLElement {
                     <div class="footer-grid">
                         <div>
                             <h5 class="footer-brand">ATHENA</h5>
-                            <p class="footer-tagline">Premium eco fashion for modern minimalists. Designed to endure.</p>
+                            <p class="footer-tagline">Thời trang cao cấp bền vững cho những người theo chủ nghĩa tối giản hiện đại. Thiết kế để tồn tại.</p>
                         </div>
                         <div class="footer-section">
-                            <h6>Shop</h6>
+                            <h6>Cửa Hàng</h6>
                             <ul>
-                                <li><a href="/products.html">All Products</a></li>
-                                <li><a href="/collections.html">Collections</a></li>
-                                <li><a href="/new.html">New Arrivals</a></li>
+                                <li><a href="/products.html">Tất Cả Sản Phẩm</a></li>
+                                <li><a href="/collections.html">Bộ Sưu Tập</a></li>
+                                <li><a href="/new.html">Hàng Mới Về</a></li>
                             </ul>
                         </div>
                         <div class="footer-section">
-                            <h6>About</h6>
+                            <h6>Về Chúng Tôi</h6>
                             <ul>
-                                <li><a href="/story.html">Our Story</a></li>
-                                <li><a href="/craft.html">Craft Standards</a></li>
-                                <li><a href="/sustainability.html">Sustainability</a></li>
-                                <li><a href="/traceability.html">Traceability</a></li>
+                                <li><a href="/story.html">Câu Chuyện</a></li>
+                                <li><a href="/craft.html">Tiêu Chuẩn Chế Tác</a></li>
+                                <li><a href="/sustainability.html">Bền Vững</a></li>
+                                <li><a href="/traceability.html">Truy Xuất Nguồn Gốc</a></li>
                             </ul>
                         </div>
                         <div class="footer-section">
-                            <h6>Support</h6>
+                            <h6>Hỗ Trợ</h6>
                             <ul>
-                                <li><a href="/care.html">Care & Repair</a></li>
-                                <li><a href="/shipping.html">Shipping</a></li>
-                                <li><a href="/returns.html">Returns</a></li>
-                                <li><a href="/contact.html">Contact</a></li>
+                                <li><a href="/care.html">Chăm Sóc & Sửa Chữa</a></li>
+                                <li><a href="/shipping.html">Vận Chuyển</a></li>
+                                <li><a href="/returns.html">Đổi Trả</a></li>
+                                <li><a href="/contact.html">Liên Hệ</a></li>
                             </ul>
                         </div>
                     </div>
                     <div class="footer-bottom">
-                        <p class="footer-copyright">© 2025 Athena. Quietly Powerful.</p>
+                        <p class="footer-copyright">© 2025 Athena. Mạnh Mẽ Êm Ái.</p>
                         <div class="footer-links">
-                            <a href="/privacy.html">Privacy</a>
-                            <a href="/terms.html">Terms</a>
+                            <a href="/privacy.html">Quyền Riêng Tư</a>
+                            <a href="/terms.html">Điều Khoản</a>
                         </div>
                     </div>
                 </div>

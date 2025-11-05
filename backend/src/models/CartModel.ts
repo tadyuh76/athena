@@ -14,6 +14,7 @@ export class CartModel extends BaseModel<CartItem> {
    */
   async findByUserId(userId: string): Promise<CartItemWithDetails[]> {
     try {
+      console.log('[CartModel.findByUserId] Finding cart items for user:', userId);
       const { data, error } = await this.client
         .from(this.tableName)
         .select(`
@@ -24,11 +25,14 @@ export class CartModel extends BaseModel<CartItem> {
         .eq('user_id', userId);
 
       if (error) {
+        console.error('[CartModel.findByUserId] Database error:', error);
         throw error;
       }
 
+      console.log('[CartModel.findByUserId] Found cart items:', data?.length || 0);
       return (data || []) as CartItemWithDetails[];
     } catch (error) {
+      console.error('[CartModel.findByUserId] Fatal error:', error);
       throw new Error(`Failed to find cart items by user ID: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

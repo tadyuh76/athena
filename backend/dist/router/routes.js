@@ -54,6 +54,7 @@ function setupRoutes() {
     router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/orders/checkout-session', (req, res) => orderController.createCheckoutSession(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/orders/:id', (req, res, params) => orderController.getOrderById(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/admin/orders', (req, res) => orderController.getAllOrders(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);

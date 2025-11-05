@@ -108,6 +108,10 @@ export class OrderService {
           variant_id: item.variant_id,
           quantity: item.quantity,
           price_at_time: item.price_at_time,
+          product_name: item.product?.name || 'Unknown Product',
+          product_sku: item.variant?.sku || item.product?.sku || 'N/A',
+          variant_title: item.variant?.size || item.variant?.color || undefined,
+          product_image_url: item.product?.featured_image_url || undefined,
         })),
         shippingAddress: {
           type: 'shipping',
@@ -169,10 +173,16 @@ export class OrderService {
    */
   async createStripeCheckoutSession(request: CreateOrderRequest, baseUrl: string): Promise<CreateOrderResponse> {
     try {
+      console.log('[OrderService.createStripeCheckoutSession] Starting checkout session creation');
+      console.log('[OrderService.createStripeCheckoutSession] User ID:', request.userId);
+
       // 1. Get user's cart items
       const cartItems = request.userId
         ? await this.cartModel.findByUserId(request.userId)
         : [];
+
+      console.log('[OrderService.createStripeCheckoutSession] Cart items count:', cartItems.length);
+      console.log('[OrderService.createStripeCheckoutSession] Cart items:', JSON.stringify(cartItems, null, 2));
 
       if (!cartItems || cartItems.length === 0) {
         throw new Error('Cart is empty');
@@ -215,6 +225,10 @@ export class OrderService {
           variant_id: item.variant_id,
           quantity: item.quantity,
           price_at_time: item.price_at_time,
+          product_name: item.product?.name || 'Unknown Product',
+          product_sku: item.variant?.sku || item.product?.sku || 'N/A',
+          variant_title: item.variant?.size || item.variant?.color || undefined,
+          product_image_url: item.product?.featured_image_url || undefined,
         })),
         shippingAddress: {
           type: 'shipping',
@@ -230,15 +244,22 @@ export class OrderService {
       };
 
       // 5. Create order in database
+      console.log('[OrderService.createStripeCheckoutSession] Creating order in database');
       const order = await this.orderModel.createOrderWithDetails(orderData);
+      console.log('[OrderService.createStripeCheckoutSession] Order created:', order.id);
 
       // 6. Create Stripe Checkout Session
+      console.log('[OrderService.createStripeCheckoutSession] Checking Stripe configuration');
       if (!isStripeConfigured()) {
         throw new Error('Stripe is not configured. Please contact support.');
       }
 
       const successUrl = `${baseUrl}/order-confirmation.html?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`;
       const cancelUrl = `${baseUrl}/checkout.html`;
+
+      console.log('[OrderService.createStripeCheckoutSession] Creating Stripe checkout session');
+      console.log('[OrderService.createStripeCheckoutSession] Total amount:', total);
+      console.log('[OrderService.createStripeCheckoutSession] Success URL:', successUrl);
 
       const session = await createCheckoutSession(
         order.id,
@@ -248,30 +269,46 @@ export class OrderService {
         successUrl,
         cancelUrl
       );
+      console.log('[OrderService.createStripeCheckoutSession] Stripe session created:', session.id);
 
-      // 7. Store session ID in payment record
-      await supabaseAdmin.from('payments').insert({
+      // 7. Store session ID in transaction record
+      console.log('[OrderService.createStripeCheckoutSession] Storing transaction record');
+      const { error: transactionError } = await supabaseAdmin.from('transactions').insert({
         order_id: order.id,
-        payment_provider: 'stripe',
-        payment_method_type: 'card',
-        payment_status: 'pending',
+        provider: 'stripe',
+        type: 'payment',
+        provider_transaction_id: session.id,
         amount: order.total_amount,
         currency_code: 'USD',
-        transaction_id: session.id,
-        metadata: {
+        status: 'pending',
+        details: {
           checkout_session_id: session.id,
+          checkout_url: session.url,
         },
       });
 
+      if (transactionError) {
+        console.error('[OrderService.createStripeCheckoutSession] Transaction record error:', transactionError);
+        throw transactionError;
+      }
+      console.log('[OrderService.createStripeCheckoutSession] Transaction record created');
+
       // 8. Commit inventory (decrement inventory_quantity, release reserved_quantity)
+      console.log('[OrderService.createStripeCheckoutSession] Committing inventory');
       for (const item of cartItems) {
         await this.commitInventory(item.variant_id, item.quantity);
       }
+      console.log('[OrderService.createStripeCheckoutSession] Inventory committed');
 
       // 9. Clear user's cart
+      console.log('[OrderService.createStripeCheckoutSession] Clearing cart');
       if (request.userId) {
         await this.cartModel.deleteByUserId(request.userId);
       }
+      console.log('[OrderService.createStripeCheckoutSession] Cart cleared');
+
+      console.log('[OrderService.createStripeCheckoutSession] Checkout URL:', session.url);
+      console.log('[OrderService.createStripeCheckoutSession] Checkout session creation complete');
 
       return {
         success: true,
@@ -280,6 +317,7 @@ export class OrderService {
         message: 'Order created successfully',
       };
     } catch (error) {
+      console.error('[OrderService.createStripeCheckoutSession] Fatal error:', error);
       throw new Error(
         `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

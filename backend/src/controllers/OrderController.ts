@@ -67,10 +67,18 @@ export class OrderController {
         paymentMethod: 'stripe',
       };
 
-      // Get base URL from request headers
+      // Get base URL from referer or default to frontend URL
       const protocol = req.headers['x-forwarded-proto'] || 'http';
-      const host = req.headers['host'] || 'localhost:3000';
-      const baseUrl = `${protocol}://${host}`;
+      const referer = req.headers['referer'] || req.headers['origin'];
+
+      // Extract base URL from referer if available, otherwise use localhost:3000
+      let baseUrl;
+      if (referer) {
+        const url = new URL(referer);
+        baseUrl = `${url.protocol}//${url.host}`;
+      } else {
+        baseUrl = `${protocol}://localhost:3000`;
+      }
 
       // Create checkout session
       const result = await this.orderService.createStripeCheckoutSession(request, baseUrl);

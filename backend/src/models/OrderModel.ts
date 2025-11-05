@@ -6,6 +6,10 @@ export interface OrderItem {
   variant_id: string;
   quantity: number;
   price_at_time: number;
+  product_name: string;
+  product_sku: string;
+  variant_title?: string;
+  product_image_url?: string;
 }
 
 export interface OrderAddress {
@@ -52,8 +56,12 @@ export class OrderModel extends BaseModel<Order> {
    */
   async createOrderWithDetails(orderData: CreateOrderData): Promise<OrderWithDetails> {
     try {
+      console.log('[OrderModel.createOrderWithDetails] Starting order creation');
+      console.log('[OrderModel.createOrderWithDetails] Order data items:', JSON.stringify(orderData.items, null, 2));
+
       // 1. Generate order number
       const orderNumber = await this.generateOrderNumber();
+      console.log('[OrderModel.createOrderWithDetails] Generated order number:', orderNumber);
 
       // 2. Create order
       const { data: order, error: orderError } = await this.adminClient
@@ -78,7 +86,11 @@ export class OrderModel extends BaseModel<Order> {
         .select()
         .single();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('[OrderModel.createOrderWithDetails] Order creation error:', orderError);
+        throw orderError;
+      }
+      console.log('[OrderModel.createOrderWithDetails] Order created successfully:', order.id);
 
       // 3. Create order items
       const orderItems = orderData.items.map(item => ({
@@ -86,16 +98,30 @@ export class OrderModel extends BaseModel<Order> {
         product_id: item.product_id,
         variant_id: item.variant_id,
         quantity: item.quantity,
-        price_at_time: item.price_at_time,
+        product_name: item.product_name,
+        product_sku: item.product_sku,
+        variant_title: item.variant_title,
+        product_image_url: item.product_image_url,
+        unit_price: item.price_at_time,
+        total_price: item.price_at_time * item.quantity,
+        discount_amount: 0,
+        tax_amount: 0,
       }));
+
+      console.log('[OrderModel.createOrderWithDetails] Inserting order items:', JSON.stringify(orderItems, null, 2));
 
       const { error: itemsError } = await this.adminClient
         .from('order_items')
         .insert(orderItems);
 
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('[OrderModel.createOrderWithDetails] Order items error:', itemsError);
+        throw itemsError;
+      }
+      console.log('[OrderModel.createOrderWithDetails] Order items created successfully');
 
       // 4. Create shipping address
+      console.log('[OrderModel.createOrderWithDetails] Creating shipping address');
       const { error: addressError } = await this.adminClient
         .from('order_addresses')
         .insert({
@@ -105,16 +131,22 @@ export class OrderModel extends BaseModel<Order> {
           last_name: orderData.shippingAddress.last_name,
           address_line1: orderData.shippingAddress.address_line1,
           city: orderData.shippingAddress.city,
-          state: orderData.shippingAddress.state,
+          state_province: orderData.shippingAddress.state,
           postal_code: orderData.shippingAddress.postal_code,
-          country: orderData.shippingAddress.country || 'US',
+          country_code: orderData.shippingAddress.country || 'US',
           phone: orderData.shippingAddress.phone,
         });
 
-      if (addressError) throw addressError;
+      if (addressError) {
+        console.error('[OrderModel.createOrderWithDetails] Address creation error:', addressError);
+        throw addressError;
+      }
+      console.log('[OrderModel.createOrderWithDetails] Address created successfully');
 
+      console.log('[OrderModel.createOrderWithDetails] Order creation complete');
       return order;
     } catch (error) {
+      console.error('[OrderModel.createOrderWithDetails] Fatal error:', error);
       throw new Error(
         `Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`
       );

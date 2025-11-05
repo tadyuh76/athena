@@ -320,11 +320,120 @@
         async function loadOrders() {
             const ordersList = document.getElementById('ordersList');
             const noOrders = document.getElementById('noOrders');
-            
-            // TODO: Fetch orders from API
-            // For now, show no orders
-            ordersList.innerHTML = '';
-            noOrders.style.display = 'block';
+
+            // Show loading
+            ordersList.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-secondary" role="status">
+                        <span class="visually-hidden">Đang tải...</span>
+                    </div>
+                </div>
+            `;
+
+            try {
+                const apiUrl = (window.ENV ? window.ENV.getApiUrl() : '/api') + '/orders/me';
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.orders && data.orders.length > 0) {
+                    ordersList.innerHTML = data.orders.map(order => `
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <h5 class="mb-1">${order.order_number}</h5>
+                                        <small class="text-muted">Đặt ngày ${new Date(order.created_at).toLocaleDateString('vi-VN')}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success">$${order.total_amount.toFixed(2)}</div>
+                                        <span class="badge ${getStatusBadgeClass(order.status)}">${getStatusText(order.status)}</span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4 mb-2">
+                                        <small class="text-muted">Trạng thái thanh toán</small><br>
+                                        <span class="badge ${getPaymentStatusBadgeClass(order.payment_status)}">${getPaymentStatusText(order.payment_status)}</span>
+                                    </div>
+                                    <div class="col-sm-4 mb-2">
+                                        <small class="text-muted">Email</small><br>
+                                        <span>${order.customer_email}</span>
+                                    </div>
+                                    <div class="col-sm-4 mb-2">
+                                        <small class="text-muted">Phương thức vận chuyển</small><br>
+                                        <span>${order.shipping_method || 'Standard'}</span>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="/order-confirmation.html?order_id=${order.id}" class="btn btn-sm btn-outline-dark">
+                                        <i class="bi bi-eye me-1"></i>Xem Chi Tiết
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    noOrders.style.display = 'none';
+                } else {
+                    ordersList.innerHTML = '';
+                    noOrders.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Failed to load orders:', error);
+                ordersList.innerHTML = '<div class="alert alert-danger">Không thể tải đơn hàng. Vui lòng thử lại.</div>';
+                noOrders.style.display = 'none';
+            }
+        }
+
+        // Get status badge class
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'pending': 'bg-warning',
+                'confirmed': 'bg-info',
+                'processing': 'bg-primary',
+                'shipped': 'bg-info',
+                'delivered': 'bg-success',
+                'cancelled': 'bg-danger'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        // Get status text
+        function getStatusText(status) {
+            const texts = {
+                'pending': 'Đang Chờ',
+                'confirmed': 'Đã Xác Nhận',
+                'processing': 'Đang Xử Lý',
+                'shipped': 'Đang Giao',
+                'delivered': 'Đã Giao',
+                'cancelled': 'Đã Hủy'
+            };
+            return texts[status] || status;
+        }
+
+        // Get payment status badge class
+        function getPaymentStatusBadgeClass(status) {
+            const classes = {
+                'pending': 'bg-warning',
+                'paid': 'bg-success',
+                'failed': 'bg-danger',
+                'refunded': 'bg-info'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        // Get payment status text
+        function getPaymentStatusText(status) {
+            const texts = {
+                'pending': 'Đang Chờ',
+                'paid': 'Đã Thanh Toán',
+                'failed': 'Thất Bại',
+                'refunded': 'Đã Hoàn Tiền'
+            };
+            return texts[status] || status;
         }
         
         // Load addresses
