@@ -19,6 +19,10 @@
     <link href="/css/style.css" rel="stylesheet" />
     <link href="css/checkout.css" rel="stylesheet" />
     <script src="/js/components.js"></script>
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    <!-- Stripe Config -->
+    <script src="/js/stripe-config.js"></script>
   </head>
   <body>
     <!-- Navigation -->
@@ -198,6 +202,15 @@
                         Credit Card
                       </label>
                     </div>
+                  </div>
+
+                  <!-- Stripe Card Element Container (shown when Stripe is selected) -->
+                  <div id="stripeCardContainer" style="display: none; margin-top: 1rem;">
+                    <label class="form-label">Card Details</label>
+                    <div id="card-element" style="padding: 12px; border: 1px solid #dee2e6; border-radius: 6px;">
+                      <!-- Stripe Elements will be inserted here -->
+                    </div>
+                    <div id="card-errors" role="alert" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.5rem;"></div>
                   </div>
                 </div>
               </div>

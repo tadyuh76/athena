@@ -8,6 +8,7 @@ const CartController_1 = require("../controllers/CartController");
 const WishlistController_1 = require("../controllers/WishlistController");
 const OrderController_1 = require("../controllers/OrderController");
 const ReviewController_1 = require("../controllers/ReviewController");
+const StripeWebhookController_1 = require("../controllers/StripeWebhookController");
 const request_handler_1 = require("../utils/request-handler");
 const supabase_1 = require("../utils/supabase");
 const CollectionController_1 = require("../controllers/CollectionController");
@@ -23,6 +24,7 @@ function setupRoutes() {
     const wishlistController = new WishlistController_1.WishlistController();
     const orderController = new OrderController_1.OrderController();
     const reviewController = new ReviewController_1.ReviewController();
+    const stripeWebhookController = new StripeWebhookController_1.StripeWebhookController();
     router.post('/api/auth/register', (req, res) => authController.register(req, res));
     router.post('/api/auth/login', (req, res) => authController.login(req, res));
     router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router_1.Router.requireAuth]);
@@ -52,7 +54,10 @@ function setupRoutes() {
     router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/orders/:id', (req, res, params) => orderController.getOrderById(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/admin/orders', (req, res) => orderController.getAllOrders(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/webhooks/stripe', (req, res) => stripeWebhookController.handleWebhook(req, res));
     router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
     router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router_1.Router.requireAuth]);
     router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router_1.Router.requireAuth]);

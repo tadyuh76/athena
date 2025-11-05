@@ -5,6 +5,7 @@ import { CartController } from '../controllers/CartController';
 import { WishlistController } from '../controllers/WishlistController';
 import { OrderController } from '../controllers/OrderController';
 import { ReviewController } from '../controllers/ReviewController';
+import { StripeWebhookController } from '../controllers/StripeWebhookController';
 import { sendJSON } from '../utils/request-handler';
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
@@ -23,6 +24,7 @@ export function setupRoutes(): Router {
   const wishlistController = new WishlistController();
   const orderController = new OrderController();
   const reviewController = new ReviewController();
+  const stripeWebhookController = new StripeWebhookController();
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -61,14 +63,21 @@ export function setupRoutes(): Router {
   router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
 
   // Order routes
-  // CUSTOMER: Tạo order
+  // CUSTOMER: Create order
   router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router.requireAuth]);
-  // ADMIN API - CHỈ ADMIN MỚI CÓ QUYỀN TRUY CẬP
-   router.get(
-    '/api/admin/orders', 
-    (req, res) => orderController.getAllOrders(req, res), 
-    [Router.requireRole(['admin', 'staff'])] // <--- CHỈ ADMIN hoặc STAFF MỚI ĐƯỢC TRUY CẬP
+  // CUSTOMER: Get my orders
+  router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router.requireAuth]);
+  // CUSTOMER/ADMIN: Get order by ID
+  router.get('/api/orders/:id', (req, res, params) => orderController.getOrderById(req, res, params.id), [Router.requireAuth]);
+  // ADMIN: Get all orders
+  router.get(
+    '/api/admin/orders',
+    (req, res) => orderController.getAllOrders(req, res),
+    [Router.requireRole(['admin', 'staff'])]
   );
+
+  // Stripe Webhook route (must be before other POST routes to handle raw body)
+  router.post('/api/webhooks/stripe', (req, res) => stripeWebhookController.handleWebhook(req, res));
 
   // Review routes
   router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));

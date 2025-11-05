@@ -9,6 +9,9 @@ const cartService = new CartService();
 // State
 let cart = null;
 let cartSummary = null;
+let stripe = null;
+let cardElement = null;
+let clientSecret = null;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
@@ -16,6 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Allow guest checkout: don't force login here. Load summary and user info if available.
     await loadOrderSummary();
     await loadUserInfo();
+    await initializeStripe();
     setupEventListeners();
   } catch (error) {
     console.error("Failed to initialize checkout:", error);
@@ -54,6 +58,55 @@ async function loadUserInfo() {
     }
   } catch (error) {
     console.error("Failed to load user information:", error);
+  }
+}
+
+// Initialize Stripe
+async function initializeStripe() {
+  try {
+    // Check if Stripe config is loaded
+    if (!window.STRIPE_CONFIG || !window.STRIPE_CONFIG.publishableKey) {
+      console.warn("Stripe configuration not found. Payment processing will not work.");
+      return;
+    }
+
+    // Initialize Stripe
+    stripe = Stripe(window.STRIPE_CONFIG.publishableKey);
+
+    // Create card element
+    const elements = stripe.elements();
+    cardElement = elements.create("card", {
+      style: {
+        base: {
+          fontSize: "16px",
+          color: "#32325d",
+          fontFamily: '"Inter", sans-serif',
+          "::placeholder": {
+            color: "#aab7c4",
+          },
+        },
+        invalid: {
+          color: "#dc3545",
+        },
+      },
+    });
+
+    // Mount card element
+    cardElement.mount("#card-element");
+
+    // Handle real-time validation errors
+    cardElement.on("change", (event) => {
+      const displayError = document.getElementById("card-errors");
+      if (event.error) {
+        displayError.textContent = event.error.message;
+      } else {
+        displayError.textContent = "";
+      }
+    });
+
+    console.log("Stripe initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize Stripe:", error);
   }
 }
 
@@ -121,7 +174,15 @@ function renderOrderSummary() {
 // Handle payment method change
 function handlePaymentMethodChange(event) {
   const method = event.target.value;
-  // You can add specific logic for different payment methods here
+  const stripeContainer = document.getElementById("stripeCardContainer");
+
+  // Show/hide Stripe card element based on selected method
+  if (method === "stripe") {
+    stripeContainer.style.display = "block";
+  } else {
+    stripeContainer.style.display = "none";
+  }
+
   console.log("Payment method changed:", method);
 }
 
@@ -276,33 +337,35 @@ async function processPayPalPayment(formData) {
 
 // Process Stripe payment
 async function processStripePayment(formData) {
-  // For demo: call backend to create order (same flow as PayPal for now)
   const token = localStorage.getItem("authToken");
   const url = (window.ENV ? window.ENV.getApiUrl() : "/api") + "/orders";
+  const placeOrderBtn = document.getElementById("placeOrderBtn");
 
-  const body = {
-    shippingInfo: {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      zip: formData.zip,
-    },
-    paymentMethod: "stripe",
-  };
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  });
   try {
+    // Step 1: Create order on backend (which creates PaymentIntent)
+    const body = {
+      shippingInfo: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+      },
+      paymentMethod: "stripe",
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    });
+
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
@@ -311,20 +374,65 @@ async function processStripePayment(formData) {
       );
     }
 
+    // Step 2: Confirm payment with Stripe
+    if (!data.clientSecret) {
+      throw new Error("Payment client secret not received");
+    }
+
+    if (!stripe || !cardElement) {
+      throw new Error("Stripe not initialized");
+    }
+
+    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+      data.clientSecret,
+      {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            address: {
+              line1: formData.address,
+              city: formData.city,
+              state: formData.state,
+              postal_code: formData.zip,
+              country: "US",
+            },
+          },
+        },
+      }
+    );
+
+    if (stripeError) {
+      throw new Error(stripeError.message);
+    }
+
+    // Step 3: Payment successful
+    console.log("Payment successful:", paymentIntent.id);
+
+    // Clear cart
     try {
       await cartService.clearCart();
     } catch (err) {
       console.warn("Failed to clear cart after order:", err);
     }
 
+    // Redirect to confirmation page
     localStorage.setItem("lastOrder", JSON.stringify(data.order || data));
     window.location.href = "/order-confirmation.html";
+
   } catch (err) {
-    // Backend call failed - show error to user
-    console.error("Order creation failed:", err);
-    showError("Failed to create order. Please try again or contact support.");
-    submitButton.disabled = false;
-    submitButton.textContent = "Place Order";
+    // Payment failed - show error to user
+    console.error("Payment failed:", err);
+    showError(err.message || "Payment failed. Please try again or contact support.");
+
+    if (placeOrderBtn) {
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.removeAttribute("aria-busy");
+      placeOrderBtn.textContent = "Place Order";
+    }
+    showProcessingOverlay(false);
   }
 }
 
