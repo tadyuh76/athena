@@ -103,6 +103,7 @@ async function loadCart() {
         ),
       ]);
 
+    let usedLocalFallback = false;
     try {
       cart = await withTimeout(cartService.getCart(), timeoutMs);
     } catch (err) {
@@ -113,6 +114,7 @@ async function loadCart() {
       cart = cartService.getLocalCart
         ? { id: null, items: cartService.getLocalCart() }
         : { id: null, items: [] };
+      usedLocalFallback = true;
     }
 
     try {
@@ -123,11 +125,19 @@ async function loadCart() {
         err
       );
       cartSummary = await cartService.getCartSummary();
+      usedLocalFallback = true;
     }
 
     // Hide spinner if it exists
     if (loadingSpinner) {
       loadingSpinner.style.display = "none";
+    }
+
+    // Show offline/demo banner if we used local fallback
+    if (usedLocalFallback) {
+      renderOfflineBanner();
+    } else {
+      removeOfflineBanner();
     }
 
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -404,6 +414,57 @@ function showError(message) {
       ${message}
     </div>
   `;
+}
+
+// Offline/demo banner helpers
+function renderOfflineBanner() {
+  const cartContent = document.getElementById("cartContent");
+  if (!cartContent) return;
+  let banner = document.getElementById("cartOfflineBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "cartOfflineBanner";
+    banner.className =
+      "alert alert-warning d-flex justify-content-between align-items-center";
+    banner.innerHTML = `
+      <div>
+        <strong>Offline / Demo mode:</strong> Some data loaded from your browser. Actions are stored locally.
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-dark me-2" id="retryCartBtn">Try API Again</button>
+        <a href="/products.html" class="btn btn-sm btn-dark">Continue Shopping</a>
+      </div>
+    `;
+    cartContent.insertAdjacentElement("afterbegin", banner);
+    document
+      .getElementById("retryCartBtn")
+      .addEventListener("click", async () => {
+        const ls = document.getElementById("loadingSpinner");
+        if (ls) ls.style.display = "";
+        try {
+          cart = await cartService.getCart();
+          cartSummary = await cartService.getCartSummary();
+          removeOfflineBanner();
+          if (!cart || !cart.items || cart.items.length === 0)
+            renderEmptyCart();
+          else renderCart();
+          showToast("Reconnected to API", "success");
+        } catch (e) {
+          console.warn("Retry failed", e);
+          showToast(
+            "Retry failed. Still offline or API unavailable.",
+            "warning"
+          );
+        } finally {
+          if (ls) ls.style.display = "none";
+        }
+      });
+  }
+}
+
+function removeOfflineBanner() {
+  const banner = document.getElementById("cartOfflineBanner");
+  if (banner) banner.remove();
 }
 
 // Show toast notification

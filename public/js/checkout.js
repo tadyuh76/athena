@@ -158,13 +158,11 @@ async function handlePlaceOrder(event) {
       return;
     }
 
-    // Disable place order button
+    // Show processing overlay and disable place order button
+    showProcessingOverlay(true);
     const placeOrderBtn = document.getElementById("placeOrderBtn");
     placeOrderBtn.disabled = true;
-    placeOrderBtn.innerHTML = `
-      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-      Processing...
-    `;
+    placeOrderBtn.setAttribute("aria-busy", "true");
 
     // Get form data
     const formData = {
@@ -189,11 +187,34 @@ async function handlePlaceOrder(event) {
     console.error("Failed to place order:", error);
     showError("Failed to place order. Please try again.");
 
-    // Re-enable place order button
+    // Re-enable place order button and hide overlay
     const placeOrderBtn = document.getElementById("placeOrderBtn");
-    placeOrderBtn.disabled = false;
-    placeOrderBtn.textContent = "Place Order";
+    if (placeOrderBtn) {
+      placeOrderBtn.disabled = false;
+      placeOrderBtn.removeAttribute("aria-busy");
+      placeOrderBtn.textContent = "Place Order";
+    }
+    showProcessingOverlay(false);
   }
+}
+
+// Processing overlay helper
+function showProcessingOverlay(show) {
+  let overlay = document.getElementById("processingOverlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "processingOverlay";
+    overlay.style = `position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:1050;`;
+    overlay.innerHTML = `
+      <div class="text-center text-white">
+        <div class="spinner-border text-light" role="status" style="width:3rem;height:3rem"></div>
+        <div class="mt-3">Processing your order... Please wait.</div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  }
+
+  overlay.style.display = show ? "flex" : "none";
 }
 
 // Process PayPal payment

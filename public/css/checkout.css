@@ -41,6 +41,11 @@
   margin-right: 1rem;
 }
 
+/* Processing overlay style tweak */
+#processingOverlay {
+  display: none;
+}
+
 .order-item-details {
   flex: 1;
 }
