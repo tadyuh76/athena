@@ -93,13 +93,51 @@ async function loadCart() {
   const cartContent = document.getElementById("cartContent");
 
   try {
-    // Get cart and summary
-    cart = await cartService.getCart();
-    cartSummary = await cartService.getCartSummary();
+    // Get cart and summary with a timeout fallback to avoid infinite spinner
+    const timeoutMs = 4000;
+    const withTimeout = (p, ms) =>
+      Promise.race([
+        p,
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("timeout")), ms)
+        ),
+      ]);
+
+    let usedLocalFallback = false;
+    try {
+      cart = await withTimeout(cartService.getCart(), timeoutMs);
+    } catch (err) {
+      console.warn(
+        "getCart timed out or failed, using local cart fallback",
+        err
+      );
+      cart = cartService.getLocalCart
+        ? { id: null, items: cartService.getLocalCart() }
+        : { id: null, items: [] };
+      usedLocalFallback = true;
+    }
+
+    try {
+      cartSummary = await withTimeout(cartService.getCartSummary(), timeoutMs);
+    } catch (err) {
+      console.warn(
+        "getCartSummary timed out or failed, computing local summary",
+        err
+      );
+      cartSummary = await cartService.getCartSummary();
+      usedLocalFallback = true;
+    }
 
     // Hide spinner if it exists
     if (loadingSpinner) {
       loadingSpinner.style.display = "none";
+    }
+
+    // Show offline/demo banner if we used local fallback
+    if (usedLocalFallback) {
+      renderOfflineBanner();
+    } else {
+      removeOfflineBanner();
     }
 
     if (!cart || !cart.items || cart.items.length === 0) {
@@ -218,8 +256,12 @@ function renderCartItem(item) {
   const isInStock = productService.getAvailableStock(variant) > 0;
 
   // Get primary image or first image from images array
-  const primaryImage = product.images?.find(img => img.is_primary) || product.images?.[0];
-  const imageUrl = primaryImage?.url || product.featured_image_url || "/images/placeholder-user.jpg";
+  const primaryImage =
+    product.images?.find((img) => img.is_primary) || product.images?.[0];
+  const imageUrl =
+    primaryImage?.url ||
+    product.featured_image_url ||
+    "/images/placeholder-user.jpg";
 
   return `
     <div class="cart-item" data-item-id="${item.id}">
@@ -320,7 +362,7 @@ window.removeItem = async function (itemId) {
       title: "Remove Item",
       confirmText: "Remove",
       cancelText: "Cancel",
-      confirmClass: "btn-danger"
+      confirmClass: "btn-danger",
     }
   );
 
@@ -345,14 +387,13 @@ window.removeItem = async function (itemId) {
 
 // Proceed to checkout
 window.proceedToCheckout = function () {
+  // Allow guest checkout: redirect to checkout page. If user is not authenticated, mark guest flag.
   if (!authService.isAuthenticated()) {
-    window.location.href =
-      "/login.html?redirect=" + encodeURIComponent("/checkout.html");
+    window.location.href = "/checkout.html?guest=true";
     return;
   }
 
-  // For now, show a message that checkout is coming soon
-  showToast("Checkout functionality coming soon!", "info");
+  window.location.href = "/checkout.html";
 };
 
 // Show loading state for an item
@@ -373,6 +414,57 @@ function showError(message) {
       ${message}
     </div>
   `;
+}
+
+// Offline/demo banner helpers
+function renderOfflineBanner() {
+  const cartContent = document.getElementById("cartContent");
+  if (!cartContent) return;
+  let banner = document.getElementById("cartOfflineBanner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "cartOfflineBanner";
+    banner.className =
+      "alert alert-warning d-flex justify-content-between align-items-center";
+    banner.innerHTML = `
+      <div>
+        <strong>Offline / Demo mode:</strong> Some data loaded from your browser. Actions are stored locally.
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-dark me-2" id="retryCartBtn">Try API Again</button>
+        <a href="/products.html" class="btn btn-sm btn-dark">Continue Shopping</a>
+      </div>
+    `;
+    cartContent.insertAdjacentElement("afterbegin", banner);
+    document
+      .getElementById("retryCartBtn")
+      .addEventListener("click", async () => {
+        const ls = document.getElementById("loadingSpinner");
+        if (ls) ls.style.display = "";
+        try {
+          cart = await cartService.getCart();
+          cartSummary = await cartService.getCartSummary();
+          removeOfflineBanner();
+          if (!cart || !cart.items || cart.items.length === 0)
+            renderEmptyCart();
+          else renderCart();
+          showToast("Reconnected to API", "success");
+        } catch (e) {
+          console.warn("Retry failed", e);
+          showToast(
+            "Retry failed. Still offline or API unavailable.",
+            "warning"
+          );
+        } finally {
+          if (ls) ls.style.display = "none";
+        }
+      });
+  }
+}
+
+function removeOfflineBanner() {
+  const banner = document.getElementById("cartOfflineBanner");
+  if (banner) banner.remove();
 }
 
 // Show toast notification

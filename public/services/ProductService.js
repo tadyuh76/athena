@@ -1,8 +1,45 @@
 export class ProductService {
   constructor() {
-    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : '/api';
+    this.baseUrl = window.ENV ? window.ENV.getApiUrl() : "/api";
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    // Demo products used when backend is unavailable (client-side only)
+    this.demoProducts = [
+      {
+        id: "demo-1",
+        name: "Classic White T-Shirt",
+        short_description: "Comfortable cotton tee",
+        base_price: 29.99,
+        compare_price: 39.99,
+        images: [{ url: "/images/product1.jpg", is_primary: true }],
+        variants: [
+          {
+            id: "d1-v1",
+            sku: "WT-001",
+            size: "M",
+            color: "White",
+            inventory_quantity: 10,
+          },
+        ],
+      },
+      {
+        id: "demo-2",
+        name: "Denim Jeans",
+        short_description: "Slim fit denim",
+        base_price: 79.99,
+        compare_price: 99.99,
+        images: [{ url: "/images/product2.jpg", is_primary: true }],
+        variants: [
+          {
+            id: "d2-v1",
+            sku: "DJ-002",
+            size: "32",
+            color: "Blue",
+            inventory_quantity: 5,
+          },
+        ],
+      },
+    ];
   }
 
   async makeRequest(endpoint, method = "GET", body = null) {
@@ -25,19 +62,19 @@ export class ProductService {
     }
 
     const url = `${this.baseUrl}${endpoint}`;
-    console.log('Making request to:', url, 'with options:', options);
-    
+    console.log("Making request to:", url, "with options:", options);
+
     const response = await fetch(url, options);
-    console.log('Response status:', response.status, response.statusText);
-    
+    console.log("Response status:", response.status, response.statusText);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('API Error:', errorText);
+      console.error("API Error:", errorText);
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
-    
+
     const result = await response.json();
-    console.log('API Response:', result);
+    console.log("API Response:", result);
     return result;
   }
 
@@ -68,15 +105,26 @@ export class ProductService {
       }
     }
 
-    const result = await this.makeRequest(`/products?${params.toString()}`);
+    try {
+      const result = await this.makeRequest(`/products?${params.toString()}`);
+      // Cache the result
+      this.cache.set(cacheKey, {
+        data: result,
+        timestamp: Date.now(),
+      });
 
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: result,
-      timestamp: Date.now(),
-    });
-
-    return result;
+      return result;
+    } catch (err) {
+      // Fallback to demo products
+      console.warn("Falling back to demo products due to error:", err);
+      const products = this.demoProducts.slice(
+        (page - 1) * limit,
+        page * limit
+      );
+      const data = { products, total: this.demoProducts.length };
+      this.cache.set(cacheKey, { data, timestamp: Date.now() });
+      return data;
+    }
   }
 
   async getProductById(id) {
@@ -89,14 +137,20 @@ export class ProductService {
       }
     }
 
-    const result = await this.makeRequest(`/products/${id}`);
-
-    this.cache.set(cacheKey, {
-      data: result,
-      timestamp: Date.now(),
-    });
-
-    return result;
+    try {
+      const result = await this.makeRequest(`/products/${id}`);
+      this.cache.set(cacheKey, { data: result, timestamp: Date.now() });
+      return result;
+    } catch (err) {
+      console.warn("Falling back to demo product for id", id, err);
+      const prod = this.demoProducts.find((p) => String(p.id) === String(id));
+      if (prod) {
+        // Return the product object directly (same shape as API client expects)
+        this.cache.set(cacheKey, { data: prod, timestamp: Date.now() });
+        return prod;
+      }
+      throw err;
+    }
   }
 
   async getProductBySlug(slug) {
