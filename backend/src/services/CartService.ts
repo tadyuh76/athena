@@ -1,11 +1,10 @@
-import { supabase, supabaseAdmin } from "../utils/supabase";
-import { CartItem, Product, ProductVariant } from "../types/database.types";
+import { supabaseAdmin } from "../utils/supabase";
+import { CartModel, CartItemWithDetails } from "../models/CartModel";
+import { ProductVariantModel } from "../models/ProductVariantModel";
+import { CartItem } from "../types/database.types";
 import { v4 as uuidv4 } from "uuid";
 
-export interface CartItemWithDetails extends CartItem {
-  product?: Product;
-  variant?: ProductVariant;
-}
+export { CartItemWithDetails };
 
 export interface CartWithItems {
   id: string;
@@ -26,6 +25,14 @@ export interface CartSummary {
 }
 
 export class CartService {
+  private cartModel: CartModel;
+  private variantModel: ProductVariantModel;
+
+  constructor() {
+    this.cartModel = new CartModel();
+    this.variantModel = new ProductVariantModel();
+  }
+
   async getCart(
     userId?: string,
     sessionId?: string
@@ -38,37 +45,28 @@ export class CartService {
         console.log('[CartService.getCart] Generated new sessionId:', sessionId);
       }
 
-      let query = supabase.from("cart_items").select(`
-          *,
-          product:products(*, images:product_images(*)),
-          variant:product_variants(*)
-        `);
+      let items: CartItemWithDetails[];
 
       if (userId) {
         console.log('[CartService.getCart] Querying by userId:', userId);
-        query = query.eq("user_id", userId);
+        items = await this.cartModel.findByUserId(userId);
       } else if (sessionId) {
         console.log('[CartService.getCart] Querying by sessionId:', sessionId);
-        query = query.eq("session_id", sessionId);
+        items = await this.cartModel.findBySessionId(sessionId);
+      } else {
+        items = [];
       }
 
-      console.log('[CartService.getCart] Executing Supabase query...');
-      const { data, error } = await query;
-      console.log('[CartService.getCart] Query complete. Items found:', data?.length || 0);
-
-      if (error) {
-        console.error('[CartService.getCart] Supabase error:', error);
-        throw error;
-      }
+      console.log('[CartService.getCart] Items found:', items.length);
 
       // Create a virtual cart object
       const cart: CartWithItems = {
         id: userId || sessionId || "anonymous",
         user_id: userId,
         session_id: sessionId,
-        items: data || [],
-        created_at: data?.[0]?.created_at || new Date().toISOString(),
-        updated_at: data?.[0]?.updated_at || new Date().toISOString(),
+        items,
+        created_at: items[0]?.created_at?.toString() || new Date().toISOString(),
+        updated_at: items[0]?.updated_at?.toString() || new Date().toISOString(),
       };
 
       console.log('[CartService.getCart] Returning cart with', cart.items.length, 'items');
@@ -100,18 +98,7 @@ export class CartService {
 
       // Check existing item
       console.log('[CartService.addItem] Checking for existing item...');
-      let existingQuery = supabase
-        .from("cart_items")
-        .select("*")
-        .eq("variant_id", variantId);
-
-      if (userId) {
-        existingQuery = existingQuery.eq("user_id", userId);
-      } else {
-        existingQuery = existingQuery.eq("session_id", sessionId);
-      }
-
-      const { data: existing } = await existingQuery.single();
+      const existing = await this.cartModel.findExistingItem(variantId, userId, sessionId);
 
       if (existing) {
         console.log('[CartService.addItem] Item already exists, updating quantity');
@@ -122,13 +109,9 @@ export class CartService {
         );
       }
 
-      // Get product and variant details for pricing
+      // Get variant details for pricing and inventory check
       console.log('[CartService.addItem] Fetching variant details...');
-      const { data: variant } = await supabase
-        .from("product_variants")
-        .select("*, product:products(base_price)")
-        .eq("id", variantId)
-        .single();
+      const variant = await this.variantModel.findById(variantId);
 
       if (!variant) {
         console.error('[CartService.addItem] Variant not found:', variantId);
@@ -137,7 +120,7 @@ export class CartService {
 
       console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
 
-      const price = variant.price || variant.product?.base_price || 0;
+      const price = variant.price || 0;
 
       // Check inventory
       const available = variant.inventory_quantity - variant.reserved_quantity;
@@ -152,36 +135,24 @@ export class CartService {
       console.log('[CartService.addItem] Adding item to cart...');
 
       // Add item to cart
-      const { data, error } = await supabase
-        .from("cart_items")
-        .insert({
-          user_id: userId,
-          session_id: sessionId,
-          product_id: productId,
-          variant_id: variantId,
-          quantity,
-          price_at_time: price,
-          inventory_reserved_until: reservationExpiry.toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('[CartService.addItem] Error inserting cart item:', error);
-        throw error;
-      }
+      const cartItem = await this.cartModel.create({
+        user_id: userId,
+        session_id: sessionId,
+        product_id: productId,
+        variant_id: variantId,
+        quantity,
+        price_at_time: price,
+        inventory_reserved_until: reservationExpiry as any,
+      });
 
       console.log('[CartService.addItem] Item added, updating reserved quantity...');
       // Update variant reserved quantity
-      await supabaseAdmin
-        .from("product_variants")
-        .update({
-          reserved_quantity: variant.reserved_quantity + quantity,
-        })
-        .eq("id", variantId);
+      await this.variantModel.update(variantId, {
+        reserved_quantity: variant.reserved_quantity + quantity,
+      } as any, true);
 
-      console.log('[CartService.addItem] Success! Cart item ID:', data.id);
-      return data;
+      console.log('[CartService.addItem] Success! Cart item ID:', cartItem.id);
+      return cartItem;
     } catch (error) {
       console.error('[CartService.addItem] Error:', error);
       throw new Error(
@@ -198,21 +169,22 @@ export class CartService {
   ): Promise<CartItem> {
     try {
       if (quantity <= 0) {
-        this.removeItem(itemId);
+        await this.removeItem(itemId);
+        throw new Error("Item removed from cart");
       }
 
       // Get current item to check inventory
-      const { data: currentItem } = await supabase
-        .from("cart_items")
-        .select("*, variant:product_variants(*)")
-        .eq("id", itemId)
-        .single();
+      const currentItem = await this.cartModel.findByIdWithVariant(itemId);
 
       if (!currentItem) {
         throw new Error("Cart item not found");
       }
 
       const variant = currentItem.variant;
+      if (!variant) {
+        throw new Error("Variant not found");
+      }
+
       const currentQuantity = currentItem.quantity;
       const quantityDiff = quantity - currentQuantity;
 
@@ -226,29 +198,17 @@ export class CartService {
       }
 
       // Update cart item
-      const { data, error } = await supabase
-        .from("cart_items")
-        .update({
-          quantity,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", itemId)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
+      const updatedItem = await this.cartModel.update(itemId, {
+        quantity,
+        updated_at: new Date().toISOString(),
+      } as any);
 
       // Update variant reserved quantity
-      await supabaseAdmin
-        .from("product_variants")
-        .update({
-          reserved_quantity: variant.reserved_quantity + quantityDiff,
-        })
-        .eq("id", variant.id);
+      await this.variantModel.update(variant.id, {
+        reserved_quantity: variant.reserved_quantity + quantityDiff,
+      } as any, true);
 
-      return data;
+      return updatedItem;
     } catch (error) {
       throw new Error(
         `Failed to update cart item: ${
@@ -261,37 +221,26 @@ export class CartService {
   async removeItem(itemId: string): Promise<void> {
     try {
       // Get current item to release inventory
-      const { data: currentItem } = await supabase
-        .from("cart_items")
-        .select("*, variant:product_variants(*)")
-        .eq("id", itemId)
-        .single();
+      const currentItem = await this.cartModel.findByIdWithVariant(itemId);
 
       if (!currentItem) {
         throw new Error("Cart item not found");
       }
 
-      // Remove item from cart
-      const { error } = await supabase
-        .from("cart_items")
-        .delete()
-        .eq("id", itemId);
+      const variant = currentItem.variant;
 
-      if (error) {
-        throw error;
-      }
+      // Remove item from cart
+      await this.cartModel.delete(itemId);
 
       // Release reserved inventory
-      const variant = currentItem.variant;
-      await supabaseAdmin
-        .from("product_variants")
-        .update({
+      if (variant) {
+        await this.variantModel.update(variant.id, {
           reserved_quantity: Math.max(
             0,
             variant.reserved_quantity - currentItem.quantity
           ),
-        })
-        .eq("id", variant.id);
+        } as any, true);
+      }
     } catch (error) {
       throw new Error(
         `Failed to remove cart item: ${
@@ -308,45 +257,35 @@ export class CartService {
       }
 
       // Get all cart items to release inventory
-      let query = supabase
-        .from("cart_items")
-        .select("*, variant:product_variants(*)");
+      let items: CartItemWithDetails[];
 
       if (userId) {
-        query = query.eq("user_id", userId);
+        items = await this.cartModel.findByUserId(userId);
+      } else if (sessionId) {
+        items = await this.cartModel.findBySessionId(sessionId);
       } else {
-        query = query.eq("session_id", sessionId);
+        return;
       }
-
-      const { data: items } = await query;
 
       if (items && items.length > 0) {
         // Release reserved inventory for all items
         for (const item of items) {
           const variant = item.variant;
-          await supabaseAdmin
-            .from("product_variants")
-            .update({
+          if (variant) {
+            await this.variantModel.update(variant.id, {
               reserved_quantity: Math.max(
                 0,
                 variant.reserved_quantity - item.quantity
               ),
-            })
-            .eq("id", variant.id);
+            } as any, true);
+          }
         }
 
         // Remove all cart items
-        let deleteQuery = supabase.from("cart_items").delete();
-
         if (userId) {
-          deleteQuery = deleteQuery.eq("user_id", userId);
-        } else {
-          deleteQuery = deleteQuery.eq("session_id", sessionId);
-        }
-
-        const { error } = await deleteQuery;
-        if (error) {
-          throw error;
+          await this.cartModel.deleteByUserId(userId);
+        } else if (sessionId) {
+          await this.cartModel.deleteBySessionId(sessionId);
         }
       }
     } catch (error) {
@@ -414,20 +353,14 @@ export class CartService {
   async mergeGuestCart(guestSessionId: string, userId: string): Promise<void> {
     try {
       // Get guest cart items
-      const { data: guestItems } = await supabase
-        .from("cart_items")
-        .select("*")
-        .eq("session_id", guestSessionId);
+      const guestItems = await this.cartModel.findBySessionId(guestSessionId);
 
       if (!guestItems || guestItems.length === 0) {
         return;
       }
 
       // Get user cart items
-      const { data: userItems } = await supabase
-        .from("cart_items")
-        .select("*")
-        .eq("user_id", userId);
+      const userItems = await this.cartModel.findByUserId(userId);
 
       const userVariantIds = new Set(
         userItems?.map((item) => item.variant_id) || []
@@ -446,23 +379,19 @@ export class CartService {
               userItem.quantity + guestItem.quantity
             );
           }
+          // Delete guest item after merging
+          await this.cartModel.delete(guestItem.id);
         } else {
           // Move guest item to user
-          await supabase
-            .from("cart_items")
-            .update({
-              user_id: userId,
-              session_id: null,
-            })
-            .eq("id", guestItem.id);
+          await this.cartModel.update(guestItem.id, {
+            user_id: userId,
+            session_id: null,
+          } as any);
         }
       }
 
       // Remove any remaining guest items
-      await supabase
-        .from("cart_items")
-        .delete()
-        .eq("session_id", guestSessionId);
+      await this.cartModel.deleteBySessionId(guestSessionId);
     } catch (error) {
       throw new Error(
         `Failed to merge guest cart: ${
@@ -474,14 +403,8 @@ export class CartService {
 
   async releaseExpiredReservations(): Promise<void> {
     try {
-      const now = new Date().toISOString();
-      
-      // Get all expired cart items
-      const { data: expiredItems } = await supabase
-        .from("cart_items")
-        .select("*, variant:product_variants(*)")
-        .lt("inventory_reserved_until", now)
-        .not("inventory_reserved_until", "is", null);
+      // Get all expired cart items using the model
+      const expiredItems = await this.cartModel.findExpiredReservations();
 
       if (!expiredItems || expiredItems.length === 0) {
         return;
@@ -489,7 +412,8 @@ export class CartService {
 
       // Release reserved inventory for expired items
       for (const item of expiredItems) {
-        const variant = item.variant;
+        // Get fresh variant data to ensure accuracy
+        const variant = await this.variantModel.findById(item.variant_id);
         if (variant) {
           await supabaseAdmin
             .from("product_variants")
@@ -505,11 +429,12 @@ export class CartService {
 
       // Clear the reservation timestamp on expired items
       const expiredItemIds = expiredItems.map(item => item.id);
-      await supabase
-        .from("cart_items")
-        .update({ inventory_reserved_until: null })
-        .in("id", expiredItemIds);
-        
+      for (const id of expiredItemIds) {
+        await this.cartModel.update(id, {
+          inventory_reserved_until: null
+        } as any);
+      }
+
     } catch (error) {
       throw new Error(
         `Failed to release expired reservations: ${

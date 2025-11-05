@@ -1,28 +1,13 @@
-import { Product, ProductVariant, ProductImage, ProductCategory, ProductCollection } from '../types/database.types';
-export interface ProductFilter {
-    category_id?: string;
-    collection_id?: string;
-    min_price?: number;
-    max_price?: number;
-    in_stock?: boolean;
-    is_featured?: boolean;
-    search?: string;
-    status?: 'draft' | 'active' | 'archived';
-    sort_by?: 'newest' | 'price_low' | 'price_high' | 'name' | 'popular';
-}
-export interface ProductWithVariants extends Product {
-    variants?: ProductVariant[];
-    images?: ProductImage[];
-    category?: ProductCategory;
-    collection?: ProductCollection;
-}
+import { ProductFilter, ProductWithVariants, PaginatedProducts } from '../models/ProductModel';
+import { Product, ProductVariant, ProductCategory, ProductCollection } from '../types/database.types';
+export { ProductFilter, ProductWithVariants };
 export declare class ProductService {
-    getProducts(filter?: ProductFilter, page?: number, limit?: number): Promise<{
-        products: ProductWithVariants[];
-        total: number;
-        page: number;
-        totalPages: number;
-    }>;
+    private productModel;
+    private variantModel;
+    private categoryModel;
+    private collectionModel;
+    constructor();
+    getProducts(filter?: ProductFilter, page?: number, limit?: number): Promise<PaginatedProducts>;
     getProductById(id: string): Promise<ProductWithVariants | null>;
     getProductBySlug(slug: string): Promise<ProductWithVariants | null>;
     createProduct(product: Partial<Product>): Promise<Product>;

@@ -98,7 +98,8 @@ export interface Cart {
 
 export interface CartItem {
   id: string;
-  cart_id: string;
+  user_id?: string;
+  session_id?: string;
   product_id: string;
   variant_id: string;
   quantity: number;

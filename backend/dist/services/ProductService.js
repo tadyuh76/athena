@@ -1,76 +1,28 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProductService = void 0;
-const supabase_1 = require("../utils/supabase");
+const ProductModel_1 = require("../models/ProductModel");
+const ProductVariantModel_1 = require("../models/ProductVariantModel");
+const CategoryModel_1 = require("../models/CategoryModel");
+const CollectionModel_1 = require("../models/CollectionModel");
 class ProductService {
+    productModel;
+    variantModel;
+    categoryModel;
+    collectionModel;
+    constructor() {
+        this.productModel = new ProductModel_1.ProductModel();
+        this.variantModel = new ProductVariantModel_1.ProductVariantModel();
+        this.categoryModel = new CategoryModel_1.CategoryModel();
+        this.collectionModel = new CollectionModel_1.CollectionModel();
+    }
     async getProducts(filter = {}, page = 1, limit = 20) {
         try {
-            let query = supabase_1.supabase
-                .from('products')
-                .select(`
-          *,
-          variants:product_variants(*),
-          images:product_images(*),
-          category:product_categories(*),
-          collection:product_collections(*)
-        `, { count: 'exact' })
-                .eq('status', filter.status || 'active');
-            switch (filter.sort_by) {
-                case 'price_low':
-                    query = query.order('base_price', { ascending: true });
-                    break;
-                case 'price_high':
-                    query = query.order('base_price', { ascending: false });
-                    break;
-                case 'name':
-                    query = query.order('name', { ascending: true });
-                    break;
-                case 'popular':
-                    query = query.order('view_count', { ascending: false });
-                    break;
-                case 'newest':
-                default:
-                    query = query.order('created_at', { ascending: false });
-                    break;
-            }
-            if (filter.category_id) {
-                query = query.eq('category_id', filter.category_id);
-            }
-            if (filter.collection_id) {
-                query = query.eq('collection_id', filter.collection_id);
-            }
-            if (filter.is_featured !== undefined) {
-                query = query.eq('is_featured', filter.is_featured);
-            }
-            if (filter.min_price !== undefined) {
-                query = query.gte('base_price', filter.min_price);
-            }
-            if (filter.max_price !== undefined) {
-                query = query.lte('base_price', filter.max_price);
-            }
-            if (filter.search) {
-                query = query.or(`name.ilike.%${filter.search}%,description.ilike.%${filter.search}%`);
-            }
-            const start = (page - 1) * limit;
-            const end = start + limit - 1;
-            query = query.range(start, end);
-            const { data, error, count } = await query;
-            if (error) {
-                throw error;
-            }
-            let products = data || [];
+            const result = await this.productModel.findWithFilters(filter, page, limit);
             if (filter.in_stock) {
-                products = products.filter((product) => {
-                    const totalStock = product.variants?.reduce((sum, v) => sum + (v.inventory_quantity - v.reserved_quantity), 0) || 0;
-                    return totalStock > 0;
-                });
+                result.products = this.productModel.filterByStock(result.products);
             }
-            return {
-                products,
-                total: count || 0,
-                page,
-                totalPages: Math.ceil((count || 0) / limit)
-            };
+            return result;
         }
         catch (error) {
             console.error('Error in getProducts:', error);
@@ -79,28 +31,11 @@ class ProductService {
     }
     async getProductById(id) {
         try {
-            const { data, error } = await supabase_1.supabase
-                .from('products')
-                .select(`
-          *,
-          variants:product_variants(*),
-          images:product_images(*),
-          category:product_categories(*),
-          collection:product_collections(*)
-        `)
-                .eq('id', id)
-                .single();
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    return null;
-                }
-                throw error;
+            const product = await this.productModel.findByIdWithRelations(id);
+            if (product) {
+                await this.productModel.incrementViewCount(id);
             }
-            await supabase_1.supabase
-                .from('products')
-                .update({ view_count: data.view_count + 1 })
-                .eq('id', id);
-            return data;
+            return product;
         }
         catch (error) {
             throw new Error(`Failed to get product: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -108,179 +43,42 @@ class ProductService {
     }
     async getProductBySlug(slug) {
         try {
-            const { data, error } = await supabase_1.supabase
-                .from('products')
-                .select(`
-          *,
-          variants:product_variants(*),
-          images:product_images(*),
-          category:product_categories(*),
-          collection:product_collections(*)
-        `)
-                .eq('slug', slug)
-                .single();
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    return null;
-                }
-                throw error;
+            const product = await this.productModel.findBySlugWithRelations(slug);
+            if (product) {
+                await this.productModel.incrementViewCount(product.id);
             }
-            await supabase_1.supabase
-                .from('products')
-                .update({ view_count: data.view_count + 1 })
-                .eq('id', data.id);
-            return data;
+            return product;
         }
         catch (error) {
             throw new Error(`Failed to get product: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     }
     async createProduct(product) {
-        try {
-            const { data, error } = await supabase_1.supabaseAdmin
-                .from('products')
-                .insert(product)
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            return data;
-        }
-        catch (error) {
-            throw new Error(`Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.productModel.create(product, true);
     }
     async updateProduct(id, updates) {
-        try {
-            const { data, error } = await supabase_1.supabaseAdmin
-                .from('products')
-                .update(updates)
-                .eq('id', id)
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            return data;
-        }
-        catch (error) {
-            throw new Error(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.productModel.update(id, updates, true);
     }
     async deleteProduct(id) {
-        try {
-            const { error } = await supabase_1.supabaseAdmin
-                .from('products')
-                .update({ deleted_at: new Date().toISOString() })
-                .eq('id', id);
-            if (error) {
-                throw error;
-            }
-            return true;
-        }
-        catch (error) {
-            throw new Error(`Failed to delete product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.productModel.softDelete(id, true);
     }
     async createVariant(variant) {
-        try {
-            const { data, error } = await supabase_1.supabaseAdmin
-                .from('product_variants')
-                .insert(variant)
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            return data;
-        }
-        catch (error) {
-            throw new Error(`Failed to create variant: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.variantModel.create(variant, true);
     }
     async updateVariant(id, updates) {
-        try {
-            const { data, error } = await supabase_1.supabaseAdmin
-                .from('product_variants')
-                .update(updates)
-                .eq('id', id)
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            return data;
-        }
-        catch (error) {
-            throw new Error(`Failed to update variant: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.variantModel.update(id, updates, true);
     }
     async getCategories() {
-        try {
-            const { data, error } = await supabase_1.supabase
-                .from('product_categories')
-                .select('*')
-                .eq('is_active', true)
-                .order('sort_order', { ascending: true });
-            if (error) {
-                throw error;
-            }
-            return data || [];
-        }
-        catch (error) {
-            throw new Error(`Failed to get categories: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.categoryModel.findAllActive();
     }
     async getCollections() {
-        try {
-            const { data, error } = await supabase_1.supabase
-                .from('product_collections')
-                .select('*')
-                .eq('is_active', true)
-                .order('sort_order', { ascending: true });
-            if (error) {
-                throw error;
-            }
-            return data || [];
-        }
-        catch (error) {
-            throw new Error(`Failed to get collections: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.collectionModel.findAllActive();
     }
     async checkInventory(variantId, quantity) {
-        try {
-            const { data, error } = await supabase_1.supabase
-                .from('product_variants')
-                .select('inventory_quantity, reserved_quantity')
-                .eq('id', variantId)
-                .single();
-            if (error) {
-                throw error;
-            }
-            const available = data.inventory_quantity - data.reserved_quantity;
-            return available >= quantity;
-        }
-        catch (error) {
-            throw new Error(`Failed to check inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.variantModel.checkInventory(variantId, quantity);
     }
     async reserveInventory(variantId, quantity, durationMinutes = 15) {
-        try {
-            const { data, error } = await supabase_1.supabaseAdmin
-                .rpc('reserve_inventory', {
-                p_variant_id: variantId,
-                p_quantity: quantity,
-                p_duration_minutes: durationMinutes
-            });
-            if (error) {
-                throw error;
-            }
-            return new Date(data);
-        }
-        catch (error) {
-            throw new Error(`Failed to reserve inventory: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
+        return this.variantModel.reserveInventory(variantId, quantity, durationMinutes);
     }
 }
 exports.ProductService = ProductService;

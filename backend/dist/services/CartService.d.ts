@@ -1,8 +1,6 @@
-import { CartItem, Product, ProductVariant } from "../types/database.types";
-export interface CartItemWithDetails extends CartItem {
-    product?: Product;
-    variant?: ProductVariant;
-}
+import { CartItemWithDetails } from "../models/CartModel";
+import { CartItem } from "../types/database.types";
+export { CartItemWithDetails };
 export interface CartWithItems {
     id: string;
     user_id?: string;
@@ -20,6 +18,9 @@ export interface CartSummary {
     itemCount: number;
 }
 export declare class CartService {
+    private cartModel;
+    private variantModel;
+    constructor();
     getCart(userId?: string, sessionId?: string): Promise<CartWithItems | null>;
     addItem(userId: string | undefined, sessionId: string | undefined, productId: string, variantId: string, quantity?: number): Promise<CartItem>;
     updateItemQuantity(itemId: string, quantity: number): Promise<CartItem>;

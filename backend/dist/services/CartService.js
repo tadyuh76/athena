@@ -2,8 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CartService = void 0;
 const supabase_1 = require("../utils/supabase");
+const CartModel_1 = require("../models/CartModel");
+const ProductVariantModel_1 = require("../models/ProductVariantModel");
 const uuid_1 = require("uuid");
 class CartService {
+    cartModel;
+    variantModel;
+    constructor() {
+        this.cartModel = new CartModel_1.CartModel();
+        this.variantModel = new ProductVariantModel_1.ProductVariantModel();
+    }
     async getCart(userId, sessionId) {
         try {
             console.log('[CartService.getCart] Called with userId:', userId, 'sessionId:', sessionId);
@@ -11,33 +19,26 @@ class CartService {
                 sessionId = (0, uuid_1.v4)();
                 console.log('[CartService.getCart] Generated new sessionId:', sessionId);
             }
-            let query = supabase_1.supabase.from("cart_items").select(`
-          *,
-          product:products(*, images:product_images(*)),
-          variant:product_variants(*)
-        `);
+            let items;
             if (userId) {
                 console.log('[CartService.getCart] Querying by userId:', userId);
-                query = query.eq("user_id", userId);
+                items = await this.cartModel.findByUserId(userId);
             }
             else if (sessionId) {
                 console.log('[CartService.getCart] Querying by sessionId:', sessionId);
-                query = query.eq("session_id", sessionId);
+                items = await this.cartModel.findBySessionId(sessionId);
             }
-            console.log('[CartService.getCart] Executing Supabase query...');
-            const { data, error } = await query;
-            console.log('[CartService.getCart] Query complete. Items found:', data?.length || 0);
-            if (error) {
-                console.error('[CartService.getCart] Supabase error:', error);
-                throw error;
+            else {
+                items = [];
             }
+            console.log('[CartService.getCart] Items found:', items.length);
             const cart = {
                 id: userId || sessionId || "anonymous",
                 user_id: userId,
                 session_id: sessionId,
-                items: data || [],
-                created_at: data?.[0]?.created_at || new Date().toISOString(),
-                updated_at: data?.[0]?.updated_at || new Date().toISOString(),
+                items,
+                created_at: items[0]?.created_at?.toString() || new Date().toISOString(),
+                updated_at: items[0]?.updated_at?.toString() || new Date().toISOString(),
             };
             console.log('[CartService.getCart] Returning cart with', cart.items.length, 'items');
             return cart;
@@ -55,33 +56,19 @@ class CartService {
                 console.log('[CartService.addItem] Generated new sessionId:', sessionId);
             }
             console.log('[CartService.addItem] Checking for existing item...');
-            let existingQuery = supabase_1.supabase
-                .from("cart_items")
-                .select("*")
-                .eq("variant_id", variantId);
-            if (userId) {
-                existingQuery = existingQuery.eq("user_id", userId);
-            }
-            else {
-                existingQuery = existingQuery.eq("session_id", sessionId);
-            }
-            const { data: existing } = await existingQuery.single();
+            const existing = await this.cartModel.findExistingItem(variantId, userId, sessionId);
             if (existing) {
                 console.log('[CartService.addItem] Item already exists, updating quantity');
                 return this.updateItemQuantity(existing.id, existing.quantity + quantity);
             }
             console.log('[CartService.addItem] Fetching variant details...');
-            const { data: variant } = await supabase_1.supabase
-                .from("product_variants")
-                .select("*, product:products(base_price)")
-                .eq("id", variantId)
-                .single();
+            const variant = await this.variantModel.findById(variantId);
             if (!variant) {
                 console.error('[CartService.addItem] Variant not found:', variantId);
                 throw new Error("Variant not found");
             }
             console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
-            const price = variant.price || variant.product?.base_price || 0;
+            const price = variant.price || 0;
             const available = variant.inventory_quantity - variant.reserved_quantity;
             console.log('[CartService.addItem] Available inventory:', available);
             if (available < quantity) {
@@ -90,32 +77,21 @@ class CartService {
             }
             const reservationExpiry = new Date(Date.now() + 15 * 60 * 1000);
             console.log('[CartService.addItem] Adding item to cart...');
-            const { data, error } = await supabase_1.supabase
-                .from("cart_items")
-                .insert({
+            const cartItem = await this.cartModel.create({
                 user_id: userId,
                 session_id: sessionId,
                 product_id: productId,
                 variant_id: variantId,
                 quantity,
                 price_at_time: price,
-                inventory_reserved_until: reservationExpiry.toISOString(),
-            })
-                .select()
-                .single();
-            if (error) {
-                console.error('[CartService.addItem] Error inserting cart item:', error);
-                throw error;
-            }
+                inventory_reserved_until: reservationExpiry,
+            });
             console.log('[CartService.addItem] Item added, updating reserved quantity...');
-            await supabase_1.supabaseAdmin
-                .from("product_variants")
-                .update({
+            await this.variantModel.update(variantId, {
                 reserved_quantity: variant.reserved_quantity + quantity,
-            })
-                .eq("id", variantId);
-            console.log('[CartService.addItem] Success! Cart item ID:', data.id);
-            return data;
+            }, true);
+            console.log('[CartService.addItem] Success! Cart item ID:', cartItem.id);
+            return cartItem;
         }
         catch (error) {
             console.error('[CartService.addItem] Error:', error);
@@ -125,17 +101,17 @@ class CartService {
     async updateItemQuantity(itemId, quantity) {
         try {
             if (quantity <= 0) {
-                this.removeItem(itemId);
+                await this.removeItem(itemId);
+                throw new Error("Item removed from cart");
             }
-            const { data: currentItem } = await supabase_1.supabase
-                .from("cart_items")
-                .select("*, variant:product_variants(*)")
-                .eq("id", itemId)
-                .single();
+            const currentItem = await this.cartModel.findByIdWithVariant(itemId);
             if (!currentItem) {
                 throw new Error("Cart item not found");
             }
             const variant = currentItem.variant;
+            if (!variant) {
+                throw new Error("Variant not found");
+            }
             const currentQuantity = currentItem.quantity;
             const quantityDiff = quantity - currentQuantity;
             if (quantityDiff > 0) {
@@ -144,25 +120,14 @@ class CartService {
                     throw new Error(`Only ${available} additional items available`);
                 }
             }
-            const { data, error } = await supabase_1.supabase
-                .from("cart_items")
-                .update({
+            const updatedItem = await this.cartModel.update(itemId, {
                 quantity,
                 updated_at: new Date().toISOString(),
-            })
-                .eq("id", itemId)
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            await supabase_1.supabaseAdmin
-                .from("product_variants")
-                .update({
+            });
+            await this.variantModel.update(variant.id, {
                 reserved_quantity: variant.reserved_quantity + quantityDiff,
-            })
-                .eq("id", variant.id);
-            return data;
+            }, true);
+            return updatedItem;
         }
         catch (error) {
             throw new Error(`Failed to update cart item: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -170,28 +135,17 @@ class CartService {
     }
     async removeItem(itemId) {
         try {
-            const { data: currentItem } = await supabase_1.supabase
-                .from("cart_items")
-                .select("*, variant:product_variants(*)")
-                .eq("id", itemId)
-                .single();
+            const currentItem = await this.cartModel.findByIdWithVariant(itemId);
             if (!currentItem) {
                 throw new Error("Cart item not found");
             }
-            const { error } = await supabase_1.supabase
-                .from("cart_items")
-                .delete()
-                .eq("id", itemId);
-            if (error) {
-                throw error;
-            }
             const variant = currentItem.variant;
-            await supabase_1.supabaseAdmin
-                .from("product_variants")
-                .update({
-                reserved_quantity: Math.max(0, variant.reserved_quantity - currentItem.quantity),
-            })
-                .eq("id", variant.id);
+            await this.cartModel.delete(itemId);
+            if (variant) {
+                await this.variantModel.update(variant.id, {
+                    reserved_quantity: Math.max(0, variant.reserved_quantity - currentItem.quantity),
+                }, true);
+            }
         }
         catch (error) {
             throw new Error(`Failed to remove cart item: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -202,36 +156,30 @@ class CartService {
             if (!userId && !sessionId) {
                 return;
             }
-            let query = supabase_1.supabase
-                .from("cart_items")
-                .select("*, variant:product_variants(*)");
+            let items;
             if (userId) {
-                query = query.eq("user_id", userId);
+                items = await this.cartModel.findByUserId(userId);
+            }
+            else if (sessionId) {
+                items = await this.cartModel.findBySessionId(sessionId);
             }
             else {
-                query = query.eq("session_id", sessionId);
+                return;
             }
-            const { data: items } = await query;
             if (items && items.length > 0) {
                 for (const item of items) {
                     const variant = item.variant;
-                    await supabase_1.supabaseAdmin
-                        .from("product_variants")
-                        .update({
-                        reserved_quantity: Math.max(0, variant.reserved_quantity - item.quantity),
-                    })
-                        .eq("id", variant.id);
+                    if (variant) {
+                        await this.variantModel.update(variant.id, {
+                            reserved_quantity: Math.max(0, variant.reserved_quantity - item.quantity),
+                        }, true);
+                    }
                 }
-                let deleteQuery = supabase_1.supabase.from("cart_items").delete();
                 if (userId) {
-                    deleteQuery = deleteQuery.eq("user_id", userId);
+                    await this.cartModel.deleteByUserId(userId);
                 }
-                else {
-                    deleteQuery = deleteQuery.eq("session_id", sessionId);
-                }
-                const { error } = await deleteQuery;
-                if (error) {
-                    throw error;
+                else if (sessionId) {
+                    await this.cartModel.deleteBySessionId(sessionId);
                 }
             }
         }
@@ -275,17 +223,11 @@ class CartService {
     }
     async mergeGuestCart(guestSessionId, userId) {
         try {
-            const { data: guestItems } = await supabase_1.supabase
-                .from("cart_items")
-                .select("*")
-                .eq("session_id", guestSessionId);
+            const guestItems = await this.cartModel.findBySessionId(guestSessionId);
             if (!guestItems || guestItems.length === 0) {
                 return;
             }
-            const { data: userItems } = await supabase_1.supabase
-                .from("cart_items")
-                .select("*")
-                .eq("user_id", userId);
+            const userItems = await this.cartModel.findByUserId(userId);
             const userVariantIds = new Set(userItems?.map((item) => item.variant_id) || []);
             for (const guestItem of guestItems) {
                 if (userVariantIds.has(guestItem.variant_id)) {
@@ -293,21 +235,16 @@ class CartService {
                     if (userItem) {
                         await this.updateItemQuantity(userItem.id, userItem.quantity + guestItem.quantity);
                     }
+                    await this.cartModel.delete(guestItem.id);
                 }
                 else {
-                    await supabase_1.supabase
-                        .from("cart_items")
-                        .update({
+                    await this.cartModel.update(guestItem.id, {
                         user_id: userId,
                         session_id: null,
-                    })
-                        .eq("id", guestItem.id);
+                    });
                 }
             }
-            await supabase_1.supabase
-                .from("cart_items")
-                .delete()
-                .eq("session_id", guestSessionId);
+            await this.cartModel.deleteBySessionId(guestSessionId);
         }
         catch (error) {
             throw new Error(`Failed to merge guest cart: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -315,17 +252,12 @@ class CartService {
     }
     async releaseExpiredReservations() {
         try {
-            const now = new Date().toISOString();
-            const { data: expiredItems } = await supabase_1.supabase
-                .from("cart_items")
-                .select("*, variant:product_variants(*)")
-                .lt("inventory_reserved_until", now)
-                .not("inventory_reserved_until", "is", null);
+            const expiredItems = await this.cartModel.findExpiredReservations();
             if (!expiredItems || expiredItems.length === 0) {
                 return;
             }
             for (const item of expiredItems) {
-                const variant = item.variant;
+                const variant = await this.variantModel.findById(item.variant_id);
                 if (variant) {
                     await supabase_1.supabaseAdmin
                         .from("product_variants")
@@ -336,10 +268,11 @@ class CartService {
                 }
             }
             const expiredItemIds = expiredItems.map(item => item.id);
-            await supabase_1.supabase
-                .from("cart_items")
-                .update({ inventory_reserved_until: null })
-                .in("id", expiredItemIds);
+            for (const id of expiredItemIds) {
+                await this.cartModel.update(id, {
+                    inventory_reserved_until: null
+                });
+            }
         }
         catch (error) {
             throw new Error(`Failed to release expired reservations: ${error instanceof Error ? error.message : "Unknown error"}`);
