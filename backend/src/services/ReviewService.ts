@@ -144,17 +144,17 @@ export class ReviewService {
     rating: number,
     title?: string,
     review?: string,
-    orderId?: string
+    orderId?: string,
+    images?: string[]
   ): Promise<ProductReview> {
     try {
-      // Check if user has already reviewed this product for this order
+      // Check if user has already reviewed this product
       const { data: existingReview } = await supabase
         .from('product_reviews')
         .select('id')
         .eq('user_id', userId)
         .eq('product_id', productId)
-        .eq('order_id', orderId || null)
-        .single();
+        .maybeSingle();
 
       if (existingReview) {
         throw new Error('You have already reviewed this product');
@@ -162,16 +162,37 @@ export class ReviewService {
 
       // Check if this is a verified purchase
       let isVerifiedPurchase = false;
-      if (orderId) {
+      let actualOrderId = orderId;
+
+      // If no orderId provided, try to find a completed order with this product
+      if (!actualOrderId) {
+        const { data: orderItems } = await supabase
+          .from('order_items')
+          .select('order_id, orders!inner(user_id, status)')
+          .eq('product_id', productId)
+          .eq('orders.user_id', userId)
+          .in('orders.status', ['delivered'])
+          .limit(1);
+
+        if (orderItems && orderItems.length > 0) {
+          actualOrderId = orderItems[0].order_id;
+          isVerifiedPurchase = true;
+        }
+      } else {
+        // Verify the provided orderId
         const { data: orderItem } = await supabase
           .from('order_items')
-          .select('id')
-          .eq('order_id', orderId)
+          .select('id, orders!inner(user_id, status)')
+          .eq('order_id', actualOrderId)
           .eq('product_id', productId)
+          .eq('orders.user_id', userId)
           .single();
 
         isVerifiedPurchase = !!orderItem;
       }
+
+      // Validate images array
+      const validatedImages = images && images.length > 0 ? images.filter(img => img && img.trim().length > 0) : null;
 
       // Create the review
       const { data, error } = await supabase
@@ -179,11 +200,12 @@ export class ReviewService {
         .insert({
           user_id: userId,
           product_id: productId,
-          order_id: orderId || null,
+          order_id: actualOrderId || null,
           rating,
           title: title || null,
           review: review || null,
-          is_verified_purchase: isVerifiedPurchase
+          is_verified_purchase: isVerifiedPurchase,
+          images: validatedImages
         })
         .select()
         .single();
@@ -293,7 +315,7 @@ export class ReviewService {
   }
 
   /**
-   * Mark review as helpful
+   * Mark review as helpful (deprecated - use toggleReviewLike instead)
    */
   async incrementHelpfulCount(reviewId: string): Promise<boolean> {
     try {
@@ -322,6 +344,133 @@ export class ReviewService {
       console.error('Failed to increment helpful count:', error);
       return false;
     }
+  }
+
+  /**
+   * Toggle review like (heart functionality)
+   */
+  async toggleReviewLike(reviewId: string, userId: string): Promise<{
+    liked: boolean;
+    helpful_count: number;
+  }> {
+    try {
+      // Check if user already liked this review
+      const { data: existingLike } = await supabase
+        .from('review_likes')
+        .select('id')
+        .eq('review_id', reviewId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      let liked = false;
+
+      if (existingLike) {
+        // Unlike: Remove the like
+        const { error } = await supabase
+          .from('review_likes')
+          .delete()
+          .eq('id', existingLike.id);
+
+        if (error) throw error;
+        liked = false;
+      } else {
+        // Like: Add the like
+        const { error } = await supabase
+          .from('review_likes')
+          .insert({
+            review_id: reviewId,
+            user_id: userId
+          });
+
+        if (error) throw error;
+        liked = true;
+      }
+
+      // Get the updated count
+      const { count, error: countError } = await supabase
+        .from('review_likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('review_id', reviewId);
+
+      if (countError) throw countError;
+
+      const helpful_count = count || 0;
+
+      // Update the helpful_count in product_reviews
+      await supabase
+        .from('product_reviews')
+        .update({ helpful_count })
+        .eq('id', reviewId);
+
+      return { liked, helpful_count };
+    } catch (error) {
+      console.error('Error toggling review like:', error);
+      throw new Error(`Failed to toggle review like: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Check if user has liked a review
+   */
+  async hasUserLikedReview(reviewId: string, userId: string): Promise<boolean> {
+    try {
+      const { data, error } = await supabase
+        .from('review_likes')
+        .select('id')
+        .eq('review_id', reviewId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        throw error;
+      }
+
+      return !!data;
+    } catch (error) {
+      console.error('Error checking review like:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get reviews with user like status
+   */
+  async getReviewsWithLikeStatus(
+    filter: ReviewFilter = {},
+    page: number = 1,
+    limit: number = 10,
+    userId?: string
+  ): Promise<{
+    reviews: (ReviewWithUser & { user_has_liked?: boolean })[];
+    total: number;
+    page: number;
+    totalPages: number;
+    stats: {
+      averageRating: number;
+      totalReviews: number;
+      ratingDistribution: { [key: number]: number };
+    };
+  }> {
+    const result = await this.getReviews(filter, page, limit);
+
+    // If userId is provided, check which reviews the user has liked
+    if (userId && result.reviews.length > 0) {
+      const reviewIds = result.reviews.map(r => r.id);
+      const { data: likes } = await supabase
+        .from('review_likes')
+        .select('review_id')
+        .eq('user_id', userId)
+        .in('review_id', reviewIds);
+
+      const likedReviewIds = new Set(likes?.map(l => l.review_id) || []);
+
+      result.reviews = result.reviews.map(review => ({
+        ...review,
+        user_has_liked: likedReviewIds.has(review.id)
+      }));
+    }
+
+    return result;
   }
 
   /**
@@ -388,7 +537,7 @@ export class ReviewService {
         .select('order_id, orders!inner(user_id, status)')
         .eq('product_id', productId)
         .eq('orders.user_id', userId)
-        .in('orders.status', ['delivered', 'confirmed']);
+        .in('orders.status', ['delivered']);
 
       if (!orderItems || orderItems.length === 0) {
         return { canReview: false, reason: 'You must purchase this product before reviewing' };

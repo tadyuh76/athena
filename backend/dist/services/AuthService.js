@@ -356,32 +356,61 @@ class AuthService {
     }
     async createOAuthProfile(userId, email, metadata) {
         try {
-            const { data: userProfile, error: upsertError } = await supabase_1.supabaseAdmin
+            const { data: existingUser } = await supabase_1.supabaseAdmin
                 .from("users")
-                .upsert({
-                id: userId,
-                email: email,
-                email_verified: true,
-                first_name: metadata?.name?.split(" ")[0] || metadata?.given_name || "",
-                last_name: metadata?.name?.split(" ").slice(1).join(" ") ||
-                    metadata?.family_name ||
-                    "",
-                status: "active",
-                role: "customer",
-                last_login_at: new Date().toISOString(),
-                metadata: {
-                    auth_provider: "google",
-                    avatar_url: metadata?.avatar_url || metadata?.picture || null,
-                    full_name: metadata?.name || metadata?.full_name || null,
-                },
-            }, {
-                onConflict: "id",
-            })
-                .select()
+                .select("*")
+                .eq("id", userId)
                 .single();
-            if (upsertError) {
-                console.error("Failed to upsert OAuth profile:", upsertError);
-                throw upsertError;
+            let userProfile;
+            if (existingUser) {
+                const { data, error: updateError } = await supabase_1.supabaseAdmin
+                    .from("users")
+                    .update({
+                    email_verified: true,
+                    last_login_at: new Date().toISOString(),
+                    metadata: {
+                        ...existingUser.metadata,
+                        auth_provider: "google",
+                        avatar_url: metadata?.avatar_url || metadata?.picture || null,
+                        full_name: metadata?.name || metadata?.full_name || null,
+                    },
+                })
+                    .eq("id", userId)
+                    .select()
+                    .single();
+                if (updateError) {
+                    console.error("Failed to update OAuth profile:", updateError);
+                    throw updateError;
+                }
+                userProfile = data;
+            }
+            else {
+                const { data, error: insertError } = await supabase_1.supabaseAdmin
+                    .from("users")
+                    .insert({
+                    id: userId,
+                    email: email,
+                    email_verified: true,
+                    first_name: metadata?.name?.split(" ")[0] || metadata?.given_name || "",
+                    last_name: metadata?.name?.split(" ").slice(1).join(" ") ||
+                        metadata?.family_name ||
+                        "",
+                    status: "active",
+                    role: "customer",
+                    last_login_at: new Date().toISOString(),
+                    metadata: {
+                        auth_provider: "google",
+                        avatar_url: metadata?.avatar_url || metadata?.picture || null,
+                        full_name: metadata?.name || metadata?.full_name || null,
+                    },
+                })
+                    .select()
+                    .single();
+                if (insertError) {
+                    console.error("Failed to create OAuth profile:", insertError);
+                    throw insertError;
+                }
+                userProfile = data;
             }
             const token = this.generateToken(userId);
             return {

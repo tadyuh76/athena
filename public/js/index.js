@@ -158,7 +158,7 @@ async function loadFeaturedProducts() {
                               primaryImage?.url ||
                               product.featured_image_url ||
                               "/images/placeholder-user.jpg"
-                            }" 
+                            }"
                                  alt="${
                                    product.name
                                  }" class="img-fluid rounded" />
@@ -166,17 +166,17 @@ async function loadFeaturedProducts() {
                         <h5 class="fw-semibold mb-2" style="color: #1f2937">${
                           product.name
                         }</h5>
-                        <p class="text-muted small mb-2">${
+                        <p class="text-muted small mb-1">${
                           product.short_description || ""
                         }</p>
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex justify-content-between align-items-center mt-2">
                             <div>
                                 <span class="fw-bold" style="color: #1f2937">${productService.formatPrice(
                                   product.base_price
                                 )}</span>
                                 ${
                                   product.compare_price
-                                    ? `<span class="text-muted text-decoration-line-through ms-2">${productService.formatPrice(
+                                    ? `<span class="text-muted text-decoration-line-through ms-2 small">${productService.formatPrice(
                                         product.compare_price
                                       )}</span>`
                                     : ""

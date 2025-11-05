@@ -74,13 +74,14 @@ export class ReviewService {
   /**
    * Create a new review
    */
-  async createReview(productId, rating, title = '', review = '', orderId = null) {
+  async createReview(productId, rating, title = '', review = '', orderId = null, images = []) {
     return await this.makeRequest('/reviews', 'POST', {
       product_id: productId,
       rating,
       title,
       review,
       order_id: orderId,
+      images: images && images.length > 0 ? images : undefined,
     });
   }
 
@@ -99,10 +100,36 @@ export class ReviewService {
   }
 
   /**
-   * Mark a review as helpful
+   * Mark a review as helpful (deprecated - use toggleLike instead)
    */
   async markHelpful(reviewId) {
     return await this.makeRequest(`/reviews/${reviewId}/helpful`, 'POST');
+  }
+
+  /**
+   * Toggle like on a review (heart functionality)
+   */
+  async toggleLike(reviewId) {
+    return await this.makeRequest(`/reviews/${reviewId}/like`, 'POST');
+  }
+
+  /**
+   * Upload review image to Supabase Storage
+   * Returns the public URL of the uploaded image
+   */
+  async uploadReviewImage(file) {
+    // For now, we'll use a simple approach: convert to base64 and store
+    // In production, you'd want to upload to Supabase Storage or another service
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // For demo purposes, we're using data URLs
+        // In production, upload to Supabase Storage and return the public URL
+        resolve(reader.result);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   }
 
   /**

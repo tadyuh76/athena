@@ -55,6 +55,7 @@ function setupRoutes() {
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders/checkout-session', (req, res) => orderController.createCheckoutSession(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/orders/buy-now-checkout', (req, res) => orderController.createBuyNowCheckoutSession(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/orders/:id', (req, res, params) => orderController.getOrderById(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/admin/orders', (req, res) => orderController.getAllOrders(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
@@ -63,7 +64,7 @@ function setupRoutes() {
     router.post('/api/admin/orders/:id/deliver', (req, res, params) => orderController.markAsDelivered(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.post('/api/admin/orders/:id/cancel', (req, res, params) => orderController.cancelOrder(req, res, params.id), [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.post('/api/webhooks/stripe', (req, res) => stripeWebhookController.handleWebhook(req, res));
-    router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
+    router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId), [Router_1.Router.optionalAuth]);
     router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router_1.Router.requireAuth]);
     router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
@@ -71,6 +72,7 @@ function setupRoutes() {
     router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router_1.Router.requireAuth]);
     router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router_1.Router.requireAuth]);
     router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
+    router.post('/api/reviews/:id/like', (req, res, params) => reviewController.toggleLike(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/health', async (_req, res) => {
         (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     });

@@ -67,6 +67,8 @@ export function setupRoutes(): Router {
   router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router.requireAuth]);
   // CUSTOMER: Create Stripe Checkout Session
   router.post('/api/orders/checkout-session', (req, res) => orderController.createCheckoutSession(req, res), [Router.requireAuth]);
+  // CUSTOMER: Create Buy Now Checkout Session (direct purchase without cart)
+  router.post('/api/orders/buy-now-checkout', (req, res) => orderController.createBuyNowCheckoutSession(req, res), [Router.requireAuth]);
   // CUSTOMER: Get my orders
   router.get('/api/orders/me', (req, res) => orderController.getMyOrders(req, res), [Router.requireAuth]);
   // CUSTOMER/ADMIN: Get order by ID
@@ -106,7 +108,7 @@ export function setupRoutes(): Router {
   router.post('/api/webhooks/stripe', (req, res) => stripeWebhookController.handleWebhook(req, res));
 
   // Review routes
-  router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId));
+  router.get('/api/products/:productId/reviews', (req, res, params) => reviewController.getProductReviews(req, res, params.productId), [Router.optionalAuth]);
   router.get('/api/products/:productId/reviews/eligibility', (req, res, params) => reviewController.checkReviewEligibility(req, res, params.productId), [Router.requireAuth]);
   router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router.requireAuth]);
   router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
@@ -114,6 +116,7 @@ export function setupRoutes(): Router {
   router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router.requireAuth]);
   router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router.requireAuth]);
   router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
+  router.post('/api/reviews/:id/like', (req, res, params) => reviewController.toggleLike(req, res, params.id), [Router.requireAuth]);
 
   // Health check
   router.get('/api/health', async (_req, res) => {

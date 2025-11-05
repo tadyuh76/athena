@@ -459,11 +459,44 @@ export class AuthService {
     metadata: any
   ): Promise<AuthResponse> {
     try {
-      // Use upsert to create or update the user profile
-      const { data: userProfile, error: upsertError } = await supabaseAdmin
+      // Check if user already exists
+      const { data: existingUser } = await supabaseAdmin
         .from("users")
-        .upsert(
-          {
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      let userProfile;
+
+      if (existingUser) {
+        // User exists - only update login timestamp and metadata, preserve role
+        const { data, error: updateError } = await supabaseAdmin
+          .from("users")
+          .update({
+            email_verified: true, // OAuth emails are pre-verified
+            last_login_at: new Date().toISOString(),
+            metadata: {
+              ...existingUser.metadata,
+              auth_provider: "google",
+              avatar_url: metadata?.avatar_url || metadata?.picture || null,
+              full_name: metadata?.name || metadata?.full_name || null,
+            },
+          })
+          .eq("id", userId)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error("Failed to update OAuth profile:", updateError);
+          throw updateError;
+        }
+
+        userProfile = data;
+      } else {
+        // New user - create profile with customer role
+        const { data, error: insertError } = await supabaseAdmin
+          .from("users")
+          .insert({
             id: userId,
             email: email,
             email_verified: true, // OAuth emails are pre-verified
@@ -481,17 +514,16 @@ export class AuthService {
               avatar_url: metadata?.avatar_url || metadata?.picture || null,
               full_name: metadata?.name || metadata?.full_name || null,
             },
-          },
-          {
-            onConflict: "id",
-          }
-        )
-        .select()
-        .single();
+          })
+          .select()
+          .single();
 
-      if (upsertError) {
-        console.error("Failed to upsert OAuth profile:", upsertError);
-        throw upsertError;
+        if (insertError) {
+          console.error("Failed to create OAuth profile:", insertError);
+          throw insertError;
+        }
+
+        userProfile = data;
       }
 
       const token = this.generateToken(userId);

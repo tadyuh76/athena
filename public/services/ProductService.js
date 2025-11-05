@@ -254,4 +254,171 @@ export class ProductService {
       0
     );
   }
+
+  /**
+   * Extract primary material from material_composition JSON
+   * @param {Object} materialComposition - JSONB object with material percentages
+   * @returns {string} Formatted primary material (e.g., "95% Organic Cotton")
+   */
+  extractPrimaryMaterial(materialComposition) {
+    if (!materialComposition || typeof materialComposition !== 'object') {
+      return null;
+    }
+
+    // Convert keys to readable format and find highest percentage
+    const materials = Object.entries(materialComposition)
+      .map(([key, value]) => ({
+        name: this.formatMaterialName(key),
+        percentage: value
+      }))
+      .sort((a, b) => b.percentage - a.percentage);
+
+    if (materials.length === 0) return null;
+
+    const primary = materials[0];
+    return `${primary.percentage}% ${primary.name}`;
+  }
+
+  /**
+   * Format material key to readable name
+   * @param {string} key - Material key (e.g., "organic_cotton", "tencel_lyocell")
+   * @returns {string} Formatted name (e.g., "Organic Cotton", "TENCEL Lyocell")
+   */
+  formatMaterialName(key) {
+    const specialCases = {
+      'tencel_lyocell': 'TENCEL Lyocell',
+      'tencel_modal': 'TENCEL Modal',
+      'peace_silk': 'Peace Silk',
+      'lyocell': 'Lyocell'
+    };
+
+    if (specialCases[key]) {
+      return specialCases[key];
+    }
+
+    // Convert snake_case to Title Case
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  /**
+   * Get certification badges for display (limit to top N)
+   * @param {Array} certificationLabels - Array of certification strings
+   * @param {number} limit - Maximum number of badges to return
+   * @returns {Array} Array of certification objects with name and badge class
+   */
+  getCertificationBadges(certificationLabels, limit = 3) {
+    if (!Array.isArray(certificationLabels) || certificationLabels.length === 0) {
+      return [];
+    }
+
+    const badgeConfig = {
+      'GOTS': { name: 'GOTS', class: 'success' },
+      'OEKO-TEX': { name: 'OEKO-TEX', class: 'info' },
+      'B-Corp': { name: 'B-Corp', class: 'primary' },
+      'Fair Trade': { name: 'Fair Trade', class: 'warning' },
+      'FSC': { name: 'FSC', class: 'success' },
+      'GRS': { name: 'GRS', class: 'info' },
+      'RWS': { name: 'RWS', class: 'primary' },
+      'Peace Silk Certified': { name: 'Peace Silk', class: 'secondary' },
+      'Hemp Certified': { name: 'Hemp', class: 'success' },
+      'EU Ecolabel': { name: 'EU Ecolabel', class: 'info' },
+      'Cradle to Cradle': { name: 'C2C', class: 'primary' },
+      'SFA': { name: 'SFA', class: 'warning' }
+    };
+
+    return certificationLabels
+      .slice(0, limit)
+      .map(cert => badgeConfig[cert] || { name: cert, class: 'secondary' });
+  }
+
+  /**
+   * Find variant by size and color selection
+   * @param {Array} variants - Array of product variants
+   * @param {string} size - Selected size
+   * @param {string} color - Selected color
+   * @returns {Object|null} Matching variant or null
+   */
+  getVariantBySelection(variants, size, color) {
+    if (!variants || variants.length === 0) return null;
+
+    return variants.find(v => {
+      const sizeMatch = !size || v.size === size;
+      const colorMatch = !color || v.color === color;
+      return sizeMatch && colorMatch;
+    }) || null;
+  }
+
+  /**
+   * Get unique sizes from variants
+   * @param {Array} variants - Array of product variants
+   * @returns {Array} Array of unique sizes
+   */
+  getAvailableSizes(variants) {
+    if (!variants || variants.length === 0) return [];
+
+    const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
+
+    // Sort sizes logically (XS, S, M, L, XL or numeric)
+    const sizeOrder = { 'XS': 1, 'S': 2, 'M': 3, 'L': 4, 'XL': 5, 'XXL': 6 };
+
+    return sizes.sort((a, b) => {
+      // If both are in size order, use that
+      if (sizeOrder[a] && sizeOrder[b]) {
+        return sizeOrder[a] - sizeOrder[b];
+      }
+      // If both are numeric, sort numerically
+      if (!isNaN(a) && !isNaN(b)) {
+        return parseInt(a) - parseInt(b);
+      }
+      // Otherwise alphabetically
+      return a.localeCompare(b);
+    });
+  }
+
+  /**
+   * Get unique colors from variants
+   * @param {Array} variants - Array of product variants
+   * @returns {Array} Array of unique color objects {name, hex}
+   */
+  getAvailableColors(variants) {
+    if (!variants || variants.length === 0) return [];
+
+    const colorMap = new Map();
+    variants.forEach(v => {
+      if (v.color && !colorMap.has(v.color)) {
+        colorMap.set(v.color, {
+          name: v.color,
+          hex: v.color_hex || '#999'
+        });
+      }
+    });
+
+    return Array.from(colorMap.values());
+  }
+
+  /**
+   * Format weight for display
+   * @param {number} weightValue - Weight value
+   * @param {string} weightUnit - Weight unit (g, kg, lb, oz)
+   * @returns {string} Formatted weight string
+   */
+  formatWeight(weightValue, weightUnit) {
+    if (!weightValue || !weightUnit) return null;
+
+    const value = parseFloat(weightValue);
+    if (isNaN(value)) return null;
+
+    // Convert to user-friendly format
+    if (weightUnit === 'g' && value >= 1000) {
+      return `${(value / 1000).toFixed(2)} kg`;
+    }
+    if (weightUnit === 'oz' && value >= 16) {
+      return `${(value / 16).toFixed(2)} lb`;
+    }
+
+    return `${value} ${weightUnit}`;
+  }
 }

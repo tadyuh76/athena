@@ -70,8 +70,12 @@ function parseUrlParams() {
   currentFilters = {
     category_id: params.get("category"),
     collection_id: params.get("collection"),
-    min_price: params.get("min_price") ? parseFloat(params.get("min_price")) : undefined,
-    max_price: params.get("max_price") ? parseFloat(params.get("max_price")) : undefined,
+    min_price: params.get("min_price")
+      ? parseFloat(params.get("min_price"))
+      : undefined,
+    max_price: params.get("max_price")
+      ? parseFloat(params.get("max_price"))
+      : undefined,
     in_stock: params.get("in_stock") === "true",
     is_featured: params.get("featured") === "true",
     search: params.get("search") || undefined,
@@ -111,7 +115,10 @@ function parseUrlParams() {
 function createFilterSkeleton(count = 4) {
   return `
     <div class="skeleton-loader">
-      ${Array(count).fill(0).map(() => '<div class="skeleton skeleton-filter"></div>').join('')}
+      ${Array(count)
+        .fill(0)
+        .map(() => '<div class="skeleton skeleton-filter"></div>')
+        .join("")}
     </div>
   `;
 }
@@ -125,28 +132,35 @@ async function loadCategories() {
     const categories = await productService.getCategories();
 
     if (categories.length === 0) {
-      container.innerHTML = '<p class="text-muted small">Không có danh mục nào</p>';
+      container.innerHTML =
+        '<p class="text-muted small">Không có danh mục nào</p>';
       return;
     }
 
     container.innerHTML = `
       <div class="form-check mb-2">
         <input class="form-check-input category-filter" type="radio" name="category"
-               id="category-all" value="" ${!currentFilters.category_id ? 'checked' : ''}>
+               id="category-all" value="" ${
+                 !currentFilters.category_id ? "checked" : ""
+               }>
         <label class="form-check-label" for="category-all">
           Tất Cả Danh Mục
         </label>
       </div>
-      ${categories.map(category => `
+      ${categories
+        .map(
+          (category) => `
         <div class="form-check mb-2">
           <input class="form-check-input category-filter" type="radio" name="category"
                  id="category-${category.id}" value="${category.id}"
-                 ${currentFilters.category_id === category.id ? 'checked' : ''}>
+                 ${currentFilters.category_id === category.id ? "checked" : ""}>
           <label class="form-check-label" for="category-${category.id}">
             ${category.name}
           </label>
         </div>
-      `).join("")}
+      `
+        )
+        .join("")}
     `;
   } catch (error) {
     console.error("Failed to load categories:", error);
@@ -164,28 +178,39 @@ async function loadCollections() {
     const collections = await productService.getCollections();
 
     if (collections.length === 0) {
-      container.innerHTML = '<p class="text-muted small">Không có bộ sưu tập nào</p>';
+      container.innerHTML =
+        '<p class="text-muted small">Không có bộ sưu tập nào</p>';
       return;
     }
 
     container.innerHTML = `
       <div class="form-check mb-2">
         <input class="form-check-input collection-filter" type="radio" name="collection"
-               id="collection-all" value="" ${!currentFilters.collection_id ? 'checked' : ''}>
+               id="collection-all" value="" ${
+                 !currentFilters.collection_id ? "checked" : ""
+               }>
         <label class="form-check-label" for="collection-all">
           Tất Cả Bộ Sưu Tập
         </label>
       </div>
-      ${collections.map(collection => `
+      ${collections
+        .map(
+          (collection) => `
         <div class="form-check mb-2">
           <input class="form-check-input collection-filter" type="radio" name="collection"
                  id="collection-${collection.id}" value="${collection.id}"
-                 ${currentFilters.collection_id === collection.id ? 'checked' : ''}>
+                 ${
+                   currentFilters.collection_id === collection.id
+                     ? "checked"
+                     : ""
+                 }>
           <label class="form-check-label" for="collection-${collection.id}">
             ${collection.name}
           </label>
         </div>
-      `).join("")}
+      `
+        )
+        .join("")}
     `;
   } catch (error) {
     console.error("Failed to load collections:", error);
@@ -212,21 +237,34 @@ function createProductSkeleton() {
 async function loadProducts() {
   const container = document.getElementById("productsGrid");
   // Show skeleton loaders
-  container.innerHTML = Array(12).fill(0).map(() => createProductSkeleton()).join('');
+  container.innerHTML = Array(12)
+    .fill(0)
+    .map(() => createProductSkeleton())
+    .join("");
 
   try {
     const filters = { ...currentFilters };
     // Remove undefined values
     Object.keys(filters).forEach((key) => {
-      if (filters[key] === undefined || filters[key] === false || filters[key] === "") {
+      if (
+        filters[key] === undefined ||
+        filters[key] === false ||
+        filters[key] === ""
+      ) {
         delete filters[key];
       }
     });
 
-    const { products, total, totalPages } = await productService.getProducts(filters, currentPage, 12);
+    const { products, total, totalPages } = await productService.getProducts(
+      filters,
+      currentPage,
+      12
+    );
 
     // Update product count
-    document.getElementById("productCount").textContent = `Hiển thị ${products.length} trong ${total} sản phẩm`;
+    document.getElementById(
+      "productCount"
+    ).textContent = `Hiển thị ${products.length} trong ${total} sản phẩm`;
 
     if (products.length === 0) {
       container.innerHTML = `
@@ -240,58 +278,125 @@ async function loadProducts() {
       return;
     }
 
-    container.innerHTML = products.map((product) => {
-      const discount = productService.getDiscountPercentage(product.base_price, product.compare_price);
-      const primaryImage = product.images?.find((img) => img.is_primary) || product.images?.[0];
-      const isInStock = productService.isInStock(product);
-      const isInWishlist = Array.isArray(wishlistItems) && wishlistItems.some(w => w.product_id === product.id);
+    container.innerHTML = products
+      .map((product) => {
+        const discount = productService.getDiscountPercentage(
+          product.base_price,
+          product.compare_price
+        );
+        const primaryImage =
+          product.images?.find((img) => img.is_primary) || product.images?.[0];
+        const isInStock = productService.isInStock(product);
+        const isInWishlist =
+          Array.isArray(wishlistItems) &&
+          wishlistItems.some((w) => w.product_id === product.id);
 
-      return `
+        return `
         <div class="col-lg-4 col-md-6">
           <div class="card product-card h-100 border-0 shadow-sm">
             <div class="position-relative overflow-hidden">
-              ${discount ? `<span class="position-absolute top-0 start-0 m-2 badge bg-danger">-${discount}%</span>` : ""}
-              ${authService.isAuthenticated() ? `
-                <button class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light rounded-circle wishlist-btn ${isInWishlist ? "active" : ""}"
+              ${
+                discount
+                  ? `<span class="position-absolute top-0 start-0 m-2 badge bg-danger">-${discount}%</span>`
+                  : ""
+              }
+              ${
+                authService.isAuthenticated()
+                  ? `
+                <button class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light rounded-circle wishlist-btn ${
+                  isInWishlist ? "active" : ""
+                }"
                         onclick="window.toggleWishlist(event, '${product.id}')"
-                        title="${isInWishlist ? 'Xóa khỏi danh sách yêu thích' : 'Thêm vào danh sách yêu thích'}">
-                  <i class="bi ${isInWishlist ? "bi-heart-fill text-danger" : "bi-heart"}"></i>
+                        title="${
+                          isInWishlist
+                            ? "Xóa khỏi danh sách yêu thích"
+                            : "Thêm vào danh sách yêu thích"
+                        }">
+                  <i class="bi ${
+                    isInWishlist ? "bi-heart-fill text-danger" : "bi-heart"
+                  }"></i>
                 </button>
-              ` : ""}
-              ${!isInStock ? `<div class="position-absolute bottom-0 start-0 end-0 bg-secondary bg-opacity-75 text-white text-center py-2">Hết Hàng</div>` : ""}
+              `
+                  : ""
+              }
+              ${
+                !isInStock
+                  ? `<div class="position-absolute bottom-0 start-0 end-0 bg-secondary bg-opacity-75 text-white text-center py-2">Hết Hàng</div>`
+                  : ""
+              }
               <a href="/product-detail.html?id=${product.id}">
-                <img src="${primaryImage?.url || product.featured_image_url || "/images/placeholder-user.jpg"}"
-                     class="card-img-top" alt="${product.name}" style="height: 350px; object-fit: cover;">
+                <img src="${
+                  primaryImage?.url ||
+                  product.featured_image_url ||
+                  "/images/placeholder-user.jpg"
+                }"
+                     class="card-img-top" alt="${
+                       product.name
+                     }" style="height: 350px; object-fit: cover;">
               </a>
             </div>
             <div class="card-body d-flex flex-column">
               <h5 class="card-title mb-2">
-                <a href="/product-detail.html?id=${product.id}" class="text-decoration-none text-dark">
+                <a href="/product-detail.html?id=${
+                  product.id
+                }" class="text-decoration-none text-dark">
                   ${product.name}
                 </a>
               </h5>
-              ${product.short_description ? `<p class="card-text text-muted small mb-auto">${product.short_description.substring(0, 80)}...</p>` : ""}
-              <div class="mt-3">
+              ${
+                product.short_description
+                  ? `<p class="card-text text-muted small">${product.short_description.substring(
+                      0,
+                      80
+                    )}...</p>`
+                  : ""
+              }
+              <div class="mt-auto">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <div>
-                    <span class="fw-bold fs-5">${productService.formatPrice(product.base_price)}</span>
-                    ${product.compare_price ? `<span class="text-muted text-decoration-line-through ms-2">${productService.formatPrice(product.compare_price)}</span>` : ""}
+                    <span class="fw-bold fs-5">${productService.formatPrice(
+                      product.base_price
+                    )}</span>
+                    ${
+                      product.compare_price
+                        ? `<span class="text-muted text-decoration-line-through ms-2">${productService.formatPrice(
+                            product.compare_price
+                          )}</span>`
+                        : ""
+                    }
                   </div>
-                  ${product.rating ? `
+                  ${
+                    product.rating
+                      ? `
                     <div class="text-warning small">
-                      ${"★".repeat(Math.round(product.rating))}${"☆".repeat(5 - Math.round(product.rating))}
+                      ${"★".repeat(Math.round(product.rating))}${"☆".repeat(
+                          5 - Math.round(product.rating)
+                        )}
+                      ${
+                        product.review_count
+                          ? `<span class="text-muted ms-1">(${product.review_count})</span>`
+                          : ""
+                      }
                     </div>
-                  ` : ""}
+                  `
+                      : ""
+                  }
                 </div>
                 <div class="d-grid gap-2">
-                  ${isInStock ? `
+                  ${
+                    isInStock
+                      ? `
                     <button class="btn btn-dark btn-sm" onclick="window.quickAddToCart(event, '${product.id}')">
                       <i class="bi bi-cart-plus me-2"></i>Thêm Nhanh
                     </button>
-                  ` : `
+                  `
+                      : `
                     <button class="btn btn-secondary btn-sm" disabled>Hết Hàng</button>
-                  `}
-                  <a href="/product-detail.html?id=${product.id}" class="btn btn-outline-dark btn-sm">
+                  `
+                  }
+                  <a href="/product-detail.html?id=${
+                    product.id
+                  }" class="btn btn-outline-dark btn-sm">
                     Xem Chi Tiết
                   </a>
                 </div>
@@ -300,7 +405,8 @@ async function loadProducts() {
           </div>
         </div>
       `;
-    }).join("");
+      })
+      .join("");
 
     // Update pagination
     updatePagination(totalPages);
@@ -336,7 +442,11 @@ function updatePagination(totalPages) {
 
   // Page numbers
   for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 2 && i <= currentPage + 2)
+    ) {
       html += `
         <li class="page-item ${i === currentPage ? "active" : ""}">
           <a class="page-link" href="#" data-page="${i}">${i}</a>
@@ -440,7 +550,9 @@ function setupEventListeners() {
   document.addEventListener("click", (e) => {
     if (e.target.matches(".page-link") || e.target.closest(".page-link")) {
       e.preventDefault();
-      const link = e.target.matches(".page-link") ? e.target : e.target.closest(".page-link");
+      const link = e.target.matches(".page-link")
+        ? e.target
+        : e.target.closest(".page-link");
       const page = parseInt(link.dataset.page);
       if (!isNaN(page) && page !== currentPage) {
         currentPage = page;
@@ -483,7 +595,11 @@ function updateUrlAndReload() {
   const params = new URLSearchParams();
 
   Object.keys(currentFilters).forEach((key) => {
-    if (currentFilters[key] !== undefined && currentFilters[key] !== false && currentFilters[key] !== "") {
+    if (
+      currentFilters[key] !== undefined &&
+      currentFilters[key] !== false &&
+      currentFilters[key] !== ""
+    ) {
       params.set(key, currentFilters[key]);
     }
   });
@@ -492,7 +608,9 @@ function updateUrlAndReload() {
     params.set("page", currentPage);
   }
 
-  const newUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+  const newUrl =
+    window.location.pathname +
+    (params.toString() ? "?" + params.toString() : "");
   window.history.pushState({}, "", newUrl);
   loadProducts();
 }
@@ -511,11 +629,11 @@ window.toggleWishlist = async function (event, productId) {
   const icon = button.querySelector("i");
 
   try {
-    const wishlistItem = wishlistItems.find(w => w.product_id === productId);
+    const wishlistItem = wishlistItems.find((w) => w.product_id === productId);
 
     if (wishlistItem) {
       await wishlistService.removeItem(wishlistItem.id);
-      wishlistItems = wishlistItems.filter(w => w.id !== wishlistItem.id);
+      wishlistItems = wishlistItems.filter((w) => w.id !== wishlistItem.id);
       button.classList.remove("active");
       icon.classList.remove("bi-heart-fill", "text-danger");
       icon.classList.add("bi-heart");
@@ -542,7 +660,8 @@ window.quickAddToCart = async function (event, productId) {
   if (!authService.isAuthenticated()) {
     showToast("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng", "warning");
     setTimeout(() => {
-      window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
+      window.location.href =
+        "/login.html?redirect=" + encodeURIComponent(window.location.href);
     }, 1500);
     return;
   }
@@ -552,7 +671,8 @@ window.quickAddToCart = async function (event, productId) {
   const originalWidth = button.offsetWidth;
   button.disabled = true;
   button.style.width = `${originalWidth}px`;
-  button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
+  button.innerHTML =
+    '<span class="spinner-border spinner-border-sm me-2"></span>Đang thêm...';
 
   try {
     const product = await productService.getProductById(productId);
@@ -561,7 +681,10 @@ window.quickAddToCart = async function (event, productId) {
     }
 
     // Get default or first available variant
-    const variant = product.variants.find((v) => v.is_default && productService.getAvailableStock(v) > 0) ||
+    const variant =
+      product.variants.find(
+        (v) => v.is_default && productService.getAvailableStock(v) > 0
+      ) ||
       product.variants.find((v) => productService.getAvailableStock(v) > 0);
 
     if (!variant) {
@@ -577,14 +700,14 @@ window.quickAddToCart = async function (event, productId) {
     setTimeout(() => {
       button.innerHTML = originalHTML;
       button.disabled = false;
-      button.style.width = '';
+      button.style.width = "";
     }, 2000);
   } catch (error) {
     console.error("Failed to add to cart:", error);
     showToast(error.message || "Không thể thêm vào giỏ hàng", "danger");
     button.innerHTML = originalHTML;
     button.disabled = false;
-    button.style.width = '';
+    button.style.width = "";
   }
 };
 
@@ -593,8 +716,22 @@ function showToast(message, type = "info") {
   const toastContainer = document.getElementById("toastContainer");
   const toastId = "toast-" + Date.now();
 
-  const bgClass = type === "success" ? "bg-success" : type === "warning" ? "bg-warning" : type === "danger" ? "bg-danger" : "bg-info";
-  const icon = type === "success" ? "bi-check-circle" : type === "warning" ? "bi-exclamation-triangle" : type === "danger" ? "bi-x-circle" : "bi-info-circle";
+  const bgClass =
+    type === "success"
+      ? "bg-success"
+      : type === "warning"
+      ? "bg-warning"
+      : type === "danger"
+      ? "bg-danger"
+      : "bg-info";
+  const icon =
+    type === "success"
+      ? "bi-check-circle"
+      : type === "warning"
+      ? "bi-exclamation-triangle"
+      : type === "danger"
+      ? "bi-x-circle"
+      : "bi-info-circle";
 
   const toast = document.createElement("div");
   toast.id = toastId;

@@ -99,12 +99,88 @@ export class OrderController {
     }
   }
 
+  // API for Customer: Create Buy Now Checkout Session (direct purchase without cart)
+  async createBuyNowCheckoutSession(req: AuthRequest, res: ServerResponse) {
+    try {
+      const body = await parseBody(req);
+
+      // Validate request body
+      if (!body.productId) {
+        return sendError(res, 400, 'Product ID is required');
+      }
+
+      if (!body.variantId) {
+        return sendError(res, 400, 'Variant ID is required');
+      }
+
+      if (!body.quantity || body.quantity < 1) {
+        return sendError(res, 400, 'Valid quantity is required');
+      }
+
+      if (!body.shippingInfo) {
+        return sendError(res, 400, 'Shipping information is required');
+      }
+
+      // Get base URL from referer or default to frontend URL
+      const protocol = req.headers['x-forwarded-proto'] || 'http';
+      const referer = req.headers['referer'] || req.headers['origin'];
+
+      // Extract base URL from referer if available, otherwise use localhost:3000
+      let baseUrl;
+      if (referer) {
+        const url = new URL(referer);
+        baseUrl = `${url.protocol}//${url.host}`;
+      } else {
+        baseUrl = `${protocol}://localhost:3000`;
+      }
+
+      // Create buy now checkout session
+      const result = await this.orderService.createBuyNowCheckoutSession(
+        req.userId,
+        body.productId,
+        body.variantId,
+        body.quantity,
+        body.shippingInfo,
+        baseUrl
+      );
+
+      sendJSON(res, 201, {
+        success: true,
+        order: result.order,
+        checkoutUrl: result.checkoutUrl,
+        message: result.message,
+      });
+    } catch (error) {
+      console.error('[OrderController.createBuyNowCheckoutSession] Error:', error);
+      sendError(
+        res,
+        500,
+        error instanceof Error ? error.message : 'Failed to create buy now checkout session'
+      );
+    }
+  }
+
   // API for Admin: Get all orders
   async getAllOrders(req: AuthRequest, res: ServerResponse) {
     // Only Admin can call this API (verified by middleware)
     try {
-      const orders = await this.orderService.getAllOrders();
-      sendJSON(res, 200, { success: true, orders, role: req.userRole });
+      // Parse query parameters from URL
+      const url = new URL(req.url || '', `http://${req.headers.host}`);
+      const searchParams = url.searchParams;
+
+      const filters = {
+        search: searchParams.get('search') || undefined,
+        status: searchParams.get('status') || undefined,
+        dateFrom: searchParams.get('dateFrom') || undefined,
+        dateTo: searchParams.get('dateTo') || undefined,
+        sortBy: searchParams.get('sortBy') || undefined,
+        sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || undefined,
+        page: searchParams.get('page') ? parseInt(searchParams.get('page')!) : undefined,
+        limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
+      };
+
+      const result = await this.orderService.getAllOrders(filters);
+      sendJSON(res, 200, { success: true, ...result, role: req.userRole });
     } catch (error) {
       console.error('[OrderController.getAllOrders] Error:', error);
       sendError(res, 500, 'Failed to fetch all orders');

@@ -19,14 +19,16 @@ export class ReviewController {
       const page = parseInt(query.get('page') || '1');
       const limit = parseInt(query.get('limit') || '10');
       const rating = query.get('rating') ? parseInt(query.get('rating')!) : undefined;
+      const userId = (req as any).user?.id; // Optional auth
 
-      const result = await this.reviewService.getReviews(
+      const result = await this.reviewService.getReviewsWithLikeStatus(
         {
           product_id: productId,
           rating
         },
         page,
-        limit
+        limit,
+        userId
       );
 
       sendJSON(res, 200, result);
@@ -96,7 +98,7 @@ export class ReviewController {
       }
 
       const body = await parseBody(req);
-      const { product_id, rating, title, review, order_id } = body;
+      const { product_id, rating, title, review, order_id, images } = body;
 
       // Validate required fields
       if (!product_id || !rating) {
@@ -109,13 +111,25 @@ export class ReviewController {
         return;
       }
 
+      // Validate images if provided
+      if (images && !Array.isArray(images)) {
+        sendError(res, 400, 'Images must be an array of URLs');
+        return;
+      }
+
+      if (images && images.length > 5) {
+        sendError(res, 400, 'Maximum 5 images allowed per review');
+        return;
+      }
+
       const newReview = await this.reviewService.createReview(
         userId,
         product_id,
         rating,
         title,
         review,
-        order_id
+        order_id,
+        images
       );
 
       sendJSON(res, 201, newReview);
@@ -188,7 +202,7 @@ export class ReviewController {
 
   /**
    * POST /api/reviews/:id/helpful
-   * Mark a review as helpful
+   * Mark a review as helpful (deprecated - use toggleLike instead)
    */
   async markHelpful(_req: IncomingMessage, res: ServerResponse, id: string) {
     try {
@@ -197,6 +211,27 @@ export class ReviewController {
     } catch (error) {
       console.error('Error marking review as helpful:', error);
       sendError(res, 500, 'Failed to mark review as helpful');
+    }
+  }
+
+  /**
+   * POST /api/reviews/:id/like
+   * Toggle like on a review (heart functionality)
+   */
+  async toggleLike(req: IncomingMessage, res: ServerResponse, id: string) {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        sendError(res, 401, 'Authentication required');
+        return;
+      }
+
+      const result = await this.reviewService.toggleReviewLike(id, userId);
+      sendJSON(res, 200, result);
+    } catch (error) {
+      console.error('Error toggling review like:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle review like';
+      sendError(res, 500, errorMessage);
     }
   }
 

@@ -74,17 +74,13 @@ export class AdminOrders {
                   onclick="adminOrders.applyFilter('pending')">
             Chờ xử lý (${statusCounts.pending})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'processing' ? 'active' : ''}"
-                  onclick="adminOrders.applyFilter('processing')">
-            Đang xử lý (${statusCounts.processing})
+          <button class="filter-pill ${this.currentFilter === 'preparing' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('preparing')">
+            Đang chuẩn bị (${statusCounts.preparing})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'confirmed' ? 'active' : ''}"
-                  onclick="adminOrders.applyFilter('confirmed')">
-            Đã xác nhận (${statusCounts.confirmed})
-          </button>
-          <button class="filter-pill ${this.currentFilter === 'shipped' ? 'active' : ''}"
-                  onclick="adminOrders.applyFilter('shipped')">
-            Đang giao (${statusCounts.shipped})
+          <button class="filter-pill ${this.currentFilter === 'shipping' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('shipping')">
+            Đang giao (${statusCounts.shipping})
           </button>
           <button class="filter-pill ${this.currentFilter === 'delivered' ? 'active' : ''}"
                   onclick="adminOrders.applyFilter('delivered')">
@@ -182,19 +178,14 @@ export class AdminOrders {
           color: #856404;
         }
 
-        .status-processing {
+        .status-preparing {
           background: #cfe2ff;
           color: #084298;
         }
 
-        .status-confirmed {
-          background: #d1e7dd;
-          color: #0f5132;
-        }
-
-        .status-shipped {
-          background: #cfe2ff;
-          color: #084298;
+        .status-shipping {
+          background: #d3d3f9;
+          color: #1d1d5a;
         }
 
         .status-delivered {
@@ -283,8 +274,8 @@ export class AdminOrders {
   renderActions(order) {
     const actions = [];
 
-    // Xác nhận đơn hàng (processing -> confirmed)
-    if (order.status === 'processing' && order.payment_status === 'paid') {
+    // Xác nhận đơn hàng (pending -> preparing)
+    if (order.status === 'pending' && order.payment_status === 'paid') {
       actions.push(`
         <button class="btn btn-sm btn-success btn-action"
                 onclick="adminOrders.confirmOrder('${order.id}')">
@@ -293,18 +284,18 @@ export class AdminOrders {
       `);
     }
 
-    // Đánh dấu đã giao (confirmed -> shipped)
-    if (order.status === 'confirmed') {
+    // Bắt đầu giao hàng (preparing -> shipping)
+    if (order.status === 'preparing') {
       actions.push(`
         <button class="btn btn-sm btn-primary btn-action"
                 onclick="adminOrders.markAsShipped('${order.id}')">
-          <i class="bi bi-truck"></i> Đã giao
+          <i class="bi bi-truck"></i> Giao hàng
         </button>
       `);
     }
 
-    // Hoàn thành đơn hàng (shipped -> delivered)
-    if (order.status === 'shipped') {
+    // Hoàn thành đơn hàng (shipping -> delivered)
+    if (order.status === 'shipping') {
       actions.push(`
         <button class="btn btn-sm btn-success btn-action"
                 onclick="adminOrders.markAsDelivered('${order.id}')">
@@ -504,9 +495,8 @@ export class AdminOrders {
   getStatusCounts() {
     const counts = {
       pending: 0,
-      processing: 0,
-      confirmed: 0,
-      shipped: 0,
+      preparing: 0,
+      shipping: 0,
       delivered: 0,
       cancelled: 0,
     };
@@ -523,9 +513,8 @@ export class AdminOrders {
   getStatusText(status) {
     const statusMap = {
       pending: 'Chờ xử lý',
-      processing: 'Đang xử lý',
-      confirmed: 'Đã xác nhận',
-      shipped: 'Đang giao',
+      preparing: 'Đang chuẩn bị',
+      shipping: 'Đang giao',
       delivered: 'Đã giao',
       cancelled: 'Đã hủy',
       refunded: 'Đã hoàn tiền',

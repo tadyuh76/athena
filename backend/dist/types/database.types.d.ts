@@ -118,7 +118,7 @@ export interface Order {
     user_id?: string;
     customer_email: string;
     customer_phone?: string;
-    status: 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+    status: 'pending' | 'preparing' | 'shipping' | 'delivered' | 'cancelled' | 'refunded';
     payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
     fulfillment_status: 'unfulfilled' | 'partially_fulfilled' | 'fulfilled' | 'returned';
     currency_code: string;

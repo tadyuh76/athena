@@ -71,9 +71,9 @@ function renderOrders() {
 
 function renderTrackingInfo(order) {
   const steps = [
-    { status: 'processing', label: 'Đang xử lý', icon: 'clock' },
-    { status: 'confirmed', label: 'Đã xác nhận', icon: 'check-circle' },
-    { status: 'shipped', label: 'Đang giao', icon: 'truck' },
+    { status: 'pending', label: 'Chờ xử lý', icon: 'clock' },
+    { status: 'preparing', label: 'Đang chuẩn bị', icon: 'check-circle' },
+    { status: 'shipping', label: 'Đang giao', icon: 'truck' },
     { status: 'delivered', label: 'Đã giao', icon: 'box-seam' },
   ];
 
@@ -96,11 +96,11 @@ function renderTrackingInfo(order) {
 function getStatusText(status) {
   const map = {
     pending: 'Chờ xử lý',
-    processing: 'Đang xử lý',
-    confirmed: 'Đã xác nhận',
-    shipped: 'Đang giao',
+    preparing: 'Đang chuẩn bị',
+    shipping: 'Đang giao',
     delivered: 'Đã giao',
     cancelled: 'Đã hủy',
+    refunded: 'Đã hoàn tiền',
   };
   return map[status] || status;
 }
@@ -108,11 +108,11 @@ function getStatusText(status) {
 function getStatusColor(status) {
   const map = {
     pending: 'warning',
-    processing: 'info',
-    confirmed: 'primary',
-    shipped: 'primary',
+    preparing: 'info',
+    shipping: 'primary',
     delivered: 'success',
     cancelled: 'danger',
+    refunded: 'secondary',
   };
   return map[status] || 'secondary';
 }

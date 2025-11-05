@@ -4,6 +4,7 @@ import path from "path";
 import { setupRoutes } from "./router/routes";
 import { CartService } from "./services/CartService";
 import { setCorsHeaders, sendError } from "./utils/request-handler";
+import { startOrderStatusUpdater } from "./jobs/orderStatusUpdater";
 
 // Load .env from project root (parent directory)
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -42,6 +43,9 @@ setInterval(async () => {
     console.error("Failed to release expired reservations:", error);
   }
 }, 5 * 60 * 1000);
+
+// Start order status updater cron job (runs every hour)
+startOrderStatusUpdater();
 
 const PORT = process.env.API_PORT || 3001;
 

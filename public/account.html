@@ -392,11 +392,11 @@
         function getStatusBadgeClass(status) {
             const classes = {
                 'pending': 'bg-warning',
-                'confirmed': 'bg-info',
-                'processing': 'bg-primary',
-                'shipped': 'bg-info',
+                'preparing': 'bg-info',
+                'shipping': 'bg-primary',
                 'delivered': 'bg-success',
-                'cancelled': 'bg-danger'
+                'cancelled': 'bg-danger',
+                'refunded': 'bg-secondary'
             };
             return classes[status] || 'bg-secondary';
         }
@@ -405,11 +405,11 @@
         function getStatusText(status) {
             const texts = {
                 'pending': 'Đang Chờ',
-                'confirmed': 'Đã Xác Nhận',
-                'processing': 'Đang Xử Lý',
-                'shipped': 'Đang Giao',
+                'preparing': 'Đang Chuẩn Bị',
+                'shipping': 'Đang Giao',
                 'delivered': 'Đã Giao',
-                'cancelled': 'Đã Hủy'
+                'cancelled': 'Đã Hủy',
+                'refunded': 'Đã Hoàn Tiền'
             };
             return texts[status] || status;
         }

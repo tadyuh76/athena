@@ -3,91 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Quản Trị - Athena</title>
+    <title>Order Management - Admin - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/athena-common.css" rel="stylesheet">
-    <link href="css/admin.css" rel="stylesheet"> 
     <script src="/js/components.js"></script>
 </head>
-<body class="admin-mode">
+<body>
+    <!-- Site Header Component -->
     <site-header></site-header>
 
-    <aside class="admin-sidebar" id="adminSidebar">
-        <div class="p-4 mb-3" style="color:white; border-bottom:1px solid rgba(255, 255, 255, 0.2);">
-            <i class="bi bi-person-circle me-2"></i>
-            <span id="adminName">Đang tải...</span>
-        </div>
-
-        <ul class="sidebar-menu">
-            <li><a href="#dashboard" class="active"><i class="bi bi-grid-fill me-2"></i> Bảng Tổng Quan</a></li>
-            <li><a href="#collections"><i class="bi bi-box-seam me-2"></i> Quản Lý Collection</a></li>
-            <li><a href="#products"><i class="bi bi-tags me-2"></i> Sản Phẩm & Biến Thể</a></li>
-            <li><a href="#orders"><i class="bi bi-receipt me-2"></i> Quản Lý Đơn Hàng</a></li>
-            <li><hr style="border-color: rgba(255, 255, 255, 0.2);"></li>
-            <li><a href="#" id="adminLogout"><i class="bi bi-box-arrow-right me-2"></i> Đăng Xuất</a></li>
-        </ul>
-    </aside>
-
-    <main class="admin-main-content" id="adminMainContent">
-        <div id="dashboardSection">
-            <div class="admin-header">
-                <h1>Bảng Tổng Quan</h1>
-            </div>
-            <div class="dashboard-grid">
-              <div class="card">
-                <h3>Tổng doanh thu</h3>
-                <p id="totalRevenue">0 ₫</p>
-              </div>
-              <div class="card">
-                <h3>Số đơn hàng</h3>
-                <p id="totalOrders">0</p>
-              </div>
-              <div class="card">
-                <h3>Tổng số Collection</h3>
-                <p id="totalCollections">0</p>
-              </div>
-              <div class="card">
-                <h3>Tổng số sản phẩm</h3>
-                <p id="totalProducts">0</p>
-              </div>
-            </div>
-            </div>
-
-        <div id="collectionsSection" style="display:none;">
-            <div class="admin-header"><h1>Quản Lý Collection</h1></div>
-            <p>Giao diện quản lý bộ sưu tập sẽ được xây dựng tại đây...</p>
-        </div>
-        <div id="productsSection" style="display:none;">
-            <div class="admin-header d-flex justify-content-between align-items-center">
-                <h1>Sản Phẩm & Biến Thể</h1>
-                <button id="addProductBtn" class="btn btn-dark">
-                <i class="bi bi-plus-circle me-1"></i> Thêm sản phẩm
-                </button>
-            </div>
-
-            <div class="table-responsive mt-3"> 
-                <table class="table table-bordered align-middle" id="adminProductTable">
-                <thead class="table-light">
-                    <tr>
-                    <th>Tên sản phẩm</th>
-                    <th>Collection</th>
-                    <th>Giá gốc</th>
-                    <th>Giá bán</th>
-                    <th>Hình ảnh</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Dữ liệu sản phẩm sẽ được JS render -->
-                </tbody>
-                </table>
-            </div>
-            </div>
-
-        <div id="ordersSection" style="display:none;">
-            <div class="admin-header d-flex justify-content-between align-items-center">
-                <h1>Quản Lý Đơn Hàng</h1>
+    <!-- Main Content -->
+    <main class="admin-main py-5">
+        <div class="container-fluid px-4">
+            <!-- Page Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-1">Order Management</h1>
+                            <p class="text-muted mb-0">Manage customer orders and fulfillment</p>
+                        </div>
+                        <a href="/admin.html" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- Filters and Search -->
@@ -211,87 +153,43 @@
         </div>
     </main>
 
-    <div class="admin-unauthorized d-none" id="unauthorizedScreen">
-        <div class="p-5 bg-white shadow-lg rounded-lg">
-            <i class="bi bi-x-octagon-fill text-danger fs-1 mb-3"></i>
-            <h3 class="mb-3">Truy Cập Bị Từ Chối (403)</h3>
-            <p class="text-muted">Bạn không có quyền hạn Admin/Staff để xem trang này.</p>
-            <a href="/" class="btn btn-dark">Trở về Trang Chủ</a>
-        </div>
-    </div>
-
-    <!-- Load Supabase từ CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/config.js"></script>
-    <script>
-    // Initialize Supabase client after library is loaded
-    const supabaseUrl = "https://ktapuasvoisugsrppczx.supabase.co";
-    const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0YXB1YXN2b2lzdWdzcnBwY3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NjYzODMsImV4cCI6MjA3NTE0MjM4M30.hypmyvPXXgzYsG7MtbsvCehjHE23fbxS-sSGa-5DJFY";
-    window.supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
-    </script>
-    <script type="module" src="js/admin-app.js"></script>
-
-        <!-- Modal xem chi tiết sản phẩm -->
-        <div class="modal fade" id="productDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Chi tiết sản phẩm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <!-- JS sẽ render chi tiết sản phẩm tại đây -->
-            </div>
-            </div>
-        </div>
-        </div>
-
-        <!-- Modal thêm/sửa sản phẩm -->
-        <div class="modal fade" id="productFormModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="productFormModalLabel">Thêm / Sửa sản phẩm</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="productFormBody">
-                <!-- Form sẽ render ở đây -->
-            </div>
-            </div>
-        </div>
-        </div>
-        
-        <!-- Modal chọn ảnh -->
-        <div class="modal fade" id="imagePickerModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Chọn ảnh</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="imagePickerBody">
-                <div class="text-center text-muted">Đang tải ảnh...</div>
-            </div>
-            </div>
-        </div>
-        </div>
-
-        <!-- Modal Order Details -->
-        <div class="modal fade" id="orderDetailsModal" tabindex="-1">
-            <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Order Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body" id="orderDetailsContent">
-                        <!-- Order details will be rendered here -->
-                    </div>
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="orderDetailsContent">
+                    <!-- Content loaded dynamically -->
                 </div>
             </div>
         </div>
+    </div>
 
-    <script type="module" src="/js/admin-orders.js"></script>
+    <!-- Site Footer Component -->
+    <site-footer></site-footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/config.js"></script>
+    <script type="module" src="js/admin-orders.js"></script>
+
+    <style>
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable:hover {
+            background-color: #f8f9fa;
+        }
+        .sortable.active i {
+            color: #0d6efd;
+        }
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+    </style>
 </body>
 </html>

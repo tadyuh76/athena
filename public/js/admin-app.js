@@ -105,7 +105,12 @@ function setupNavigation() {
         loadDashboard(); // không dùng await → không chặn render
       }
       if (target === "#collections") loadCollections();
-      if (target === "#products") loadAdminProducts(); 
+      if (target === "#products") loadAdminProducts();
+      if (target === "#orders") {
+        // Trigger orders loading - the admin-orders.js module handles this
+        const ordersInitEvent = new CustomEvent('ordersTabOpened');
+        window.dispatchEvent(ordersInitEvent);
+      }
 
     });
   });

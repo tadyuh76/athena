@@ -66,6 +66,73 @@
         </div>
     </main>
 
+    <!-- Buy Now Modal -->
+    <div class="modal fade" id="buyNowModal" tabindex="-1" aria-labelledby="buyNowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="buyNowModalLabel">Thông Tin Giao Hàng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="buyNowForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="buyNowFirstName" class="form-label">Tên <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buyNowFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="buyNowLastName" class="form-label">Họ <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buyNowLastName" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="buyNowEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="buyNowEmail" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="buyNowPhone" class="form-label">Số Điện Thoại</label>
+                            <input type="tel" class="form-control" id="buyNowPhone">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="buyNowAddress" class="form-label">Địa Chỉ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="buyNowAddress" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="buyNowCity" class="form-label">Thành Phố <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buyNowCity" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="buyNowState" class="form-label">Tỉnh/Thành <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buyNowState" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label for="buyNowZip" class="form-label">Mã Zip <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="buyNowZip" required>
+                            </div>
+                        </div>
+
+                        <div class="text-muted small mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Bạn sẽ được chuyển đến trang thanh toán sau khi xác nhận thông tin.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-outline-dark" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success" id="confirmBuyNowBtn">
+                        <i class="bi bi-lightning-charge-fill me-2"></i>Tiếp Tục Thanh Toán
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Review Modal -->
     <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -102,6 +169,15 @@
                             <label for="reviewText" class="form-label fw-semibold">Nội Dung</label>
                             <textarea class="form-control" id="reviewText" rows="5"
                                       placeholder="Chia sẻ suy nghĩ của bạn về sản phẩm này (tùy chọn)"></textarea>
+                        </div>
+
+                        <!-- Image Upload -->
+                        <div class="mb-3">
+                            <label for="reviewImages" class="form-label fw-semibold">Hình Ảnh</label>
+                            <input type="file" class="form-control" id="reviewImages"
+                                   accept="image/*" multiple>
+                            <div class="form-text">Tối đa 5 hình ảnh. Mỗi ảnh không quá 5MB.</div>
+                            <div id="reviewImagePreviews" class="d-flex gap-2 flex-wrap mt-2"></div>
                         </div>
 
                         <div class="text-muted small mb-3">
