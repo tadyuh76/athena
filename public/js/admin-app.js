@@ -46,9 +46,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 // ===============================
 // 🔹 3. CÁC HÀM HỖ TRỢ
 // ===============================
+
+// Helper function to get auth headers
+function getAuthHeaders() {
+  const token = localStorage.getItem('authToken');
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+}
+
 async function loadDashboard() {
   try {
-    const response = await fetch("/api/admin/dashboard");
+    const response = await fetch("/api/admin/dashboard", {
+      headers: getAuthHeaders()
+    });
     const data = await response.json();
 
     // 🧠 Gắn dữ liệu vào giao diện (không cần data.success)
@@ -128,21 +140,23 @@ async function loadCollections() {
   // Hiển thị loading
   section.innerHTML = `
     <div class="admin-header d-flex justify-content-between align-items-center">
-      <h1>Collection Management</h1>
+      <h1>Quản Lý Collection</h1>
       <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Collection</button>
     </div>
     <p>Đang tải dữ liệu...</p>
   `;
 
   try {
-    const res = await fetch("/api/admin/collections");
+    const res = await fetch("/api/admin/collections", {
+      headers: getAuthHeaders()
+    });
     const result = await res.json();
 
     if (!result.success) throw new Error(result.error || "Lỗi tải dữ liệu");
 
     const html = `
       <div class="admin-header d-flex justify-content-between align-items-center">
-        <h1>Collection Management</h1>
+        <h1>Quản Lý Collection</h1>
         <button id="addCollectionBtn" class="btn btn-dark">+ Thêm Collection</button>
       </div>
 
@@ -232,7 +246,7 @@ async function openCollectionForm(existing = null) {
           : `/api/admin/collections`,
         {
           method: existing ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(data),
         }
       );
@@ -261,7 +275,9 @@ document.addEventListener("click", async (e) => {
   if (e.target && e.target.matches(".btn-outline-primary[data-id]")) {
     const id = e.target.getAttribute("data-id");
     try {
-      const res = await fetch(`/api/admin/collections`);
+      const res = await fetch(`/api/admin/collections`, {
+        headers: getAuthHeaders()
+      });
       const result = await res.json();
       const col = result.data.find((c) => c.id === id);
       if (col) openCollectionForm(col);
@@ -276,7 +292,10 @@ document.addEventListener("click", async (e) => {
     if (!confirm("Bạn có chắc chắn muốn xoá collection này không?")) return;
 
     try {
-      const res = await fetch(`/api/admin/collections/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/admin/collections/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
       alert("✅ Đã xoá collection!");
@@ -302,7 +321,9 @@ async function loadAdminProducts() {
   `;
 
   try {
-    const res = await fetch("/api/admin/products");
+    const res = await fetch("/api/admin/products", {
+      headers: getAuthHeaders()
+    });
     const result = await res.json();
 
     if (!result.success || !Array.isArray(result.data)) {
@@ -326,8 +347,8 @@ async function loadAdminProducts() {
         </a>
       </td>
       <td>${p.collection_name || "-"}</td>
-      <td>${p.compare_price ? p.compare_price.toLocaleString("vi-VN") + " ₫" : "-"}</td>
-      <td>${p.final_price ? p.final_price.toLocaleString("vi-VN") + " ₫" : "-"}</td>
+      <td>${p.compare_price ? "$" + p.compare_price.toLocaleString("en-US") : "-"}</td>
+      <td>${p.final_price ? "$" + p.final_price.toLocaleString("en-US") : "-"}</td>
       <td>
         <img src="${p.featured_image_url || '/images/no-image.png'}"
             alt="${p.name}"
@@ -417,15 +438,15 @@ async function showProductDetail(productId) {
               <div class="collection-name text-muted mb-1">${p.collection?.name || "-"}</div>
               <h2 class="product-title">${p.name || "-"}</h2>
               <div class="product-price mb-2">
-                ${p.base_price ? p.base_price.toLocaleString("en-US") + " USD" : "-"}
-                ${p.compare_price ? `<del class="text-muted ms-2">${p.compare_price.toLocaleString("en-US")} USD</del>` : ""}
+                ${p.base_price ? "$" + p.base_price.toLocaleString("en-US") : "-"}
+                ${p.compare_price ? `<del class="text-muted ms-2">$${p.compare_price.toLocaleString("en-US")}</del>` : ""}
               </div>
             </div>
 
             <p class="product-description mb-3">${p.description || "Chưa có mô tả"}</p>
 
             <div class="product-section mb-2">
-              <h5>Size</h5>
+              <h5>Kích cỡ</h5>
               <p>${sizes.length ? sizes.join(", ") : "-"}</p>
             </div>
 
@@ -440,14 +461,14 @@ async function showProductDetail(productId) {
             </div>
 
             <hr>
-            <h5>Variants</h5>
+            <h5>Biến Thể</h5>
             <button class="btn btn-sm btn-primary" id="editVariantsBtn">Cập nhật</button>
             <table class="table table-sm table-bordered" id="variantsTable">
               <thead>
                 <tr>
-                  <th>Size</th>
+                  <th>Kích cỡ</th>
                   <th>Màu</th>
-                  <th>Code màu</th>
+                  <th>Mã màu</th>
                   <th>Giá</th>
                   <th>Tồn kho</th>
                   <th>SKU</th>
@@ -460,7 +481,7 @@ async function showProductDetail(productId) {
                     <td>${v.size || ""}</td>
                     <td>${v.color || ""}</td>
                     <td>${v.color_hex || ""}</td>
-                    <td>${v.price || ""}</td>
+                    <td>${v.price ? "$" + v.price.toLocaleString("en-US") : ""}</td>
                     <td>${v.inventory_quantity || ""}</td>
                     <td>${v.sku || ""}</td>
                     <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
@@ -471,12 +492,12 @@ async function showProductDetail(productId) {
 
             <hr>
             <h5>Chi tiết bổ sung</h5>
-            <p><strong>SKU:</strong> ${p.sku || "-"}</p>
-            <p><strong>Slug:</strong> ${p.slug || "-"}</p>
+            <p><strong>Mã sản phẩm (SKU):</strong> ${p.sku || "-"}</p>
+            <p><strong>Đường dẫn (Slug):</strong> ${p.slug || "-"}</p>
             <p><strong>Danh mục:</strong> ${p.category?.name || "-"}</p>
-            <p><strong>Thành phần:</strong> ${JSON.stringify(p.material_composition) || "-"}</p>
-            <p><strong>Bảo quản:</strong> ${p.care_instructions || "-"}</p>
-            <p><strong>Sustainability:</strong> ${p.sustainability_notes || "-"}</p>
+            <p><strong>Thành phần vật liệu:</strong> ${JSON.stringify(p.material_composition) || "-"}</p>
+            <p><strong>Hướng dẫn bảo quản:</strong> ${p.care_instructions || "-"}</p>
+            <p><strong>Ghi chú bền vững:</strong> ${p.sustainability_notes || "-"}</p>
             <p><strong>Phương pháp sản xuất:</strong> ${p.production_method || "-"}</p>
             <p><strong>Chứng nhận:</strong> ${(p.certification_labels || []).join(", ") || "-"}</p>
             
@@ -521,7 +542,9 @@ async function openProductForm(productId = null) {
 
   if (productId) {
     try {
-      const res = await fetch(`/api/admin/products/${productId}`);
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        headers: getAuthHeaders()
+      });
       const result = await res.json();
       if (result.success) productData = result.data;
     } catch {
@@ -541,7 +564,7 @@ async function openProductForm(productId = null) {
           <input type="text" id="productName" class="form-control" value="${productData?.name || ""}" required>
           <small class="text-muted d-block mb-2">Nhập tên sản phẩm (bắt buộc).</small>
 
-          <label class="form-label mt-2">Slug (preview)</label>
+          <label class="form-label mt-2">Đường dẫn (Slug) - Tự động</label>
           <input type="text" id="productSlug" class="form-control" value="${productData?.slug || ""}" readonly>
           <small class="text-muted d-block mb-2">Slug tự tạo theo tên sản phẩm, không sửa trực tiếp.</small>
 
@@ -551,19 +574,19 @@ async function openProductForm(productId = null) {
           </select>
           <small class="text-muted d-block mb-2">Chọn collection sản phẩm. Có thể để trống.</small>
 
-          <label class="form-label mt-2">Giá cơ bản</label>
+          <label class="form-label mt-2">Giá cơ bản (USD)</label>
           <input type="number" id="productBasePrice" class="form-control" value="${productData?.base_price || 0}" required>
           <small class="text-muted d-block mb-2">Nhập giá cơ bản (bắt buộc).</small>
 
-          <label class="form-label mt-2">Compare Price</label>
+          <label class="form-label mt-2">Giá so sánh (USD)</label>
           <input type="number" id="productComparePrice" class="form-control" value="${productData?.compare_price || ""}">
           <small class="text-muted d-block mb-2">Giá so sánh, có thể để trống.</small>
 
-          <label class="form-label mt-2">SKU</label>
+          <label class="form-label mt-2">Mã sản phẩm (SKU)</label>
           <input type="text" id="productSKU" class="form-control" value="${productData?.sku || ""}">
           <small class="text-muted d-block mb-2">Mã sản phẩm, có thể để trống.</small>
 
-          <label class="form-label mt-2">Category</label>
+          <label class="form-label mt-2">Danh mục</label>
           <input type="text" id="productCategory" class="form-control" value="${productData?.category?.name || ""}">
           <small class="text-muted d-block mb-2">Tên danh mục, có thể để trống.</small>
 
@@ -594,7 +617,7 @@ async function openProductForm(productId = null) {
             Chọn ảnh có sẵn trong thư mục /public/images
           </small>
 
-          <label class="form-label mt-2">Thành phần (JSON)</label>
+          <label class="form-label mt-2">Thành phần vật liệu (JSON)</label>
           <textarea id="productMaterial" class="form-control" rows="3">${JSON.stringify(productData?.material_composition || {})}</textarea>
           <small class="text-muted d-block mb-2">Ví dụ: {"cotton":50,"polyester":50}. Có thể để trống.</small>
 
@@ -602,13 +625,13 @@ async function openProductForm(productId = null) {
           <textarea id="productCare" class="form-control" rows="2">${productData?.care_instructions || ""}</textarea>
           <small class="text-muted d-block mb-2">Ví dụ: Giặt tay, phơi nơi thoáng. Có thể để trống.</small>
 
-          <label class="form-label mt-2">Sustainability Notes</label>
+          <label class="form-label mt-2">Ghi chú về tính bền vững</label>
           <textarea id="productSustainability" class="form-control" rows="2">${productData?.sustainability_notes || ""}</textarea>
-          <small class="text-muted d-block mb-2">Ví dụ: Eco-friendly materials. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Vật liệu thân thiện môi trường. Có thể để trống.</small>
 
           <label class="form-label mt-2">Phương pháp sản xuất</label>
           <textarea id="productProduction" class="form-control" rows="2">${productData?.production_method || ""}</textarea>
-          <small class="text-muted d-block mb-2">Ví dụ: Handmade. Có thể để trống.</small>
+          <small class="text-muted d-block mb-2">Ví dụ: Thủ công. Có thể để trống.</small>
 
           <label class="form-label mt-2">Chứng nhận (phân tách bằng ,)</label>
           <input type="text" id="productCertifications" class="form-control" value="${(productData?.certification_labels || []).join(", ")}">
@@ -623,7 +646,9 @@ async function openProductForm(productId = null) {
   `;
 
   // Load collection list vào select
-  const collectionRes = await fetch("/api/admin/collections");
+  const collectionRes = await fetch("/api/admin/collections", {
+    headers: getAuthHeaders()
+  });
   const collectionData = await collectionRes.json();
   if (collectionData.success && Array.isArray(collectionData.data)) {
     const select = modalBody.querySelector("#productCollection");
@@ -690,13 +715,13 @@ async function openProductForm(productId = null) {
       if (!productId) {
         res = await fetch("/api/admin/products", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(formData)
         });
       } else {
         res = await fetch(`/api/admin/products/${productId}`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: getAuthHeaders(),
           body: JSON.stringify(formData)
         });
       }
@@ -763,7 +788,9 @@ openPickerBtn.addEventListener("click", async () => {
 
   // Lấy danh sách ảnh từ server
   try {
-    const res = await fetch("/api/admin/product-images");
+    const res = await fetch("/api/admin/product-images", {
+      headers: getAuthHeaders()
+    });
     const images = await res.json();
 
     if (!Array.isArray(images) || images.length === 0) {
@@ -835,20 +862,20 @@ function openVariantsModal(productId, variants) {
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Quản lý Variants</h5>
+            <h5 class="modal-title">Quản lý Biến Thể</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
             <div class="d-flex justify-content-end mb-2">
-              <button class="btn btn-sm btn-success" id="addVariantBtn">Thêm Variant</button>
+              <button class="btn btn-sm btn-success" id="addVariantBtn">Thêm Biến Thể</button>
             </div>
             <table class="table table-sm table-bordered" id="variantsEditTable">
               <thead>
                 <tr>
-                  <th>Size</th>
-                  <th>Màu</th>
-                  <th>Code màu</th>
-                  <th>Giá</th>
+                  <th>Kích cỡ</th>
+                  <th>Màu sắc</th>
+                  <th>Mã màu</th>
+                  <th>Giá (USD)</th>
                   <th>Tồn kho</th>
                   <th>SKU</th>
                   <th>Hành động</th>
@@ -960,7 +987,7 @@ function openVariantsModal(productId, variants) {
         if (updateError) throw updateError;
       }
 
-      alert("✅ Lưu variants thành công!");
+      alert("✅ Lưu biến thể thành công!");
       modalInstance.hide();
       modalEl.remove();
 
