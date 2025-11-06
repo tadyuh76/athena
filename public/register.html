@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Athena</title>
+    <title>Đăng Ký - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -21,8 +21,8 @@
             <div class="col-md-6 col-lg-5">
                 <div class="auth-container">
                     <div class="auth-header">
-                        <h2>Create Account</h2>
-                        <p class="text-muted">Join Athena for exclusive access to sustainable luxury fashion</p>
+                        <h2>Tạo Tài Khoản</h2>
+                        <p class="text-muted">Tham gia Athena để được truy cập độc quyền vào thời trang xa xỉ bền vững</p>
                     </div>
                     
                     <div id="alertContainer"></div>
@@ -30,62 +30,62 @@
                     <form id="registerForm">
                         <div class="row">
                             <div class="col-6 mb-3">
-                                <label for="firstName" class="form-label">First Name</label>
+                                <label for="firstName" class="form-label">Họ</label>
                                 <input type="text" class="form-control" id="firstName" required>
                             </div>
                             <div class="col-6 mb-3">
-                                <label for="lastName" class="form-label">Last Name</label>
+                                <label for="lastName" class="form-label">Tên</label>
                                 <input type="text" class="form-control" id="lastName" required>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="email" class="form-label">Email Address</label>
+                            <label for="email" class="form-label">Địa Chỉ Email</label>
                             <input type="email" class="form-control" id="email" required>
-                            <div class="form-text">We'll never share your email with anyone else.</div>
+                            <div class="form-text">Chúng tôi sẽ không bao giờ chia sẻ email của bạn với người khác.</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="phone" class="form-label">Phone Number (Optional)</label>
+                            <label for="phone" class="form-label">Số Điện Thoại (Tùy chọn)</label>
                             <input type="tel" class="form-control" id="phone">
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
+                            <label for="password" class="form-label">Mật Khẩu</label>
                             <input type="password" class="form-control" id="password" required minlength="8">
-                            <div class="form-text">Must be at least 8 characters long</div>
+                            <div class="form-text">Tối thiểu 8 ký tự</div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="confirmPassword" class="form-label">Confirm Password</label>
+                            <label for="confirmPassword" class="form-label">Xác Nhận Mật Khẩu</label>
                             <input type="password" class="form-control" id="confirmPassword" required>
                         </div>
-                        
+
                         <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="terms" required checked>
                                 <label class="form-check-label" for="terms">
-                                    I agree to the <a href="/terms.html" target="_blank">Terms of Service</a> and 
-                                    <a href="/privacy.html" target="_blank">Privacy Policy</a>
+                                    Tôi đồng ý với <a href="/terms.html" target="_blank">Điều Khoản Dịch Vụ</a> và
+                                    <a href="/privacy.html" target="_blank">Chính Sách Bảo Mật</a>
                                 </label>
                             </div>
                         </div>
-                        
-                        <button type="submit" class="btn btn-register w-100 mb-3">Create Account</button>
+
+                        <button type="submit" class="btn btn-register w-100 mb-3">Tạo Tài Khoản</button>
                     </form>
                     
                     <div class="text-center">
-                        <p>Already have an account? <a href="/login.html" class="text-decoration-none">Sign In</a></p>
+                        <p>Đã có tài khoản? <a href="/login.html" class="text-decoration-none">Đăng Nhập</a></p>
                     </div>
-                    
+
                     <div class="social-login">
-                        <p class="text-center text-muted mb-3">Or continue with</p>
+                        <p class="text-center text-muted mb-3">Hoặc tiếp tục với</p>
                         <div class="d-grid gap-2">
                             <button class="social-btn" disabled>
-                                <i class="bi bi-google me-2"></i>Continue with Google
+                                <i class="bi bi-google me-2"></i>Tiếp tục với Google
                             </button>
                             <button class="social-btn" disabled>
-                                <i class="bi bi-facebook me-2"></i>Continue with Facebook
+                                <i class="bi bi-facebook me-2"></i>Tiếp tục với Facebook
                             </button>
                         </div>
                     </div>
@@ -116,18 +116,18 @@
             if (password !== confirmPassword) {
                 alertContainer.innerHTML = `
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Passwords do not match
+                        Mật khẩu không khớp
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `;
                 return;
             }
-            
+
             // Validate password strength
             if (password.length < 8) {
                 alertContainer.innerHTML = `
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        Password must be at least 8 characters long
+                        Mật khẩu phải có ít nhất 8 ký tự
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `;
@@ -138,8 +138,8 @@
                 // Show loading state
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
-                
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang tạo tài khoản...';
+
                 const response = await authService.register(
                     email,
                     password,
@@ -147,22 +147,22 @@
                     lastName,
                     phone || undefined
                 );
-                
+
                 if (response.success) {
                     // Store email and token for verification page
                     localStorage.setItem('pendingVerificationEmail', email);
                     if (response.token) {
                         localStorage.setItem('verificationToken', response.token);
                     }
-                    
+
                     // Show success message
                     alertContainer.innerHTML = `
                         <div class="alert alert-success" role="alert">
                             <i class="bi bi-check-circle me-2"></i>
-                            Account created! Redirecting to email verification...
+                            Tài khoản đã được tạo! Đang chuyển hướng đến xác thực email...
                         </div>
                     `;
-                    
+
                     // Redirect to OTP verification page
                     setTimeout(() => {
                         window.location.href = `/verify-otp.html?email=${encodeURIComponent(email)}`;
@@ -170,23 +170,23 @@
                 } else {
                     alertContainer.innerHTML = `
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            ${response.error || 'Registration failed. Please try again.'}
+                            ${response.error || 'Đăng ký thất bại. Vui lòng thử lại.'}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     `;
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Create Account';
+                    submitBtn.innerHTML = 'Tạo Tài Khoản';
                 }
             } catch (error) {
                 alertContainer.innerHTML = `
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        An error occurred. Please try again.
+                        Đã xảy ra lỗi. Vui lòng thử lại.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 `;
                 const submitBtn = e.target.querySelector('button[type="submit"]');
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Create Account';
+                submitBtn.innerHTML = 'Tạo Tài Khoản';
             }
         });
         
@@ -194,26 +194,26 @@
         document.getElementById('password').addEventListener('input', (e) => {
             const password = e.target.value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (password.length < 8) {
-                e.target.setCustomValidity('Password must be at least 8 characters');
+                e.target.setCustomValidity('Mật khẩu phải có ít nhất 8 ký tự');
             } else {
                 e.target.setCustomValidity('');
             }
-            
+
             if (confirmPassword && password !== confirmPassword) {
-                document.getElementById('confirmPassword').setCustomValidity('Passwords do not match');
+                document.getElementById('confirmPassword').setCustomValidity('Mật khẩu không khớp');
             } else {
                 document.getElementById('confirmPassword').setCustomValidity('');
             }
         });
-        
+
         document.getElementById('confirmPassword').addEventListener('input', (e) => {
             const password = document.getElementById('password').value;
             const confirmPassword = e.target.value;
-            
+
             if (password !== confirmPassword) {
-                e.target.setCustomValidity('Passwords do not match');
+                e.target.setCustomValidity('Mật khẩu không khớp');
             } else {
                 e.target.setCustomValidity('');
             }

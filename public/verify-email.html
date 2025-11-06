@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email - Athena</title>
+    <title>Xác Thực Email - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -23,12 +23,12 @@
                             <div class="verification-icon">
                                 <i class="bi bi-envelope-check"></i>
                             </div>
-                            <h2>Verify Your Email</h2>
-                            <p class="text-muted">Enter the 6-digit code sent to your email</p>
+                            <h2>Xác Thực Email Của Bạn</h2>
+                            <p class="text-muted">Nhập mã 6 chữ số đã được gửi đến email của bạn</p>
                         </div>
-                        
+
                         <div id="alertContainer"></div>
-                        
+
                         <form id="otpForm">
                             <div class="otp-inputs">
                                 <input type="text" class="otp-input" maxlength="1" data-index="0" required>
@@ -38,16 +38,16 @@
                                 <input type="text" class="otp-input" maxlength="1" data-index="4" required>
                                 <input type="text" class="otp-input" maxlength="1" data-index="5" required>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-verify mb-3">
-                                <span class="btn-text">Verify Email</span>
+                                <span class="btn-text">Xác Thực Email</span>
                                 <span class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
                             </button>
                         </form>
-                        
+
                         <div class="text-center">
-                            <p class="text-muted mb-3">Didn't receive the code?</p>
-                            <button type="button" class="btn btn-resend" id="resendBtn">Resend Code</button>
+                            <p class="text-muted mb-3">Chưa nhận được mã?</p>
+                            <button type="button" class="btn btn-resend" id="resendBtn">Gửi Lại Mã</button>
                             <p class="text-muted mt-3 small" id="resendTimer"></p>
                         </div>
                     </div>
@@ -56,16 +56,16 @@
                         <div class="success-icon">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
-                        <h3 class="mb-3">Email Verified!</h3>
-                        <p class="text-muted mb-4">Your email has been successfully verified. You can now access all features of your Athena account.</p>
-                        <a href="/account.html" class="btn btn-verify">Go to My Account</a>
+                        <h3 class="mb-3">Email Đã Được Xác Thực!</h3>
+                        <p class="text-muted mb-4">Email của bạn đã được xác thực thành công. Bây giờ bạn có thể truy cập tất cả các tính năng của tài khoản Athena.</p>
+                        <a href="/account.html" class="btn btn-verify">Đến Tài Khoản Của Tôi</a>
                     </div>
 
                     <div id="autoVerifying" class="text-center d-none">
                         <div class="spinner-border mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                            <span class="visually-hidden">Đang tải...</span>
                         </div>
-                        <p>Verifying your email...</p>
+                        <p>Đang xác thực email của bạn...</p>
                     </div>
                 </div>
             </div>
@@ -124,7 +124,7 @@
             
             const otp = Array.from(otpInputs).map(input => input.value).join('');
             if (otp.length !== 6) {
-                showAlert('Please enter a complete 6-digit code', 'danger');
+                showAlert('Vui lòng nhập đầy đủ mã 6 chữ số', 'danger');
                 return;
             }
 
@@ -134,9 +134,9 @@
         async function verifyEmail(otp, isAutoVerify) {
             const btnText = document.querySelector('.btn-text');
             const spinner = document.querySelector('.spinner-border');
-            
+
             if (!isAutoVerify) {
-                btnText.textContent = 'Verifying...';
+                btnText.textContent = 'Đang xác thực...';
                 spinner.classList.remove('d-none');
             }
 
@@ -146,7 +146,7 @@
                 }
 
                 const response = await authService.verifyEmail(token, otp);
-                
+
                 if (response.success) {
                     document.getElementById('verificationForm').classList.add('d-none');
                     document.getElementById('autoVerifying').classList.add('d-none');
@@ -157,7 +157,7 @@
                         document.getElementById('autoVerifying').classList.add('d-none');
                         document.getElementById('verificationForm').classList.remove('d-none');
                     } else {
-                        showAlert(response.error || 'Invalid verification code', 'danger');
+                        showAlert(response.error || 'Mã xác thực không hợp lệ', 'danger');
                     }
                 }
             } catch (error) {
@@ -165,11 +165,11 @@
                     document.getElementById('autoVerifying').classList.add('d-none');
                     document.getElementById('verificationForm').classList.remove('d-none');
                 } else {
-                    showAlert('Verification failed. Please try again.', 'danger');
+                    showAlert('Xác thực thất bại. Vui lòng thử lại.', 'danger');
                 }
             } finally {
                 if (!isAutoVerify) {
-                    btnText.textContent = 'Verify Email';
+                    btnText.textContent = 'Xác Thực Email';
                     spinner.classList.add('d-none');
                 }
             }
@@ -178,23 +178,23 @@
         // Handle resend code
         document.getElementById('resendBtn').addEventListener('click', async () => {
             if (resendCooldown > 0) return;
-            
+
             if (!email) {
-                showAlert('Email address not found', 'danger');
+                showAlert('Không tìm thấy địa chỉ email', 'danger');
                 return;
             }
 
             try {
                 const response = await authService.resendVerificationEmail(email);
-                
+
                 if (response.success) {
-                    showAlert('Verification code has been resent to your email', 'success');
+                    showAlert('Mã xác thực đã được gửi lại đến email của bạn', 'success');
                     startResendCooldown();
                 } else {
-                    showAlert(response.error || 'Failed to resend code', 'danger');
+                    showAlert(response.error || 'Gửi lại mã thất bại', 'danger');
                 }
             } catch (error) {
-                showAlert('Failed to resend code. Please try again.', 'danger');
+                showAlert('Gửi lại mã thất bại. Vui lòng thử lại.', 'danger');
             }
         });
 
@@ -202,12 +202,12 @@
             resendCooldown = 60;
             const resendBtn = document.getElementById('resendBtn');
             const resendTimer = document.getElementById('resendTimer');
-            
+
             resendBtn.disabled = true;
-            
+
             const interval = setInterval(() => {
                 if (resendCooldown > 0) {
-                    resendTimer.textContent = `You can resend in ${resendCooldown} seconds`;
+                    resendTimer.textContent = `Bạn có thể gửi lại sau ${resendCooldown} giây`;
                     resendCooldown--;
                 } else {
                     clearInterval(interval);

@@ -260,7 +260,7 @@ class SiteHeader extends HTMLElement {
             if (adminLink) { adminLink.style.display = 'flex'; }
 
             const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
-            const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
+            const buttonText = isCurrentlyAdmin ? 'Chuyển sang Giao diện Khách hàng' : 'Chuyển sang Giao diện Quản trị';
 
             if (switchContainer) {
                 // HIỆN Switch Container và nút
@@ -360,7 +360,7 @@ class SiteHeader extends HTMLElement {
             // 2. LOGIC ADMIN/STAFF: GHI ĐÈ
             if (role === 'admin' || role === 'staff') {
                 const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
-                const buttonText = isCurrentlyAdmin ? 'Switch to Customer View' : 'Switch to Admin View';
+                const buttonText = isCurrentlyAdmin ? 'Chuyển sang Giao diện Khách hàng' : 'Chuyển sang Giao diện Quản trị';
 
                 if (switchContainer) {
                     switchContainer.style.display = 'flex';

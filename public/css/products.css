@@ -316,15 +316,23 @@
 }
 
 /* Responsive Grid */
+/* Tablet: Force 2 columns */
+@media (min-width: 768px) and (max-width: 991px) {
+  #productsGrid > [class*="col-"] {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
 @media (max-width: 576px) {
   .product-card .card-img-top {
     aspect-ratio: 1;
   }
-  
+
   .product-title {
     font-size: 0.9rem;
   }
-  
+
   .product-description {
     display: none;
   }

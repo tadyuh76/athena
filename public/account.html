@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Account - Athena</title>
+    <title>Tài Khoản - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -25,31 +25,31 @@
                         <li>
                             <a href="#profile" class="active" data-section="profile">
                                 <i class="bi bi-person"></i>
-                                Profile
+                                Hồ Sơ
                             </a>
                         </li>
                         <li>
                             <a href="#orders" data-section="orders">
                                 <i class="bi bi-bag"></i>
-                                Orders
+                                Đơn Hàng
                             </a>
                         </li>
                         <li>
                             <a href="#addresses" data-section="addresses">
                                 <i class="bi bi-geo-alt"></i>
-                                Addresses
+                                Địa Chỉ
                             </a>
                         </li>
                         <li>
                             <a href="#security" data-section="security">
                                 <i class="bi bi-shield-lock"></i>
-                                Security
+                                Bảo Mật
                             </a>
                         </li>
                         <li>
                             <a href="#" id="logoutBtn">
                                 <i class="bi bi-box-arrow-right"></i>
-                                Sign Out
+                                Đăng Xuất
                             </a>
                         </li>
                     </ul>
@@ -60,16 +60,16 @@
             <div class="col-md-9">
                 <!-- Profile Section -->
                 <div id="profileSection" class="account-content">
-                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">My Profile</h3>
-                    
+                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Hồ Sơ Của Tôi</h3>
+
                     <div class="row align-items-center mb-4">
                         <div class="col-auto">
-                            <img src="/images/placeholder-user.jpg" alt="Profile" class="profile-avatar" id="profileAvatar">
+                            <img src="/images/placeholder-user.jpg" alt="Hồ sơ" class="profile-avatar" id="profileAvatar">
                         </div>
                         <div class="col">
-                            <h5 id="profileName">Loading...</h5>
-                            <p class="text-muted mb-0" id="profileEmail">Loading...</p>
-                            <small class="text-muted">Member since <span id="memberSince">-</span></small>
+                            <h5 id="profileName">Đang tải...</h5>
+                            <p class="text-muted mb-0" id="profileEmail">Đang tải...</p>
+                            <small class="text-muted">Thành viên từ <span id="memberSince">-</span></small>
                         </div>
                     </div>
                     
@@ -78,99 +78,99 @@
                     <form id="profileForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="firstName" class="form-label">First Name</label>
+                                <label for="firstName" class="form-label">Họ</label>
                                 <input type="text" class="form-control" id="firstName" required>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="lastName" class="form-label">Last Name</label>
+                                <label for="lastName" class="form-label">Tên</label>
                                 <input type="text" class="form-control" id="lastName" required>
                             </div>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">Email Address</label>
+                                <label for="email" class="form-label">Địa Chỉ Email</label>
                                 <input type="email" class="form-control" id="email" disabled>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="phone" class="form-label">Phone Number</label>
+                                <label for="phone" class="form-label">Số Điện Thoại</label>
                                 <input type="tel" class="form-control" id="phone">
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="birthDate" class="form-label">Date of Birth</label>
+                            <label for="birthDate" class="form-label">Ngày Sinh</label>
                             <input type="date" class="form-control" id="birthDate">
                         </div>
-                        
-                        <button type="submit" class="btn btn-dark">Save Changes</button>
+
+                        <button type="submit" class="btn btn-dark">Lưu Thay Đổi</button>
                     </form>
                 </div>
                 
                 <!-- Orders Section -->
                 <div id="ordersSection" class="account-content" style="display:none;">
-                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">My Orders</h3>
-                    
+                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Đơn Hàng Của Tôi</h3>
+
                     <div id="ordersList">
                         <!-- Orders will be loaded here -->
                     </div>
-                    
+
                     <div id="noOrders" class="text-center py-5" style="display:none;">
                         <i class="bi bi-bag fs-1 text-muted mb-3"></i>
-                        <p class="text-muted">You haven't placed any orders yet.</p>
-                        <a href="/products.html" class="btn btn-dark">Start Shopping</a>
+                        <p class="text-muted">Bạn chưa có đơn hàng nào.</p>
+                        <a href="/products.html" class="btn btn-dark">Bắt Đầu Mua Sắm</a>
                     </div>
                 </div>
                 
                 <!-- Addresses Section -->
                 <div id="addressesSection" class="account-content" style="display:none;">
-                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Shipping Addresses</h3>
-                    
+                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Địa Chỉ Giao Hàng</h3>
+
                     <button class="btn btn-outline-dark mb-4" id="addAddressBtn">
-                        <i class="bi bi-plus-circle me-2"></i>Add New Address
+                        <i class="bi bi-plus-circle me-2"></i>Thêm Địa Chỉ Mới
                     </button>
-                    
+
                     <div id="addressesList">
                         <!-- Addresses will be loaded here -->
                     </div>
-                    
+
                     <div id="noAddresses" class="text-center py-5" style="display:none;">
                         <i class="bi bi-geo-alt fs-1 text-muted mb-3"></i>
-                        <p class="text-muted">No addresses saved yet.</p>
+                        <p class="text-muted">Chưa có địa chỉ nào được lưu.</p>
                     </div>
                 </div>
                 
                 <!-- Security Section -->
                 <div id="securitySection" class="account-content" style="display:none;">
-                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Security Settings</h3>
-                    
+                    <h3 class="mb-4" style="font-family: 'Cormorant Garamond', serif;">Cài Đặt Bảo Mật</h3>
+
                     <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">Change Password</h5>
+                            <h5 class="card-title">Đổi Mật Khẩu</h5>
                             <form id="passwordForm">
                                 <div class="mb-3">
-                                    <label for="currentPassword" class="form-label">Current Password</label>
+                                    <label for="currentPassword" class="form-label">Mật Khẩu Hiện Tại</label>
                                     <input type="password" class="form-control" id="currentPassword" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="newPassword" class="form-label">New Password</label>
+                                    <label for="newPassword" class="form-label">Mật Khẩu Mới</label>
                                     <input type="password" class="form-control" id="newPassword" required minlength="8">
-                                    <div class="form-text">Minimum 8 characters</div>
+                                    <div class="form-text">Tối thiểu 8 ký tự</div>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                                    <label for="confirmPassword" class="form-label">Xác Nhận Mật Khẩu Mới</label>
                                     <input type="password" class="form-control" id="confirmPassword" required>
                                 </div>
-                                <button type="submit" class="btn btn-dark">Update Password</button>
+                                <button type="submit" class="btn btn-dark">Cập Nhật Mật Khẩu</button>
                             </form>
                         </div>
                     </div>
-                    
+
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Two-Factor Authentication</h5>
-                            <p class="text-muted">Add an extra layer of security to your account.</p>
-                            <button class="btn btn-outline-dark" disabled>Coming Soon</button>
+                            <h5 class="card-title">Xác Thực Hai Yếu Tố</h5>
+                            <p class="text-muted">Thêm một lớp bảo mật cho tài khoản của bạn.</p>
+                            <button class="btn btn-outline-dark" disabled>Sắp Ra Mắt</button>
                         </div>
                     </div>
                 </div>
@@ -209,7 +209,7 @@
             if (!currentUser) return;
             
             // Update profile display
-            document.getElementById('profileName').textContent = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'User';
+            document.getElementById('profileName').textContent = `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || 'Người dùng';
             document.getElementById('profileEmail').textContent = currentUser.email;
             
             // Update avatar
@@ -284,13 +284,13 @@
                 if (result.success) {
                     currentUser = { ...currentUser, ...updates };
                     localStorage.setItem('user', JSON.stringify(currentUser));
-                    showToast('Profile updated successfully!', 'success');
+                    showToast('Cập nhật hồ sơ thành công!', 'success');
                     loadProfile();
                 } else {
-                    showToast('Failed to update profile', 'danger');
+                    showToast('Không thể cập nhật hồ sơ', 'danger');
                 }
             } catch (error) {
-                showToast('An error occurred', 'danger');
+                showToast('Đã xảy ra lỗi', 'danger');
             }
         });
         
@@ -300,14 +300,14 @@
             
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (newPassword !== confirmPassword) {
-                showToast('Passwords do not match', 'danger');
+                showToast('Mật khẩu không khớp', 'danger');
                 return;
             }
-            
+
             // TODO: Implement password change
-            showToast('Password update coming soon', 'info');
+            showToast('Chức năng đổi mật khẩu đang được phát triển', 'info');
         });
         
         // Handle logout

@@ -1,109 +1,109 @@
 :root {
-    --admin-primary: #1f2937; /* Primary Dark */
-    --admin-accent: #0f4c2f; /* Success Green */
-    --admin-light: #f9fafb;
-    --admin-font: 'Inter', sans-serif;
-    --admin-serif: 'Cormorant Garamond', serif;
+  --admin-primary: #1f2937; /* Primary Dark */
+  --admin-accent: #0f4c2f; /* Success Green */
+  --admin-light: #f9fafb;
+  --admin-font: "Inter", sans-serif;
+  --admin-serif: "Cormorant Garamond", serif;
 }
 
 body.admin-mode {
-    padding-top: 80px; /* Bù đắp cho header cố định */
-    background: var(--admin-light);
-    font-family: var(--admin-font);
+  padding-top: 80px; /* Bù đắp cho header cố định */
+  background: var(--admin-light);
+  font-family: var(--admin-font);
 }
 
 /* Sidebar Navigation */
 .admin-sidebar {
-    position: fixed;
-    top: 80px;
-    bottom: 0;
-    left: 0;
-    width: 250px;
-    background: var(--admin-primary);
-    padding: 20px 0;
-    color: white;
-    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+  position: fixed;
+  top: 80px;
+  bottom: 0;
+  left: 0;
+  width: 250px;
+  background: var(--admin-primary);
+  padding: 20px 0;
+  color: white;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
 .sidebar-menu {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .sidebar-menu a {
-    display: block;
-    padding: 15px 20px;
-    color: rgba(255, 255, 255, 0.8);
-    text-decoration: none;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
+  display: block;
+  padding: 15px 20px;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-menu a:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.1);
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-menu a.active {
-    color: var(--admin-primary);
-    background: white;
-    font-weight: 600;
-    /* Dùng border-left để tạo điểm nhấn Admin */
-    border-left: 5px solid var(--admin-accent);
+  color: var(--admin-primary);
+  background: white;
+  font-weight: 600;
+  /* Dùng border-left để tạo điểm nhấn Admin */
+  border-left: 5px solid var(--admin-accent);
 }
 
 /* Main Content Area */
 .admin-main-content {
-    margin-left: 250px; /* Tạo khoảng trống cho sidebar */
-    padding: 30px;
-    min-height: calc(100vh - 80px); /* Đảm bảo chiều cao tối thiểu */
+  margin-left: 250px; /* Tạo khoảng trống cho sidebar */
+  padding: 30px;
+  min-height: calc(100vh - 80px); /* Đảm bảo chiều cao tối thiểu */
 }
 
 .admin-header h1 {
-    font-family: var(--admin-serif);
-    font-weight: 300;
-    color: var(--admin-primary);
-    margin-bottom: 30px;
+  font-family: var(--admin-serif);
+  font-weight: 300;
+  color: var(--admin-primary);
+  margin-bottom: 30px;
 }
 
 /* Summary Cards (Dựa trên mẫu UI của bạn) */
 .summary-card {
-    background: white;
-    border-radius: 8px;
-    padding: 25px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    border-left: 5px solid var(--admin-accent);
+  background: white;
+  border-radius: 8px;
+  padding: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-left: 5px solid var(--admin-accent);
 }
 
 .summary-card .value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--admin-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--admin-primary);
 }
 
 .summary-card .label {
-    font-size: 0.9rem;
-    color: var(--admin-accent);
-    text-transform: uppercase;
+  font-size: 0.9rem;
+  color: var(--admin-accent);
+  text-transform: uppercase;
 }
 
 /* Alert khi không có quyền */
 .admin-unauthorized {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: var(--admin-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    text-align: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--admin-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  text-align: center;
 }
 
 .dashboard-grid {
@@ -117,7 +117,7 @@ body.admin-mode {
   background: #fff;
   border: none;
   border-radius: 12px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
   text-align: center;
   padding: 25px 10px;
   transition: all 0.2s ease;
@@ -125,7 +125,7 @@ body.admin-mode {
 
 .dashboard-grid .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-grid h3 {
@@ -142,6 +142,328 @@ body.admin-mode {
 
 /* Kích thước tuỳ chỉnh Modal Sản phẩm cho admin */
 #productDetailModal .modal-dialog {
-    max-width: 85%;  /* hoặc 100% nếu muốn full màn hình */
-    width: auto;
+  max-width: 85%; /* hoặc 100% nếu muốn full màn hình */
+  width: auto;
+}
+
+/* ========================================
+   RESPONSIVE STYLES
+   ======================================== */
+
+/* Mobile menu toggle button - hidden by default */
+.mobile-menu-toggle {
+  display: none;
+}
+
+/* Tablet Styles (768px - 991px) */
+@media (max-width: 991px) {
+  /* Mobile menu toggle */
+  .mobile-menu-toggle {
+    display: flex !important;
+    position: fixed;
+    top: 100px;
+    left: 15px;
+    z-index: 999;
+    background: var(--admin-primary);
+    color: white;
+    border: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    font-size: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu-toggle:hover {
+    background: var(--admin-accent);
+    transform: scale(1.05);
+  }
+
+  /* Sidebar becomes collapsible/hidden */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1050;
+  }
+
+  .admin-sidebar.show {
+    transform: translateX(0);
+  }
+
+  /* Main content takes full width */
+  .admin-main-content {
+    margin-left: 0;
+    padding: 20px;
+    padding-top: 70px; /* Add space for mobile menu button */
+  }
+
+  /* Admin header adjustments for spacing */
+  .admin-header {
+    margin-top: 10px;
+  }
+
+  /* Dashboard grid - 2 columns on tablet */
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  /* Table responsiveness */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Admin header adjustments */
+  .admin-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .admin-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: 15px;
+  }
+
+  /* Filter row in orders section */
+  #ordersSection .row.mb-4 .col-md-4,
+  #ordersSection .row.mb-4 .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  #ordersSection .row.mb-4 .col-md-4 {
+    margin-bottom: 15px;
+  }
+
+  #ordersSection .row.mb-4 .col-md-2 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  /* Modal adjustments */
+  .modal-xl {
+    max-width: 95%;
+  }
+}
+
+/* Mobile Styles (< 768px) */
+@media (max-width: 767px) {
+  body.admin-mode {
+    padding-top: 60px;
+  }
+
+  /* Sidebar adjustments */
+  .admin-sidebar {
+    top: 60px;
+    width: 280px;
+    max-width: 85%;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    z-index: 1050;
+  }
+
+  .admin-sidebar.show {
+    transform: translateX(0);
+  }
+
+  /* Mobile menu toggle button - adjust position */
+  .mobile-menu-toggle {
+    top: 95px !important;
+    left: 10px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Backdrop for mobile sidebar */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+  }
+
+  .sidebar-backdrop.show {
+    display: block;
+  }
+
+  /* Main content adjustments */
+  .admin-main-content {
+    margin-left: 0;
+    padding: 15px;
+    padding-top: 80px; /* Add space for mobile menu button */
+  }
+
+  /* Dashboard grid - single column on mobile */
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-grid .card {
+    padding: 20px 15px;
+  }
+
+  .dashboard-grid h3 {
+    font-size: 0.9rem;
+  }
+
+  .dashboard-grid p {
+    font-size: 1.5rem;
+  }
+
+  /* Admin header */
+  .admin-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+
+  .admin-header.d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .admin-header button {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  /* Products table - Stack columns */
+  #adminProductTable thead {
+    display: none;
+  }
+
+  #adminProductTable tbody tr {
+    display: block;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    background: white;
+  }
+
+  #adminProductTable tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border: none;
+    text-align: right;
+  }
+
+  #adminProductTable tbody td:before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    flex: 0 0 40%;
+  }
+
+  #adminProductTable tbody td:first-child {
+    justify-content: center;
+  }
+
+  /* Orders section filters - full width */
+  #ordersSection .row.mb-4 .col-md-4,
+  #ordersSection .row.mb-4 .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin-bottom: 12px;
+  }
+
+  /* Orders table */
+  .table-responsive table {
+    font-size: 0.85rem;
+  }
+
+  .table-responsive thead th {
+    white-space: nowrap;
+    font-size: 0.8rem;
+    padding: 8px;
+  }
+
+  .table-responsive tbody td {
+    padding: 8px;
+    white-space: nowrap;
+  }
+
+  /* Card adjustments */
+  .card-body {
+    padding: 15px;
+  }
+
+  .card-footer {
+    padding: 12px 15px;
+  }
+
+  /* Pagination */
+  .pagination {
+    font-size: 0.85rem;
+  }
+
+  .pagination .page-link {
+    padding: 4px 8px;
+  }
+
+  /* Modal adjustments */
+  .modal-xl,
+  .modal-lg {
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .modal-dialog {
+    margin: 10px;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  /* Button groups */
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 8px !important;
+  }
+
+  .d-flex.gap-2 button {
+    width: 100%;
+  }
+
+  /* Form controls */
+  .form-control,
+  .form-select {
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small devices (< 576px) */
+@media (max-width: 575px) {
+  .admin-main-content {
+    padding: 10px;
+    padding-top: 75px; /* Maintain space for mobile menu button */
+  }
+
+  .dashboard-grid .card {
+    padding: 15px 10px;
+  }
+
+  .admin-header h1 {
+    font-size: 1.3rem;
+  }
+
+  /* Hide non-essential table columns on very small screens */
+  .table-responsive th:nth-child(3),
+  .table-responsive td:nth-child(3),
+  .table-responsive th:nth-child(4),
+  .table-responsive td:nth-child(4) {
+    display: none;
+  }
 }

@@ -44,10 +44,10 @@ async function initializeNavigation() {
             user.first_name || user.email
           }</h6></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="/account.html"><i class="bi bi-person me-2"></i>My Account</a></li>
-          <li><a class="dropdown-item" href="/orders.html"><i class="bi bi-bag me-2"></i>My Orders</a></li>
+          <li><a class="dropdown-item" href="/account.html"><i class="bi bi-person me-2"></i>Tài Khoản</a></li>
+          <li><a class="dropdown-item" href="/orders.html"><i class="bi bi-bag me-2"></i>Đơn Hàng</a></li>
           <li><hr class="dropdown-divider"></li>
-          <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+          <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Đăng Xuất</a></li>
         </ul>
       </div>
     `;
@@ -60,7 +60,7 @@ async function initializeNavigation() {
       });
   } else if (authSection) {
     authSection.innerHTML = `
-      <a href="/login.html" class="btn btn-outline-dark">Sign In</a>
+      <a href="/login.html" class="btn btn-outline-dark">Đăng Nhập</a>
     `;
   }
 
@@ -150,7 +150,7 @@ async function loadCart() {
     if (loadingSpinner) {
       loadingSpinner.style.display = "none";
     }
-    showError("Failed to load cart. Please refresh the page.");
+    showError("Không thể tải giỏ hàng. Vui lòng làm mới trang.");
     console.error("Failed to load cart:", error);
   }
 }
@@ -161,9 +161,9 @@ function renderEmptyCart() {
   cartContent.innerHTML = `
     <div class="empty-cart">
       <i class="bi bi-bag"></i>
-      <h3>Your cart is empty</h3>
-      <p class="text-muted mb-4">Looks like you haven't added anything to your cart yet.</p>
-      <a href="/products.html" class="btn btn-dark">Continue Shopping</a>
+      <h3>Giỏ hàng trống</h3>
+      <p class="text-muted mb-4">Bạn chưa thêm sản phẩm nào vào giỏ hàng.</p>
+      <a href="/products.html" class="btn btn-dark">Tiếp Tục Mua Sắm</a>
     </div>
   `;
 }
@@ -184,64 +184,64 @@ function renderCart() {
       <!-- Cart Summary -->
       <div class="col-lg-4">
         <div class="cart-summary">
-          <h5 class="mb-3">Order Summary</h5>
-          
+          <h5 class="mb-3">Tóm Tắt Đơn Hàng</h5>
+
           <div class="d-flex justify-content-between mb-2">
-            <span>Subtotal (${cartSummary.itemCount} items)</span>
+            <span>Tạm tính (${cartSummary.itemCount} sản phẩm)</span>
             <span>$${cartSummary.subtotal.toFixed(2)}</span>
           </div>
-          
+
           <div class="d-flex justify-content-between mb-2">
-            <span>Shipping</span>
+            <span>Phí vận chuyển</span>
             <span>${
               cartSummary.shipping === 0
-                ? "Free"
+                ? "Miễn phí"
                 : "$" + cartSummary.shipping.toFixed(2)
             }</span>
           </div>
-          
+
           <div class="d-flex justify-content-between mb-2">
-            <span>Tax</span>
+            <span>Thuế</span>
             <span>$${cartSummary.tax.toFixed(2)}</span>
           </div>
-          
+
           ${
             cartSummary.discount > 0
               ? `
             <div class="d-flex justify-content-between mb-2 text-success">
-              <span>Discount</span>
+              <span>Giảm giá</span>
               <span>-$${cartSummary.discount.toFixed(2)}</span>
             </div>
           `
               : ""
           }
-          
+
           <hr>
-          
+
           <div class="d-flex justify-content-between mb-3">
-            <strong>Total</strong>
+            <strong>Tổng cộng</strong>
             <strong>$${cartSummary.total.toFixed(2)}</strong>
           </div>
-          
+
           ${
             cartSummary.shipping === 0 && cartSummary.subtotal < 150
               ? `
             <div class="alert alert-info small">
               <i class="bi bi-info-circle me-1"></i>
-              Add $${(150 - cartSummary.subtotal).toFixed(
+              Thêm $${(150 - cartSummary.subtotal).toFixed(
                 2
-              )} more for free shipping
+              )} để được miễn phí vận chuyển
             </div>
           `
               : ""
           }
-          
+
           <button class="btn btn-dark w-100 mb-3" onclick="proceedToCheckout()">
-            Proceed to Checkout
+            Thanh Toán
           </button>
-          
+
           <a href="/products.html" class="btn btn-outline-secondary w-100">
-            Continue Shopping
+            Tiếp Tục Mua Sắm
           </a>
         </div>
       </div>
@@ -280,14 +280,14 @@ function renderCartItem(item) {
             </a>
           </h6>
           <p class="text-muted small mb-1">
-            ${variant.size ? `Size: ${variant.size}` : ""}
+            ${variant.size ? `Kích cỡ: ${variant.size}` : ""}
             ${variant.size && variant.color ? " • " : ""}
-            ${variant.color ? `Color: ${variant.color}` : ""}
+            ${variant.color ? `Màu: ${variant.color}` : ""}
           </p>
           <p class="text-muted small mb-0">SKU: ${variant.sku}</p>
           ${
             !isInStock
-              ? '<p class="text-danger small mb-0">Out of stock</p>'
+              ? '<p class="text-danger small mb-0">Hết hàng</p>'
               : ""
           }
         </div>
@@ -319,7 +319,7 @@ function renderCartItem(item) {
           ).toFixed(2)}</strong></p>
           <p class="text-muted small mb-0">$${item.price_at_time.toFixed(
             2
-          )} each</p>
+          )} mỗi cái</p>
         </div>
         
         <div class="col-md-2 text-end">
@@ -347,21 +347,21 @@ window.updateQuantity = async function (itemId, newQuantity) {
     await cartService.updateItemQuantity(itemId, quantity);
     await loadCart(); // Refresh cart
     await updateCartCount();
-    showToast("Quantity updated", "success");
+    showToast("Đã cập nhật số lượng", "success");
   } catch (error) {
     console.error("Failed to update quantity:", error);
-    showToast("Failed to update quantity", "danger");
+    showToast("Không thể cập nhật số lượng", "danger");
   }
 };
 
 // Remove item from cart
 window.removeItem = async function (itemId) {
   const confirmed = await Dialog.confirm(
-    "Are you sure you want to remove this item from your cart?",
+    "Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?",
     {
-      title: "Remove Item",
-      confirmText: "Remove",
-      cancelText: "Cancel",
+      title: "Xóa Sản Phẩm",
+      confirmText: "Xóa",
+      cancelText: "Hủy",
       confirmClass: "btn-danger",
     }
   );
@@ -373,13 +373,13 @@ window.removeItem = async function (itemId) {
   try {
     showLoading(itemId);
     await cartService.removeItem(itemId);
-    showToast("Item removed from cart", "success");
+    showToast("Đã xóa sản phẩm khỏi giỏ hàng", "success");
     // Refresh cart after showing success message
     await loadCart();
     await updateCartCount();
   } catch (error) {
     console.error("Failed to remove item:", error);
-    showToast("Failed to remove item", "danger");
+    showToast("Không thể xóa sản phẩm", "danger");
     // Reload cart anyway to show current state
     await loadCart();
   }
@@ -428,11 +428,11 @@ function renderOfflineBanner() {
       "alert alert-warning d-flex justify-content-between align-items-center";
     banner.innerHTML = `
       <div>
-        <strong>Offline / Demo mode:</strong> Some data loaded from your browser. Actions are stored locally.
+        <strong>Chế độ ngoại tuyến / Demo:</strong> Một số dữ liệu được tải từ trình duyệt. Các thao tác được lưu cục bộ.
       </div>
       <div>
-        <button class="btn btn-sm btn-outline-dark me-2" id="retryCartBtn">Try API Again</button>
-        <a href="/products.html" class="btn btn-sm btn-dark">Continue Shopping</a>
+        <button class="btn btn-sm btn-outline-dark me-2" id="retryCartBtn">Thử Lại API</button>
+        <a href="/products.html" class="btn btn-sm btn-dark">Tiếp Tục Mua Sắm</a>
       </div>
     `;
     cartContent.insertAdjacentElement("afterbegin", banner);
@@ -448,11 +448,11 @@ function renderOfflineBanner() {
           if (!cart || !cart.items || cart.items.length === 0)
             renderEmptyCart();
           else renderCart();
-          showToast("Reconnected to API", "success");
+          showToast("Đã kết nối lại với API", "success");
         } catch (e) {
           console.warn("Retry failed", e);
           showToast(
-            "Retry failed. Still offline or API unavailable.",
+            "Thử lại thất bại. Vẫn đang ngoại tuyến hoặc API không khả dụng.",
             "warning"
           );
         } finally {

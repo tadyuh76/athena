@@ -30,6 +30,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   // ===============================
+  // 🔹 1.5. MOBILE MENU TOGGLE
+  // ===============================
+  setupMobileMenu();
+
+  // ===============================
   // 🔹 2. KHỞI TẠO ADMIN DASHBOARD
   // ===============================
   try {
@@ -112,6 +117,37 @@ async function loadDashboard() {
   }
 }
 
+// ===============================
+// 🔹 MOBILE MENU TOGGLE
+// ===============================
+function setupMobileMenu() {
+  const mobileMenuToggle = document.getElementById("mobileMenuToggle");
+  const sidebar = document.getElementById("adminSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+
+  if (!mobileMenuToggle || !sidebar || !backdrop) return;
+
+  // Handle window resize - close sidebar when resizing to desktop
+  window.addEventListener("resize", () => {
+    if (window.innerWidth >= 992) {
+      sidebar.classList.remove("show");
+      backdrop.classList.remove("show");
+    }
+  });
+
+  // Toggle sidebar
+  mobileMenuToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("show");
+    backdrop.classList.toggle("show");
+  });
+
+  // Close sidebar when clicking backdrop
+  backdrop.addEventListener("click", () => {
+    sidebar.classList.remove("show");
+    backdrop.classList.remove("show");
+  });
+}
+
 function setupNavigation() {
   const links = document.querySelectorAll(".sidebar-menu a");
   const sections = {
@@ -134,6 +170,14 @@ function setupNavigation() {
       Object.keys(sections).forEach((key) => {
         sections[key].style.display = key === target ? "block" : "none";
       });
+
+      // Close mobile sidebar after navigation
+      const sidebar = document.getElementById("adminSidebar");
+      const backdrop = document.getElementById("sidebarBackdrop");
+      if (sidebar && backdrop) {
+        sidebar.classList.remove("show");
+        backdrop.classList.remove("show");
+      }
 
       // 🔄 Nếu user click vào Dashboard → tải lại dữ liệu mới nhất (không block UI)
       if (target === "#dashboard") {
@@ -671,7 +715,7 @@ async function loadAdminProducts() {
 
         return `
     <tr>
-      <td>
+      <td data-label="Hình ảnh">
         <div class="d-flex gap-2 align-items-center">
           <img src="${p.featured_image_url || "/images/no-image.png"}"
               alt="${p.name}"
@@ -683,19 +727,19 @@ async function loadAdminProducts() {
           }
         </div>
       </td>
-      <td>
+      <td data-label="Tên sản phẩm">
         <a href="#" class="product-detail-link" data-id="${p.id}">
           ${p.name || "-"}
         </a>
       </td>
-      <td>${p.collection_name || "-"}</td>
-      <td>
+      <td data-label="Collection">${p.collection_name || "-"}</td>
+      <td data-label="Biến thể">
         <span class="badge bg-primary">${variantCount} biến thể</span>
       </td>
-      <td>${
+      <td data-label="Giá gốc">${
         p.compare_price ? "$" + p.compare_price.toLocaleString("en-US") : "-"
       }</td>
-      <td>${
+      <td data-label="Giá bán">${
         p.final_price ? "$" + p.final_price.toLocaleString("en-US") : "-"
       }</td>
     </tr>
@@ -921,7 +965,7 @@ async function showProductDetail(productId) {
           const result = await adminProductService.deleteProduct(productId);
 
           if (!result.success) {
-            throw new Error(result.error || 'Failed to delete product');
+            throw new Error(result.error || 'Không thể xoá sản phẩm');
           }
 
           alert("✅ Đã xoá sản phẩm!");
@@ -1502,7 +1546,7 @@ function openVariantsModal(productId, variants) {
         console.log('Upsert result:', result);
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to save variants');
+          throw new Error(result.error || 'Không thể lưu biến thể');
         }
 
         alert("✅ Lưu biến thể thành công!");

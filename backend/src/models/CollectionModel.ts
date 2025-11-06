@@ -5,13 +5,16 @@ export class CollectionModel extends BaseModel<ProductCollection> {
   protected tableName = 'product_collections';
 
   /**
-   * Get all active collections ordered by sort_order
+   * Get all active collections ordered by sort_order with product count
    */
   async findAllActive(): Promise<ProductCollection[]> {
     try {
       const { data, error } = await this.client
         .from(this.tableName)
-        .select('*')
+        .select(`
+          *,
+          products:products(count)
+        `)
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
@@ -19,7 +22,14 @@ export class CollectionModel extends BaseModel<ProductCollection> {
         throw error;
       }
 
-      return (data || []) as ProductCollection[];
+      // Map the data to include product_count
+      const collections = (data || []).map((collection: any) => ({
+        ...collection,
+        product_count: collection.products?.[0]?.count || 0,
+        products: undefined // Remove the nested products object
+      }));
+
+      return collections as ProductCollection[];
     } catch (error) {
       throw new Error(`Failed to find active collections: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
