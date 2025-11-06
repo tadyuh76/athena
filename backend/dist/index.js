@@ -9,7 +9,6 @@ const path_1 = __importDefault(require("path"));
 const routes_1 = require("./router/routes");
 const CartService_1 = require("./services/CartService");
 const request_handler_1 = require("./utils/request-handler");
-const orderStatusUpdater_1 = require("./jobs/orderStatusUpdater");
 const storage_1 = require("./utils/storage");
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
 const router = (0, routes_1.setupRoutes)();
@@ -40,7 +39,6 @@ setInterval(async () => {
         console.error("Failed to release expired reservations:", error);
     }
 }, 5 * 60 * 1000);
-(0, orderStatusUpdater_1.startOrderStatusUpdater)();
 storage_1.StorageService.ensureBucketExists().catch((error) => {
     console.error("Failed to initialize review images bucket:", error);
 });

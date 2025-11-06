@@ -9,6 +9,8 @@ const WishlistController_1 = require("../controllers/WishlistController");
 const OrderController_1 = require("../controllers/OrderController");
 const ReviewController_1 = require("../controllers/ReviewController");
 const StripeWebhookController_1 = require("../controllers/StripeWebhookController");
+const AddressController_1 = require("../controllers/AddressController");
+const DiscountController_1 = require("../controllers/DiscountController");
 const request_handler_1 = require("../utils/request-handler");
 const supabase_1 = require("../utils/supabase");
 const CollectionController_1 = require("../controllers/CollectionController");
@@ -25,6 +27,8 @@ function setupRoutes() {
     const orderController = new OrderController_1.OrderController();
     const reviewController = new ReviewController_1.ReviewController();
     const stripeWebhookController = new StripeWebhookController_1.StripeWebhookController();
+    const addressController = new AddressController_1.AddressController();
+    const discountController = new DiscountController_1.DiscountController();
     router.post('/api/auth/register', (req, res) => authController.register(req, res));
     router.post('/api/auth/login', (req, res) => authController.login(req, res));
     router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router_1.Router.requireAuth]);
@@ -53,6 +57,13 @@ function setupRoutes() {
     router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router_1.Router.requireAuth]);
     router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router_1.Router.requireAuth]);
     router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/addresses', (req, res) => addressController.getAddresses(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/addresses/default', (req, res) => addressController.getDefaultAddress(req, res), [Router_1.Router.requireAuth]);
+    router.get('/api/addresses/:id', (req, res, params) => addressController.getAddressById(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.post('/api/addresses', (req, res) => addressController.createAddress(req, res), [Router_1.Router.requireAuth]);
+    router.put('/api/addresses/:id', (req, res, params) => addressController.updateAddress(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.delete('/api/addresses/:id', (req, res, params) => addressController.deleteAddress(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.put('/api/addresses/:id/default', (req, res, params) => addressController.setDefaultAddress(req, res, params.id), [Router_1.Router.requireAuth]);
     router.post('/api/orders', (req, res) => orderController.createOrder(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders/checkout-session', (req, res) => orderController.createCheckoutSession(req, res), [Router_1.Router.requireAuth]);
     router.post('/api/orders/buy-now-checkout', (req, res) => orderController.createBuyNowCheckoutSession(req, res), [Router_1.Router.requireAuth]);
@@ -74,6 +85,14 @@ function setupRoutes() {
     router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router_1.Router.requireAuth]);
     router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
     router.post('/api/reviews/:id/like', (req, res, params) => reviewController.toggleLike(req, res, params.id), [Router_1.Router.requireAuth]);
+    router.post('/api/discounts/validate', (req, res) => discountController.validateDiscount(req, res), [Router_1.Router.optionalAuth]);
+    router.get('/api/admin/discounts', (req, res) => discountController.getDiscounts(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.get('/api/admin/discounts/:id', (req, res, params) => discountController.getDiscountById(req, res, params), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post('/api/admin/discounts', (req, res) => discountController.createDiscount(req, res), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.put('/api/admin/discounts/:id', (req, res, params) => discountController.updateDiscount(req, res, params), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.delete('/api/admin/discounts/:id', (req, res, params) => discountController.deleteDiscount(req, res, params), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.get('/api/health', async (_req, res) => {
         (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     });

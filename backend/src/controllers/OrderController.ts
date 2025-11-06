@@ -65,6 +65,7 @@ export class OrderController {
         userId: req.userId,
         shippingInfo: body.shippingInfo,
         paymentMethod: 'stripe',
+        discountCode: body.discountCode, // Include discount code if provided
       };
 
       // Get base URL from referer or default to frontend URL

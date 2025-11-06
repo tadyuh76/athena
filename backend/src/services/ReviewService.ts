@@ -1,5 +1,5 @@
-import { supabase, supabaseAdmin } from '../utils/supabase';
-import { ProductReview } from '../types/database.types';
+import { supabase, supabaseAdmin } from "../utils/supabase";
+import { ProductReview } from "../types/database.types";
 
 export interface ReviewFilter {
   product_id?: string;
@@ -37,25 +37,28 @@ export class ReviewService {
   }> {
     try {
       let query = supabase
-        .from('product_reviews')
-        .select(`
+        .from("product_reviews")
+        .select(
+          `
           *,
           user:users!product_reviews_user_id_fkey(first_name, last_name, avatar_url)
-        `, { count: 'exact' })
-        .order('created_at', { ascending: false });
+        `,
+          { count: "exact" }
+        )
+        .order("created_at", { ascending: false });
 
       // Apply filters
       if (filter.product_id) {
-        query = query.eq('product_id', filter.product_id);
+        query = query.eq("product_id", filter.product_id);
       }
       if (filter.user_id) {
-        query = query.eq('user_id', filter.user_id);
+        query = query.eq("user_id", filter.user_id);
       }
       if (filter.rating !== undefined) {
-        query = query.eq('rating', filter.rating);
+        query = query.eq("rating", filter.rating);
       }
       if (filter.is_verified_purchase !== undefined) {
-        query = query.eq('is_verified_purchase', filter.is_verified_purchase);
+        query = query.eq("is_verified_purchase", filter.is_verified_purchase);
       }
 
       // Apply pagination
@@ -73,22 +76,24 @@ export class ReviewService {
       let stats = {
         averageRating: 0,
         totalReviews: 0,
-        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+        ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
       };
 
       if (filter.product_id) {
         const { data: allReviews } = await supabase
-          .from('product_reviews')
-          .select('rating')
-          .eq('product_id', filter.product_id);
+          .from("product_reviews")
+          .select("rating")
+          .eq("product_id", filter.product_id);
 
         if (allReviews && allReviews.length > 0) {
           stats.totalReviews = allReviews.length;
           const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
-          stats.averageRating = parseFloat((totalRating / allReviews.length).toFixed(1));
+          stats.averageRating = parseFloat(
+            (totalRating / allReviews.length).toFixed(1)
+          );
 
           // Calculate rating distribution
-          allReviews.forEach(review => {
+          allReviews.forEach((review) => {
             const rating = review.rating as 1 | 2 | 3 | 4 | 5;
             stats.ratingDistribution[rating]++;
           });
@@ -100,11 +105,15 @@ export class ReviewService {
         total: count || 0,
         page,
         totalPages: Math.ceil((count || 0) / limit),
-        stats
+        stats,
       };
     } catch (error) {
-      console.error('Error in getReviews:', error);
-      throw new Error(`Failed to get reviews: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error in getReviews:", error);
+      throw new Error(
+        `Failed to get reviews: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -114,16 +123,18 @@ export class ReviewService {
   async getReviewById(id: string): Promise<ReviewWithUser | null> {
     try {
       const { data, error } = await supabase
-        .from('product_reviews')
-        .select(`
+        .from("product_reviews")
+        .select(
+          `
           *,
           user:users!product_reviews_user_id_fkey(first_name, last_name, avatar_url)
-        `)
-        .eq('id', id)
+        `
+        )
+        .eq("id", id)
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           return null;
         }
         throw error;
@@ -131,7 +142,11 @@ export class ReviewService {
 
       return data;
     } catch (error) {
-      throw new Error(`Failed to get review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to get review: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -150,14 +165,14 @@ export class ReviewService {
     try {
       // Check if user has already reviewed this product
       const { data: existingReview } = await supabase
-        .from('product_reviews')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('product_id', productId)
+        .from("product_reviews")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", productId)
         .maybeSingle();
 
       if (existingReview) {
-        throw new Error('You have already reviewed this product');
+        throw new Error("You have already reviewed this product");
       }
 
       // Check if this is a verified purchase
@@ -167,11 +182,11 @@ export class ReviewService {
       // If no orderId provided, try to find a completed order with this product
       if (!actualOrderId) {
         const { data: orderItems } = await supabase
-          .from('order_items')
-          .select('order_id, orders!inner(user_id, status)')
-          .eq('product_id', productId)
-          .eq('orders.user_id', userId)
-          .in('orders.status', ['delivered'])
+          .from("order_items")
+          .select("order_id, orders!inner(user_id, status)")
+          .eq("product_id", productId)
+          .eq("orders.user_id", userId)
+          .in("orders.status", ["delivered"])
           .limit(1);
 
         if (orderItems && orderItems.length > 0) {
@@ -181,22 +196,25 @@ export class ReviewService {
       } else {
         // Verify the provided orderId
         const { data: orderItem } = await supabase
-          .from('order_items')
-          .select('id, orders!inner(user_id, status)')
-          .eq('order_id', actualOrderId)
-          .eq('product_id', productId)
-          .eq('orders.user_id', userId)
+          .from("order_items")
+          .select("id, orders!inner(user_id, status)")
+          .eq("order_id", actualOrderId)
+          .eq("product_id", productId)
+          .eq("orders.user_id", userId)
           .single();
 
         isVerifiedPurchase = !!orderItem;
       }
 
       // Validate images array
-      const validatedImages = images && images.length > 0 ? images.filter(img => img && img.trim().length > 0) : null;
+      const validatedImages =
+        images && images.length > 0
+          ? images.filter((img) => img && img.trim().length > 0)
+          : null;
 
       // Create the review
       const { data, error } = await supabase
-        .from('product_reviews')
+        .from("product_reviews")
         .insert({
           user_id: userId,
           product_id: productId,
@@ -205,7 +223,7 @@ export class ReviewService {
           title: title || null,
           review: review || null,
           is_verified_purchase: isVerifiedPurchase,
-          images: validatedImages
+          images: validatedImages,
         })
         .select()
         .single();
@@ -219,7 +237,11 @@ export class ReviewService {
 
       return data;
     } catch (error) {
-      throw new Error(`Failed to create review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to create review: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -238,28 +260,28 @@ export class ReviewService {
     try {
       // Verify the review belongs to the user
       const { data: existingReview } = await supabase
-        .from('product_reviews')
-        .select('user_id, product_id')
-        .eq('id', reviewId)
+        .from("product_reviews")
+        .select("user_id, product_id")
+        .eq("id", reviewId)
         .single();
 
       if (!existingReview) {
-        throw new Error('Review not found');
+        throw new Error("Review not found");
       }
 
       if (existingReview.user_id !== userId) {
-        throw new Error('Unauthorized to update this review');
+        throw new Error("Unauthorized to update this review");
       }
 
       // Update the review
       const { data, error } = await supabase
-        .from('product_reviews')
+        .from("product_reviews")
         .update({
           rating: updates.rating,
           title: updates.title,
-          review: updates.review
+          review: updates.review,
         })
-        .eq('id', reviewId)
+        .eq("id", reviewId)
         .select()
         .single();
 
@@ -272,7 +294,11 @@ export class ReviewService {
 
       return data;
     } catch (error) {
-      throw new Error(`Failed to update review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to update review: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -283,34 +309,37 @@ export class ReviewService {
     try {
       // Verify the review belongs to the user and get images
       const { data: existingReview } = await supabase
-        .from('product_reviews')
-        .select('user_id, product_id, images')
-        .eq('id', reviewId)
+        .from("product_reviews")
+        .select("user_id, product_id, images")
+        .eq("id", reviewId)
         .single();
 
       if (!existingReview) {
-        throw new Error('Review not found');
+        throw new Error("Review not found");
       }
 
       if (existingReview.user_id !== userId) {
-        throw new Error('Unauthorized to delete this review');
+        throw new Error("Unauthorized to delete this review");
       }
 
       // Delete images from storage if any
       if (existingReview.images && existingReview.images.length > 0) {
         try {
-          const { StorageService } = await import('../utils/storage');
+          const { StorageService } = await import("../utils/storage");
           await StorageService.deleteReviewImages(existingReview.images);
         } catch (storageError) {
           // Log error but don't fail the deletion
-          console.error('Error deleting review images from storage:', storageError);
+          console.error(
+            "Error deleting review images from storage:",
+            storageError
+          );
         }
       }
 
       const { error } = await supabase
-        .from('product_reviews')
+        .from("product_reviews")
         .delete()
-        .eq('id', reviewId);
+        .eq("id", reviewId);
 
       if (error) {
         throw error;
@@ -321,7 +350,11 @@ export class ReviewService {
 
       return true;
     } catch (error) {
-      throw new Error(`Failed to delete review: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to delete review: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -330,29 +363,29 @@ export class ReviewService {
    */
   async incrementHelpfulCount(reviewId: string): Promise<boolean> {
     try {
-      const { error } = await supabase.rpc('increment_review_helpful_count', {
-        review_id: reviewId
+      const { error } = await supabase.rpc("increment_review_helpful_count", {
+        review_id: reviewId,
       });
 
       if (error) {
         // If the RPC doesn't exist, do it manually
         const { data: review } = await supabase
-          .from('product_reviews')
-          .select('helpful_count')
-          .eq('id', reviewId)
+          .from("product_reviews")
+          .select("helpful_count")
+          .eq("id", reviewId)
           .single();
 
         if (review) {
           await supabase
-            .from('product_reviews')
+            .from("product_reviews")
             .update({ helpful_count: (review.helpful_count || 0) + 1 })
-            .eq('id', reviewId);
+            .eq("id", reviewId);
         }
       }
 
       return true;
     } catch (error) {
-      console.error('Failed to increment helpful count:', error);
+      console.error("Failed to increment helpful count:", error);
       return false;
     }
   }
@@ -360,17 +393,20 @@ export class ReviewService {
   /**
    * Toggle review like (heart functionality)
    */
-  async toggleReviewLike(reviewId: string, userId: string): Promise<{
+  async toggleReviewLike(
+    reviewId: string,
+    userId: string
+  ): Promise<{
     liked: boolean;
     helpful_count: number;
   }> {
     try {
       // Check if user already liked this review
       const { data: existingLike } = await supabase
-        .from('review_likes')
-        .select('id')
-        .eq('review_id', reviewId)
-        .eq('user_id', userId)
+        .from("review_likes")
+        .select("id")
+        .eq("review_id", reviewId)
+        .eq("user_id", userId)
         .maybeSingle();
 
       let liked = false;
@@ -378,20 +414,18 @@ export class ReviewService {
       if (existingLike) {
         // Unlike: Remove the like
         const { error } = await supabase
-          .from('review_likes')
+          .from("review_likes")
           .delete()
-          .eq('id', existingLike.id);
+          .eq("id", existingLike.id);
 
         if (error) throw error;
         liked = false;
       } else {
         // Like: Add the like
-        const { error } = await supabase
-          .from('review_likes')
-          .insert({
-            review_id: reviewId,
-            user_id: userId
-          });
+        const { error } = await supabase.from("review_likes").insert({
+          review_id: reviewId,
+          user_id: userId,
+        });
 
         if (error) throw error;
         liked = true;
@@ -399,9 +433,9 @@ export class ReviewService {
 
       // Get the updated count
       const { count, error: countError } = await supabase
-        .from('review_likes')
-        .select('*', { count: 'exact', head: true })
-        .eq('review_id', reviewId);
+        .from("review_likes")
+        .select("*", { count: "exact", head: true })
+        .eq("review_id", reviewId);
 
       if (countError) throw countError;
 
@@ -409,14 +443,18 @@ export class ReviewService {
 
       // Update the helpful_count in product_reviews
       await supabase
-        .from('product_reviews')
+        .from("product_reviews")
         .update({ helpful_count })
-        .eq('id', reviewId);
+        .eq("id", reviewId);
 
       return { liked, helpful_count };
     } catch (error) {
-      console.error('Error toggling review like:', error);
-      throw new Error(`Failed to toggle review like: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error toggling review like:", error);
+      throw new Error(
+        `Failed to toggle review like: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
     }
   }
 
@@ -426,10 +464,10 @@ export class ReviewService {
   async hasUserLikedReview(reviewId: string, userId: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .from('review_likes')
-        .select('id')
-        .eq('review_id', reviewId)
-        .eq('user_id', userId)
+        .from("review_likes")
+        .select("id")
+        .eq("review_id", reviewId)
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (error) {
@@ -438,7 +476,7 @@ export class ReviewService {
 
       return !!data;
     } catch (error) {
-      console.error('Error checking review like:', error);
+      console.error("Error checking review like:", error);
       return false;
     }
   }
@@ -466,18 +504,18 @@ export class ReviewService {
 
     // If userId is provided, check which reviews the user has liked
     if (userId && result.reviews.length > 0) {
-      const reviewIds = result.reviews.map(r => r.id);
+      const reviewIds = result.reviews.map((r) => r.id);
       const { data: likes } = await supabase
-        .from('review_likes')
-        .select('review_id')
-        .eq('user_id', userId)
-        .in('review_id', reviewIds);
+        .from("review_likes")
+        .select("review_id")
+        .eq("user_id", userId)
+        .in("review_id", reviewIds);
 
-      const likedReviewIds = new Set(likes?.map(l => l.review_id) || []);
+      const likedReviewIds = new Set(likes?.map((l) => l.review_id) || []);
 
-      result.reviews = result.reviews.map(review => ({
+      result.reviews = result.reviews.map((review) => ({
         ...review,
-        user_has_liked: likedReviewIds.has(review.id)
+        user_has_liked: likedReviewIds.has(review.id),
       }));
     }
 
@@ -490,33 +528,33 @@ export class ReviewService {
   private async updateProductRatingStats(productId: string): Promise<void> {
     try {
       const { data: reviews } = await supabase
-        .from('product_reviews')
-        .select('rating')
-        .eq('product_id', productId);
+        .from("product_reviews")
+        .select("rating")
+        .eq("product_id", productId);
 
       if (reviews && reviews.length > 0) {
         const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
         const averageRating = totalRating / reviews.length;
 
         await supabaseAdmin
-          .from('products')
+          .from("products")
           .update({
             rating: parseFloat(averageRating.toFixed(1)),
-            review_count: reviews.length
+            review_count: reviews.length,
           })
-          .eq('id', productId);
+          .eq("id", productId);
       } else {
         // No reviews, reset to null
         await supabaseAdmin
-          .from('products')
+          .from("products")
           .update({
             rating: null,
-            review_count: 0
+            review_count: 0,
           })
-          .eq('id', productId);
+          .eq("id", productId);
       }
     } catch (error) {
-      console.error('Failed to update product rating stats:', error);
+      console.error("Failed to update product rating stats:", error);
       // Don't throw, as this is a background operation
     }
   }
@@ -524,7 +562,10 @@ export class ReviewService {
   /**
    * Check if user can review a product (has purchased it)
    */
-  async canUserReviewProduct(userId: string, productId: string): Promise<{
+  async canUserReviewProduct(
+    userId: string,
+    productId: string
+  ): Promise<{
     canReview: boolean;
     reason?: string;
     orderId?: string;
@@ -532,33 +573,39 @@ export class ReviewService {
     try {
       // Check if user has already reviewed this product
       const { data: existingReview } = await supabase
-        .from('product_reviews')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('product_id', productId)
+        .from("product_reviews")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("product_id", productId)
         .maybeSingle();
 
       if (existingReview) {
-        return { canReview: false, reason: 'You have already reviewed this product' };
+        return {
+          canReview: false,
+          reason: "Bạn đã đánh giá sản phẩm này trước đó",
+        };
       }
 
       // Check if user has purchased this product
       const { data: orderItems } = await supabase
-        .from('order_items')
-        .select('order_id, orders!inner(user_id, status)')
-        .eq('product_id', productId)
-        .eq('orders.user_id', userId)
-        .in('orders.status', ['delivered']);
+        .from("order_items")
+        .select("order_id, orders!inner(user_id, status)")
+        .eq("product_id", productId)
+        .eq("orders.user_id", userId)
+        .in("orders.status", ["delivered"]);
 
       if (!orderItems || orderItems.length === 0) {
-        return { canReview: false, reason: 'You must purchase this product before reviewing' };
+        return {
+          canReview: false,
+          reason: "Bạn phải mua sản phẩm trước khi đánh giá",
+        };
       }
 
       // User can review, return the most recent order ID
       return { canReview: true, orderId: orderItems[0].order_id };
     } catch (error) {
-      console.error('Error checking review eligibility:', error);
-      return { canReview: false, reason: 'Unable to verify purchase' };
+      console.error("Error checking review eligibility:", error);
+      return { canReview: false, reason: "Không thể xác thực mua sản phẩm" };
     }
   }
 }

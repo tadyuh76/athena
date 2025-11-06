@@ -184,14 +184,86 @@
     <!-- Toast Container -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
 
+    <!-- Address Modal -->
+    <div class="modal fade" id="addressModal" tabindex="-1" aria-labelledby="addressModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addressModalLabel">Thêm Địa Chỉ Mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addressForm">
+                        <input type="hidden" id="addressId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="addrFirstName" class="form-label">Họ *</label>
+                                <input type="text" class="form-control" id="addrFirstName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="addrLastName" class="form-label">Tên *</label>
+                                <input type="text" class="form-control" id="addrLastName" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addrPhone" class="form-label">Số Điện Thoại *</label>
+                            <input type="tel" class="form-control" id="addrPhone" required placeholder="0901234567">
+                            <div class="form-text">Nhập số điện thoại để liên hệ giao hàng</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addrCompany" class="form-label">Công Ty (tùy chọn)</label>
+                            <input type="text" class="form-control" id="addrCompany">
+                        </div>
+                        <div class="mb-3">
+                            <label for="addrLine1" class="form-label">Số Nhà, Tên Đường *</label>
+                            <input type="text" class="form-control" id="addrLine1" required placeholder="VD: 123 Nguyễn Huệ">
+                        </div>
+                        <div class="mb-3">
+                            <label for="addrLine2" class="form-label">Căn hộ, Tầng, Tòa nhà (tùy chọn)</label>
+                            <input type="text" class="form-control" id="addrLine2" placeholder="VD: Tầng 5, Căn 502">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="addrCity" class="form-label">Phường/Xã *</label>
+                                <input type="text" class="form-control" id="addrCity" required placeholder="VD: Phường Bến Nghé">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="addrState" class="form-label">Quận/Huyện *</label>
+                                <input type="text" class="form-control" id="addrState" required placeholder="VD: Quận 1">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="addrCountry" class="form-label">Tỉnh/Thành phố *</label>
+                                <input type="text" class="form-control" id="addrCountry" required placeholder="VD: Hồ Chí Minh">
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="addrIsDefault">
+                            <label class="form-check-label" for="addrIsDefault">
+                                Đặt làm địa chỉ giao hàng mặc định
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-dark" id="saveAddressBtn">Lưu Địa Chỉ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/navbar.js"></script>
     <script type="module">
         import { AuthService } from '/services/AuthService.js';
-        
+        import { AddressService } from '/services/AddressService.js';
+        import { Dialog } from '/js/dialog.js';
+
         const authService = new AuthService();
+        const addressService = new AddressService();
         let currentUser = null;
+        let addressModal = null;
         
         // Check authentication
         async function checkAuth() {
@@ -457,11 +529,192 @@
         async function loadAddresses() {
             const addressesList = document.getElementById('addressesList');
             const noAddresses = document.getElementById('noAddresses');
-            
-            // TODO: Fetch addresses from API
-            // For now, show no addresses
-            addressesList.innerHTML = '';
-            noAddresses.style.display = 'block';
+
+            try {
+                const addresses = await addressService.getAddresses();
+
+                if (addresses.length === 0) {
+                    addressesList.innerHTML = '';
+                    noAddresses.style.display = 'block';
+                    return;
+                }
+
+                noAddresses.style.display = 'none';
+                addressesList.innerHTML = addresses.map(address => `
+                    <div class="card mb-3" data-address-id="${address.id}">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title">
+                                        ${address.first_name} ${address.last_name}
+                                        ${address.is_default ? '<span class="badge bg-success ms-2">Mặc định</span>' : ''}
+                                    </h5>
+                                    <p class="mb-1"><i class="bi bi-telephone me-1"></i>${address.phone}</p>
+                                    ${address.company ? `<p class="mb-1 text-muted">${address.company}</p>` : ''}
+                                    <p class="mb-1">${address.address_line1}</p>
+                                    ${address.address_line2 ? `<p class="mb-1 text-muted">${address.address_line2}</p>` : ''}
+                                    <p class="mb-0">${address.city}, ${address.state_province}, ${address.country_code}</p>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-link text-dark" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots-vertical"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item edit-address-btn" href="#" data-address-id="${address.id}">
+                                            <i class="bi bi-pencil me-2"></i>Chỉnh Sửa
+                                        </a></li>
+                                        ${!address.is_default ? `
+                                            <li><a class="dropdown-item set-default-btn" href="#" data-address-id="${address.id}">
+                                                <i class="bi bi-star me-2"></i>Đặt Làm Mặc Định
+                                            </a></li>
+                                        ` : ''}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item text-danger delete-address-btn" href="#" data-address-id="${address.id}">
+                                            <i class="bi bi-trash me-2"></i>Xóa
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Attach event listeners
+                document.querySelectorAll('.edit-address-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const addressId = e.currentTarget.getAttribute('data-address-id');
+                        editAddress(addressId);
+                    });
+                });
+
+                document.querySelectorAll('.set-default-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const addressId = e.currentTarget.getAttribute('data-address-id');
+                        await setDefaultAddress(addressId);
+                    });
+                });
+
+                document.querySelectorAll('.delete-address-btn').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        const addressId = e.currentTarget.getAttribute('data-address-id');
+                        await deleteAddress(addressId);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Failed to load addresses:', error);
+                showToast('Không thể tải địa chỉ', 'danger');
+            }
+        }
+
+        // Open address modal for adding new address
+        function openAddressModal() {
+            document.getElementById('addressModalLabel').textContent = 'Thêm Địa Chỉ Mới';
+            document.getElementById('addressForm').reset();
+            document.getElementById('addressId').value = '';
+            addressModal.show();
+        }
+
+        // Edit address
+        async function editAddress(addressId) {
+            try {
+                const address = await addressService.getAddressById(addressId);
+
+                document.getElementById('addressModalLabel').textContent = 'Chỉnh Sửa Địa Chỉ';
+                document.getElementById('addressId').value = address.id;
+                document.getElementById('addrFirstName').value = address.first_name;
+                document.getElementById('addrLastName').value = address.last_name;
+                document.getElementById('addrCompany').value = address.company || '';
+                document.getElementById('addrLine1').value = address.address_line1;
+                document.getElementById('addrLine2').value = address.address_line2 || '';
+                document.getElementById('addrCity').value = address.city;
+                document.getElementById('addrState').value = address.state_province || '';
+                document.getElementById('addrCountry').value = address.country_code;
+                document.getElementById('addrPhone').value = address.phone || '';
+                document.getElementById('addrIsDefault').checked = address.is_default;
+
+                addressModal.show();
+            } catch (error) {
+                console.error('Failed to load address:', error);
+                showToast('Không thể tải địa chỉ', 'danger');
+            }
+        }
+
+        // Save address (create or update)
+        async function saveAddress() {
+            const form = document.getElementById('addressForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const addressId = document.getElementById('addressId').value;
+            const addressData = {
+                first_name: document.getElementById('addrFirstName').value.trim(),
+                last_name: document.getElementById('addrLastName').value.trim(),
+                phone: document.getElementById('addrPhone').value.trim(),
+                company: document.getElementById('addrCompany').value.trim() || undefined,
+                address_line1: document.getElementById('addrLine1').value.trim(), // Số nhà + Tên đường
+                address_line2: document.getElementById('addrLine2').value.trim() || undefined, // Căn hộ, tầng
+                city: document.getElementById('addrCity').value.trim(), // Phường/Xã
+                state_province: document.getElementById('addrState').value.trim(), // Quận/Huyện
+                country_code: document.getElementById('addrCountry').value.trim(), // Tỉnh/Thành phố
+                type: 'shipping', // All addresses are shipping addresses
+                is_default: document.getElementById('addrIsDefault').checked
+            };
+
+            try {
+                if (addressId) {
+                    await addressService.updateAddress(addressId, addressData);
+                    showToast('Đã cập nhật địa chỉ thành công', 'success');
+                } else {
+                    await addressService.createAddress(addressData);
+                    showToast('Đã thêm địa chỉ mới thành công', 'success');
+                }
+
+                addressModal.hide();
+                await loadAddresses();
+            } catch (error) {
+                console.error('Failed to save address:', error);
+                showToast(error.message || 'Không thể lưu địa chỉ', 'danger');
+            }
+        }
+
+        // Set address as default
+        async function setDefaultAddress(addressId) {
+            try {
+                await addressService.setDefaultAddress(addressId);
+                showToast('Đã đặt địa chỉ mặc định', 'success');
+                await loadAddresses();
+            } catch (error) {
+                console.error('Failed to set default address:', error);
+                showToast('Không thể đặt địa chỉ mặc định', 'danger');
+            }
+        }
+
+        // Delete address
+        async function deleteAddress(addressId) {
+            const confirmed = await Dialog.confirm(
+                'Bạn có chắc chắn muốn xóa địa chỉ này?',
+                {
+                    confirmText: 'Xóa',
+                    confirmColor: 'danger'
+                }
+            );
+
+            if (!confirmed) return;
+
+            try {
+                await addressService.deleteAddress(addressId);
+                showToast('Đã xóa địa chỉ', 'success');
+                await loadAddresses();
+            } catch (error) {
+                console.error('Failed to delete address:', error);
+                showToast(error.message || 'Không thể xóa địa chỉ', 'danger');
+            }
         }
         
         // Show toast notification
@@ -490,6 +743,17 @@
         }
         
         // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize address modal
+            addressModal = new bootstrap.Modal(document.getElementById('addressModal'));
+
+            // Add address button event listener
+            document.getElementById('addAddressBtn').addEventListener('click', openAddressModal);
+
+            // Save address button event listener
+            document.getElementById('saveAddressBtn').addEventListener('click', saveAddress);
+        });
+
         checkAuth();
     </script>
 </body>

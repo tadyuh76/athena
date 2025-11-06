@@ -71,6 +71,7 @@ export abstract class BaseModel<T> {
    */
   async create(record: Partial<T>, useAdmin: boolean = false): Promise<T> {
     try {
+      console.log(`[BaseModel.create] Table: ${this.tableName}, Record:`, JSON.stringify(record, null, 2));
       const client = useAdmin ? this.adminClient : this.client;
       const { data, error } = await client
         .from(this.tableName)
@@ -79,12 +80,15 @@ export abstract class BaseModel<T> {
         .single();
 
       if (error) {
+        console.error(`[BaseModel.create] Supabase error for ${this.tableName}:`, JSON.stringify(error, null, 2));
         throw error;
       }
 
+      console.log(`[BaseModel.create] Successfully created in ${this.tableName}, ID:`, (data as any)?.id);
       return data as T;
     } catch (error) {
-      throw new Error(`Failed to create ${this.tableName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`[BaseModel.create] Exception for ${this.tableName}:`, error);
+      throw new Error(`Failed to create ${this.tableName}: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
     }
   }
 

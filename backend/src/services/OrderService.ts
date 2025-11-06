@@ -1,6 +1,7 @@
 import { OrderModel, CreateOrderData, OrderWithDetails } from '../models/OrderModel';
 import { CartModel } from '../models/CartModel';
 import { ProductVariantModel } from '../models/ProductVariantModel';
+import { DiscountService } from './DiscountService.js';
 import { Order } from '../types/database.types';
 import { createPaymentIntent, createCheckoutSession, isStripeConfigured } from '../utils/stripe';
 import { supabaseAdmin } from '../utils/supabase';
@@ -18,6 +19,7 @@ export interface CreateOrderRequest {
     zip: string;
   };
   paymentMethod: 'stripe' | 'paypal';
+  discountCode?: string; // Optional discount code
 }
 
 export interface CreateOrderResponse {
@@ -32,11 +34,13 @@ export class OrderService {
   private orderModel: OrderModel;
   private cartModel: CartModel;
   private variantModel: ProductVariantModel;
+  private discountService: DiscountService;
 
   constructor() {
     this.orderModel = new OrderModel();
     this.cartModel = new CartModel();
     this.variantModel = new ProductVariantModel();
+    this.discountService = new DiscountService();
   }
 
   /**
@@ -61,7 +65,37 @@ export class OrderService {
 
       const tax = subtotal * 0.085; // 8.5% tax
       const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
-      const discount = 0;
+
+      // 2.5. Validate and calculate discount if code is provided
+      let discount = 0;
+      let discountId: string | undefined;
+      if (request.discountCode) {
+        try {
+          const items = cartItems.map(item => ({
+            product_id: item.product_id,
+            category_id: item.product?.category_id,
+            collection_id: item.product?.collection_id,
+            quantity: item.quantity,
+            price: item.price_at_time
+          }));
+
+          const discountResult = await this.discountService.validateAndCalculateDiscount({
+            discountCode: request.discountCode,
+            userId: request.userId,
+            items,
+            subtotal
+          });
+
+          if (discountResult.valid && discountResult.discountAmount) {
+            discount = discountResult.discountAmount;
+            discountId = discountResult.discount?.id;
+          }
+        } catch (error) {
+          console.error('Error applying discount:', error);
+          // Continue without discount if validation fails
+        }
+      }
+
       const total = subtotal + tax + shipping - discount;
 
       // 3. Validate inventory availability
@@ -145,12 +179,27 @@ export class OrderService {
         });
       }
 
-      // 8. Commit inventory (decrement inventory_quantity, release reserved_quantity)
+      // 8. Create discount usage if discount was applied
+      if (discountId && discount > 0) {
+        try {
+          await this.discountService.createDiscountUsage({
+            discount_id: discountId,
+            order_id: order.id,
+            user_id: request.userId,
+            amount_saved: discount
+          });
+        } catch (error) {
+          console.error('Error creating discount usage:', error);
+          // Don't fail the order if discount usage creation fails
+        }
+      }
+
+      // 9. Commit inventory (decrement inventory_quantity, release reserved_quantity)
       for (const item of cartItems) {
         await this.commitInventory(item.variant_id, item.quantity);
       }
 
-      // 9. Clear user's cart
+      // 10. Clear user's cart
       if (request.userId) {
         await this.cartModel.deleteByUserId(request.userId);
       }
@@ -196,7 +245,38 @@ export class OrderService {
 
       const tax = subtotal * 0.085; // 8.5% tax
       const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
-      const discount = 0;
+
+      // 2.5. Validate and calculate discount if code is provided
+      let discount = 0;
+      let discountId: string | undefined;
+      if (request.discountCode) {
+        try {
+          const items = cartItems.map(item => ({
+            product_id: item.product_id,
+            category_id: item.product?.category_id,
+            collection_id: item.product?.collection_id,
+            quantity: item.quantity,
+            price: item.price_at_time
+          }));
+
+          const discountResult = await this.discountService.validateAndCalculateDiscount({
+            discountCode: request.discountCode,
+            userId: request.userId,
+            items,
+            subtotal
+          });
+
+          if (discountResult.valid && discountResult.discountAmount) {
+            discount = discountResult.discountAmount;
+            discountId = discountResult.discount?.id;
+            console.log('[OrderService.createStripeCheckoutSession] Discount applied:', discount);
+          }
+        } catch (error) {
+          console.error('Error applying discount:', error);
+          // Continue without discount if validation fails
+        }
+      }
+
       const total = subtotal + tax + shipping - discount;
 
       // 3. Validate inventory availability
@@ -293,14 +373,31 @@ export class OrderService {
       }
       console.log('[OrderService.createStripeCheckoutSession] Transaction record created');
 
-      // 8. Commit inventory (decrement inventory_quantity, release reserved_quantity)
+      // 8. Create discount usage if discount was applied
+      if (discountId && discount > 0) {
+        try {
+          console.log('[OrderService.createStripeCheckoutSession] Creating discount usage');
+          await this.discountService.createDiscountUsage({
+            discount_id: discountId,
+            order_id: order.id,
+            user_id: request.userId,
+            amount_saved: discount
+          });
+          console.log('[OrderService.createStripeCheckoutSession] Discount usage created');
+        } catch (error) {
+          console.error('Error creating discount usage:', error);
+          // Don't fail the order if discount usage creation fails
+        }
+      }
+
+      // 9. Commit inventory (decrement inventory_quantity, release reserved_quantity)
       console.log('[OrderService.createStripeCheckoutSession] Committing inventory');
       for (const item of cartItems) {
         await this.commitInventory(item.variant_id, item.quantity);
       }
       console.log('[OrderService.createStripeCheckoutSession] Inventory committed');
 
-      // 9. Clear user's cart
+      // 10. Clear user's cart
       console.log('[OrderService.createStripeCheckoutSession] Clearing cart');
       if (request.userId) {
         await this.cartModel.deleteByUserId(request.userId);

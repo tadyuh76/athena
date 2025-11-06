@@ -6,6 +6,8 @@ import { WishlistController } from '../controllers/WishlistController';
 import { OrderController } from '../controllers/OrderController';
 import { ReviewController } from '../controllers/ReviewController';
 import { StripeWebhookController } from '../controllers/StripeWebhookController';
+import { AddressController } from '../controllers/AddressController';
+import { DiscountController } from '../controllers/DiscountController';
 import { sendJSON } from '../utils/request-handler';
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
@@ -25,6 +27,8 @@ export function setupRoutes(): Router {
   const orderController = new OrderController();
   const reviewController = new ReviewController();
   const stripeWebhookController = new StripeWebhookController();
+  const addressController = new AddressController();
+  const discountController = new DiscountController();
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -61,6 +65,15 @@ export function setupRoutes(): Router {
   router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router.requireAuth]);
   router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router.requireAuth]);
   router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
+
+  // Address routes
+  router.get('/api/addresses', (req, res) => addressController.getAddresses(req, res), [Router.requireAuth]);
+  router.get('/api/addresses/default', (req, res) => addressController.getDefaultAddress(req, res), [Router.requireAuth]);
+  router.get('/api/addresses/:id', (req, res, params) => addressController.getAddressById(req, res, params.id), [Router.requireAuth]);
+  router.post('/api/addresses', (req, res) => addressController.createAddress(req, res), [Router.requireAuth]);
+  router.put('/api/addresses/:id', (req, res, params) => addressController.updateAddress(req, res, params.id), [Router.requireAuth]);
+  router.delete('/api/addresses/:id', (req, res, params) => addressController.deleteAddress(req, res, params.id), [Router.requireAuth]);
+  router.put('/api/addresses/:id/default', (req, res, params) => addressController.setDefaultAddress(req, res, params.id), [Router.requireAuth]);
 
   // Order routes
   // CUSTOMER: Create order
@@ -118,6 +131,24 @@ export function setupRoutes(): Router {
   router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router.requireAuth]);
   router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
   router.post('/api/reviews/:id/like', (req, res, params) => reviewController.toggleLike(req, res, params.id), [Router.requireAuth]);
+
+  // Discount routes
+  // CUSTOMER: Validate discount code for checkout
+  router.post('/api/discounts/validate', (req, res) => discountController.validateDiscount(req, res), [Router.optionalAuth]);
+  // ADMIN: Get all discounts
+  router.get('/api/admin/discounts', (req, res) => discountController.getDiscounts(req, res), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Get discount by ID
+  router.get('/api/admin/discounts/:id', (req, res, params) => discountController.getDiscountById(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Create discount
+  router.post('/api/admin/discounts', (req, res) => discountController.createDiscount(req, res), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Update discount
+  router.put('/api/admin/discounts/:id', (req, res, params) => discountController.updateDiscount(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Delete discount
+  router.delete('/api/admin/discounts/:id', (req, res, params) => discountController.deleteDiscount(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Get discount stats
+  router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  // ADMIN: Get discount usage history
+  router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router.requireRole(['admin', 'staff'])]);
 
   // Health check
   router.get('/api/health', async (_req, res) => {

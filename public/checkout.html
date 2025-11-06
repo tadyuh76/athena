@@ -59,6 +59,19 @@
               <h4>Thông Tin Giao Hàng</h4>
               <div class="card">
                 <div class="card-body">
+                  <!-- Saved Addresses Selection (shown only for logged-in users) -->
+                  <div id="savedAddressesSection" style="display: none;">
+                    <div class="mb-3">
+                      <label for="savedAddressSelect" class="form-label">
+                        <i class="bi bi-geo-alt me-2"></i>Chọn Địa Chỉ Đã Lưu
+                      </label>
+                      <select class="form-select" id="savedAddressSelect">
+                        <option value="">Nhập địa chỉ mới...</option>
+                      </select>
+                    </div>
+                    <hr>
+                  </div>
+
                   <form id="shippingForm">
                     <div class="row">
                       <div class="col-md-6 mb-3">
@@ -106,40 +119,44 @@
                     </div>
 
                     <div class="mb-3">
-                      <label for="address" class="form-label">Địa Chỉ</label>
+                      <label for="address" class="form-label">Số Nhà, Tên Đường</label>
                       <input
                         type="text"
                         class="form-control"
                         id="address"
+                        placeholder="VD: 123 Nguyễn Huệ"
                         required
                       />
                     </div>
 
                     <div class="row">
-                      <div class="col-md-6 mb-3">
-                        <label for="city" class="form-label">Thành Phố</label>
+                      <div class="col-md-4 mb-3">
+                        <label for="city" class="form-label">Phường/Xã</label>
                         <input
                           type="text"
                           class="form-control"
                           id="city"
+                          placeholder="VD: Phường Bến Nghé"
                           required
                         />
                       </div>
-                      <div class="col-md-3 mb-3">
-                        <label for="state" class="form-label">Tỉnh/Thành</label>
+                      <div class="col-md-4 mb-3">
+                        <label for="state" class="form-label">Quận/Huyện</label>
                         <input
                           type="text"
                           class="form-control"
                           id="state"
+                          placeholder="VD: Quận 1"
                           required
                         />
                       </div>
-                      <div class="col-md-3 mb-3">
-                        <label for="zip" class="form-label">Mã Bưu Chính</label>
+                      <div class="col-md-4 mb-3">
+                        <label for="zip" class="form-label">Tỉnh/Thành phố</label>
                         <input
                           type="text"
                           class="form-control"
                           id="zip"
+                          placeholder="VD: Hồ Chí Minh"
                           required
                         />
                       </div>
@@ -195,6 +212,28 @@
 
                 <hr />
 
+                <!-- Discount Code Section -->
+                <div class="mb-3">
+                  <label for="discountCode" class="form-label">
+                    <i class="bi bi-tag me-1"></i>Mã Giảm Giá
+                  </label>
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="discountCode"
+                      placeholder="Nhập mã giảm giá..."
+                      maxlength="50"
+                    />
+                    <button class="btn btn-outline-secondary" type="button" id="applyDiscountBtn">
+                      Áp dụng
+                    </button>
+                  </div>
+                  <div id="discountMessage" class="mt-2"></div>
+                </div>
+
+                <hr />
+
                 <div class="d-flex justify-content-between mb-2">
                   <span>Tạm Tính</span>
                   <span id="subtotal">$0.00</span>
@@ -206,6 +245,18 @@
                 <div class="d-flex justify-content-between mb-2">
                   <span>Thuế</span>
                   <span id="tax">$0.00</span>
+                </div>
+                <div id="discountRow" class="d-flex justify-content-between mb-2 text-success" style="display: none !important;">
+                  <span>
+                    <i class="bi bi-tag-fill me-1"></i>Giảm giá
+                    <span id="discountCodeLabel"></span>
+                  </span>
+                  <span>
+                    -<span id="discount">$0.00</span>
+                    <button class="btn btn-sm btn-link text-danger p-0 ms-2" id="removeDiscountBtn" title="Xóa mã giảm giá">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
+                  </span>
                 </div>
 
                 <hr />

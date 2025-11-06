@@ -1,6 +1,7 @@
 // Import services
 import { AdminProductService } from "/services/AdminProductService.js";
 import { CollectionService } from "/services/CollectionService.js";
+import { initDiscountsTab, loadDiscounts } from "/js/admin-discounts-tab.js";
 
 // Initialize services
 const adminProductService = new AdminProductService();
@@ -155,6 +156,7 @@ function setupNavigation() {
     "#collections": document.getElementById("collectionsSection"),
     "#products": document.getElementById("productsSection"),
     "#orders": document.getElementById("ordersSection"),
+    "#discounts": document.getElementById("discountsSection"),
   };
 
   links.forEach((link) => {
@@ -189,6 +191,11 @@ function setupNavigation() {
         // Trigger orders loading - the admin-orders.js module handles this
         const ordersInitEvent = new CustomEvent("ordersTabOpened");
         window.dispatchEvent(ordersInitEvent);
+      }
+      if (target === "#discounts") {
+        // Initialize and load discounts
+        initDiscountsTab();
+        loadDiscounts();
       }
     });
   });

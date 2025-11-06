@@ -1,14 +1,19 @@
 import { AuthService } from "/services/AuthService.js";
 import { CartService } from "/services/CartService.js";
+import { AddressService } from "/services/AddressService.js";
+import { DiscountService } from "/services/DiscountService.js";
 import { Dialog } from "/js/dialog.js";
 
 // Initialize services
 const authService = new AuthService();
 const cartService = new CartService();
+const addressService = new AddressService();
 
 // State
 let cart = null;
 let cartSummary = null;
+let savedAddresses = [];
+let appliedDiscount = null;
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
@@ -16,6 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Allow guest checkout: don't force login here. Load summary and user info if available.
     await loadOrderSummary();
     await loadUserInfo();
+    await loadSavedAddresses();
     setupEventListeners();
   } catch (error) {
     console.error("Failed to initialize checkout:", error);
@@ -57,12 +63,113 @@ async function loadUserInfo() {
   }
 }
 
+// Load saved addresses for logged-in users
+async function loadSavedAddresses() {
+  try {
+    const user = authService.getUser();
+    if (!user) {
+      // User not logged in, hide saved addresses section
+      document.getElementById("savedAddressesSection").style.display = "none";
+      return;
+    }
+
+    // Fetch saved addresses
+    savedAddresses = await addressService.getAddresses();
+
+    if (savedAddresses.length === 0) {
+      // No saved addresses, hide the section
+      document.getElementById("savedAddressesSection").style.display = "none";
+      return;
+    }
+
+    // Show saved addresses section
+    document.getElementById("savedAddressesSection").style.display = "block";
+
+    // Populate address select dropdown
+    const addressSelect = document.getElementById("savedAddressSelect");
+    addressSelect.innerHTML = '<option value="">Nhập địa chỉ mới...</option>';
+
+    savedAddresses.forEach((address) => {
+      const option = document.createElement("option");
+      option.value = address.id;
+      option.textContent = `${address.first_name} ${address.last_name} - ${address.address_line1}, ${address.city}${address.is_default ? " (Mặc định)" : ""}`;
+      addressSelect.appendChild(option);
+    });
+
+    // Auto-select default address if exists
+    const defaultAddress = savedAddresses.find((addr) => addr.is_default);
+    if (defaultAddress) {
+      addressSelect.value = defaultAddress.id;
+      fillAddressForm(defaultAddress);
+    }
+  } catch (error) {
+    console.error("Failed to load saved addresses:", error);
+    // Don't show error to user, just hide the section
+    document.getElementById("savedAddressesSection").style.display = "none";
+  }
+}
+
+// Fill address form with selected address data - Vietnamese format
+function fillAddressForm(address) {
+  document.getElementById("firstName").value = address.first_name || "";
+  document.getElementById("lastName").value = address.last_name || "";
+  document.getElementById("phone").value = address.phone || "";
+  document.getElementById("address").value = address.address_line1 || ""; // Số nhà + Tên đường
+  document.getElementById("city").value = address.city || ""; // Phường/Xã
+  document.getElementById("state").value = address.state_province || ""; // Quận/Huyện
+  document.getElementById("zip").value = address.country_code || ""; // Tỉnh/Thành phố
+}
+
 // Setup event listeners
 function setupEventListeners() {
   // Handle form submission
   document
     .getElementById("placeOrderBtn")
     .addEventListener("click", handlePlaceOrder);
+
+  // Handle discount code
+  document.getElementById("applyDiscountBtn").addEventListener("click", applyDiscountCode);
+  document.getElementById("discountCode").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyDiscountCode();
+    }
+  });
+  document.getElementById("removeDiscountBtn").addEventListener("click", removeDiscount);
+
+  // Handle saved address selection
+  const addressSelect = document.getElementById("savedAddressSelect");
+  if (addressSelect) {
+    addressSelect.addEventListener("change", (e) => {
+      const selectedAddressId = e.target.value;
+
+      if (!selectedAddressId) {
+        // User selected "Enter new address", clear the form
+        document.getElementById("firstName").value = "";
+        document.getElementById("lastName").value = "";
+        document.getElementById("phone").value = "";
+        document.getElementById("address").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("state").value = "";
+        document.getElementById("zip").value = "";
+
+        // Keep email from user profile if available
+        const user = authService.getUser();
+        if (user) {
+          document.getElementById("email").value = user.email || "";
+        }
+        return;
+      }
+
+      // Find and fill the selected address
+      const selectedAddress = savedAddresses.find(
+        (addr) => addr.id === selectedAddressId
+      );
+      if (selectedAddress) {
+        fillAddressForm(selectedAddress);
+      }
+    });
+  }
 }
 
 // Render order summary
@@ -71,6 +178,8 @@ function renderOrderSummary() {
   const subtotalEl = document.getElementById("subtotal");
   const shippingEl = document.getElementById("shipping");
   const taxEl = document.getElementById("tax");
+  const discountEl = document.getElementById("discount");
+  const discountRow = document.getElementById("discountRow");
   const totalEl = document.getElementById("total");
 
   // Render order items
@@ -102,12 +211,87 @@ function renderOrderSummary() {
     )
     .join("");
 
+  // Calculate totals with discount
+  let discount = 0;
+  if (appliedDiscount) {
+    discount = appliedDiscount.discountAmount || 0;
+  }
+
+  const total = Math.max(0, cartSummary.subtotal + cartSummary.shipping + cartSummary.tax - discount);
+
   // Update summary
   subtotalEl.textContent = `$${cartSummary.subtotal.toFixed(2)}`;
   shippingEl.textContent =
     cartSummary.shipping === 0 ? "Miễn Phí" : `$${cartSummary.shipping.toFixed(2)}`;
   taxEl.textContent = `$${cartSummary.tax.toFixed(2)}`;
-  totalEl.textContent = `$${cartSummary.total.toFixed(2)}`;
+
+  // Show/hide discount row
+  if (appliedDiscount) {
+    discountEl.textContent = `$${discount.toFixed(2)}`;
+    document.getElementById("discountCodeLabel").textContent = `(${appliedDiscount.discount.code || 'Mã giảm giá'})`;
+    discountRow.style.display = "flex";
+  } else {
+    discountRow.style.display = "none";
+  }
+
+  totalEl.textContent = `$${total.toFixed(2)}`;
+}
+
+// Apply discount code
+async function applyDiscountCode() {
+  const discountCodeInput = document.getElementById("discountCode");
+  const code = discountCodeInput.value.trim();
+  const messageEl = document.getElementById("discountMessage");
+
+  if (!code) {
+    messageEl.innerHTML = '<small class="text-danger">Vui lòng nhập mã giảm giá</small>';
+    return;
+  }
+
+  // Disable button while processing
+  const applyBtn = document.getElementById("applyDiscountBtn");
+  applyBtn.disabled = true;
+  applyBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+  try {
+    // Prepare cart items for discount validation
+    const items = cart.items.map(item => ({
+      product_id: item.product.id,
+      category_id: item.product.category_id,
+      collection_id: item.product.collection_id,
+      quantity: item.quantity,
+      price: item.price_at_time
+    }));
+
+    // Validate discount
+    const result = await DiscountService.validateDiscount(code, items, cartSummary.subtotal);
+
+    // Store applied discount
+    appliedDiscount = result;
+
+    // Update UI
+    renderOrderSummary();
+    messageEl.innerHTML = `<small class="text-success"><i class="bi bi-check-circle"></i> ${result.message}</small>`;
+    discountCodeInput.disabled = true;
+    applyBtn.style.display = "none";
+
+  } catch (error) {
+    console.error('Error applying discount:', error);
+    messageEl.innerHTML = `<small class="text-danger"><i class="bi bi-exclamation-circle"></i> ${error.message}</small>`;
+  } finally {
+    applyBtn.disabled = false;
+    applyBtn.innerHTML = 'Áp dụng';
+  }
+}
+
+// Remove discount
+function removeDiscount() {
+  appliedDiscount = null;
+  document.getElementById("discountCode").value = "";
+  document.getElementById("discountCode").disabled = false;
+  document.getElementById("applyDiscountBtn").style.display = "inline-block";
+  document.getElementById("discountMessage").innerHTML = "";
+  renderOrderSummary();
 }
 
 // Handle place order
@@ -122,11 +306,16 @@ async function handlePlaceOrder(event) {
   }
 
   try {
-    // Show confirmation dialog
+    // Calculate final total with discount
+    let discount = 0;
+    if (appliedDiscount) {
+      discount = appliedDiscount.discountAmount || 0;
+    }
+    const finalTotal = Math.max(0, cartSummary.subtotal + cartSummary.shipping + cartSummary.tax - discount);
+
+    // Show confirmation dialog with correct total
     const confirmed = await Dialog.confirm(
-      `Bạn có chắc chắn muốn đặt hàng với tổng giá trị $${cartSummary.total.toFixed(
-        2
-      )}?`,
+      `Bạn có chắc chắn muốn đặt hàng với tổng giá trị $${finalTotal.toFixed(2)}?`,
       {
         title: "Xác Nhận Đơn Hàng",
         confirmText: "Đặt Hàng",
@@ -210,6 +399,11 @@ async function createCheckoutSession(formData) {
       zip: formData.zip,
     },
   };
+
+  // Include discount code if applied
+  if (appliedDiscount && appliedDiscount.discount) {
+    body.discountCode = appliedDiscount.discount.code;
+  }
 
   try {
     const res = await fetch(url, {
