@@ -25,6 +25,7 @@
     "concurrently": "^8.2.2"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.80.0",
     "@vercel/node": "^3.2.29",
     "dotenv": "^17.2.3",
     "http-proxy-middleware": "^3.0.5"

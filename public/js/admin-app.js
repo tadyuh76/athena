@@ -2,6 +2,7 @@
 import { AdminProductService } from "/services/AdminProductService.js";
 import { CollectionService } from "/services/CollectionService.js";
 import { initDiscountsTab, loadDiscounts } from "/js/admin-discounts-tab.js";
+import { initUsersTab, loadUsers } from "/js/admin-users-tab.js";
 
 // Initialize services
 const adminProductService = new AdminProductService();
@@ -157,6 +158,7 @@ function setupNavigation() {
     "#products": document.getElementById("productsSection"),
     "#orders": document.getElementById("ordersSection"),
     "#discounts": document.getElementById("discountsSection"),
+    "#users": document.getElementById("usersSection"),
   };
 
   links.forEach((link) => {
@@ -196,6 +198,11 @@ function setupNavigation() {
         // Initialize and load discounts
         initDiscountsTab();
         loadDiscounts();
+      }
+      if (target === "#users") {
+        // Initialize and load users
+        initUsersTab();
+        loadUsers();
       }
     });
   });

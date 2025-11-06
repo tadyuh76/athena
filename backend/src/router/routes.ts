@@ -7,6 +7,7 @@ import { ReviewController } from '../controllers/ReviewController';
 import { StripeWebhookController } from '../controllers/StripeWebhookController';
 import { AddressController } from '../controllers/AddressController';
 import { DiscountController } from '../controllers/DiscountController';
+import { UserManagementController } from '../controllers/UserManagementController';
 import { sendJSON, sendError } from '../utils/request-handler';
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
@@ -27,6 +28,7 @@ export function setupRoutes(): Router {
   const stripeWebhookController = new StripeWebhookController();
   const addressController = new AddressController();
   const discountController = new DiscountController();
+  const userManagementController = new UserManagementController();
 
   // Auth routes
   router.post('/api/auth/register', (req, res) => authController.register(req, res));
@@ -140,6 +142,20 @@ export function setupRoutes(): Router {
   router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router.requireRole(['admin'])]);
   // ADMIN: Get discount usage history
   router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router.requireRole(['admin'])]);
+
+  // User Management routes (Admin only)
+  // ADMIN: Get all users with pagination and filters
+  router.get('/api/admin/users', (req, res) => userManagementController.getAllUsers(req, res), [Router.requireRole(['admin'])]);
+  // ADMIN: Get user statistics
+  router.get('/api/admin/users/stats', (req, res) => userManagementController.getUserStats(req, res), [Router.requireRole(['admin'])]);
+  // ADMIN: Get user by ID
+  router.get('/api/admin/users/:id', (req, res, params) => userManagementController.getUserById(req, res, params.id), [Router.requireRole(['admin'])]);
+  // ADMIN: Update user status
+  router.put('/api/admin/users/:id/status', (req, res, params) => userManagementController.updateUserStatus(req, res, params.id), [Router.requireRole(['admin'])]);
+  // ADMIN: Update user role
+  router.put('/api/admin/users/:id/role', (req, res, params) => userManagementController.updateUserRole(req, res, params.id), [Router.requireRole(['admin'])]);
+  // ADMIN: Update user profile
+  router.put('/api/admin/users/:id', (req, res, params) => userManagementController.updateUserProfile(req, res, params.id), [Router.requireRole(['admin'])]);
 
   // Health check
   router.get('/api/health', async (_req, res) => {

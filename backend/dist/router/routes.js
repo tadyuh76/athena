@@ -10,6 +10,7 @@ const ReviewController_1 = require("../controllers/ReviewController");
 const StripeWebhookController_1 = require("../controllers/StripeWebhookController");
 const AddressController_1 = require("../controllers/AddressController");
 const DiscountController_1 = require("../controllers/DiscountController");
+const UserManagementController_1 = require("../controllers/UserManagementController");
 const request_handler_1 = require("../utils/request-handler");
 const supabase_1 = require("../utils/supabase");
 const CollectionController_1 = require("../controllers/CollectionController");
@@ -27,6 +28,7 @@ function setupRoutes() {
     const stripeWebhookController = new StripeWebhookController_1.StripeWebhookController();
     const addressController = new AddressController_1.AddressController();
     const discountController = new DiscountController_1.DiscountController();
+    const userManagementController = new UserManagementController_1.UserManagementController();
     router.post('/api/auth/register', (req, res) => authController.register(req, res));
     router.post('/api/auth/login', (req, res) => authController.login(req, res));
     router.post('/api/auth/logout', (req, res) => authController.logout(req, res), [Router_1.Router.requireAuth]);
@@ -86,6 +88,12 @@ function setupRoutes() {
     router.delete('/api/admin/discounts/:id', (req, res, params) => discountController.deleteDiscount(req, res, params), [Router_1.Router.requireRole(['admin'])]);
     router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router_1.Router.requireRole(['admin'])]);
     router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router_1.Router.requireRole(['admin'])]);
+    router.get('/api/admin/users', (req, res) => userManagementController.getAllUsers(req, res), [Router_1.Router.requireRole(['admin'])]);
+    router.get('/api/admin/users/stats', (req, res) => userManagementController.getUserStats(req, res), [Router_1.Router.requireRole(['admin'])]);
+    router.get('/api/admin/users/:id', (req, res, params) => userManagementController.getUserById(req, res, params.id), [Router_1.Router.requireRole(['admin'])]);
+    router.put('/api/admin/users/:id/status', (req, res, params) => userManagementController.updateUserStatus(req, res, params.id), [Router_1.Router.requireRole(['admin'])]);
+    router.put('/api/admin/users/:id/role', (req, res, params) => userManagementController.updateUserRole(req, res, params.id), [Router_1.Router.requireRole(['admin'])]);
+    router.put('/api/admin/users/:id', (req, res, params) => userManagementController.updateUserProfile(req, res, params.id), [Router_1.Router.requireRole(['admin'])]);
     router.get('/api/health', async (_req, res) => {
         (0, request_handler_1.sendJSON)(res, 200, { status: 'ok', timestamp: new Date().toISOString() });
     });
