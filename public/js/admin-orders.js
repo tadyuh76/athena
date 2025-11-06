@@ -151,7 +151,7 @@ async function loadOrders() {
   const tbody = document.getElementById('ordersTableBody');
   tbody.innerHTML = `
     <tr>
-      <td colspan="6" class="text-center py-5">
+      <td colspan="7" class="text-center py-5">
         <div class="spinner-border text-secondary" role="status"></div>
         <div class="mt-2 text-muted">Loading orders...</div>
       </td>
@@ -192,7 +192,7 @@ async function loadOrders() {
     console.error('Error loading orders:', error);
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center py-5">
+        <td colspan="7" class="text-center py-5">
           <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
           <div class="mt-3 text-muted">Failed to load orders</div>
           <button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">
@@ -211,7 +211,7 @@ function renderOrders() {
   if (orders.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="text-center py-5">
+        <td colspan="7" class="text-center py-5">
           <i class="bi bi-inbox display-1 text-muted"></i>
           <div class="mt-3 text-muted">No orders found</div>
         </td>
@@ -228,6 +228,14 @@ function renderOrders() {
       : 'N/A';
     const customerPhone = shippingAddr.phone || order.customer_phone || '';
 
+    // Render product items
+    const productItems = order.items && order.items.length > 0
+      ? order.items.map(item => {
+          const variantText = item.variant_title ? ` (${item.variant_title})` : '';
+          return `<div class="small">${item.product_name}${variantText} <span class="text-muted">×${item.quantity}</span></div>`;
+        }).join('')
+      : '<div class="small text-muted">No items</div>';
+
     return `
       <tr>
         <td>
@@ -241,6 +249,9 @@ function renderOrders() {
           <div class="fw-semibold">${customerName}</div>
           <div class="small text-muted">${order.customer_email}</div>
           ${customerPhone ? `<div class="small text-muted">${customerPhone}</div>` : ''}
+        </td>
+        <td>
+          ${productItems}
         </td>
         <td>
           <span class="fw-bold">$${order.total_amount.toFixed(2)}</span>

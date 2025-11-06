@@ -205,7 +205,16 @@ export class OrderModel extends BaseModel<Order> {
     try {
       const { data, error } = await this.adminClient
         .from(this.tableName)
-        .select('*')
+        .select(`
+          *,
+          items:order_items(
+            id,
+            product_name,
+            variant_title,
+            quantity,
+            unit_price
+          )
+        `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 

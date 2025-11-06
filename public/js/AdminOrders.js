@@ -535,10 +535,10 @@ export class AdminOrders {
   }
 
   formatPrice(price) {
-    return new Intl.NumberFormat('vi-VN', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'VND',
-    }).format(price * 1000); // Convert USD to VND approximation
+      currency: 'USD',
+    }).format(price);
   }
 
   attachEventListeners() {

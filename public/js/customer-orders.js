@@ -43,30 +43,44 @@ function renderOrders() {
   }
 
   noOrders.style.display = 'none';
-  container.innerHTML = userOrders.map(order => `
-    <div class="order-card mb-3">
-      <div class="order-header">
-        <div>
-          <h5>${order.order_number}</h5>
-          <small class="text-muted">${new Date(order.created_at).toLocaleDateString('vi-VN')}</small>
+  container.innerHTML = userOrders.map(order => {
+    // Render product items
+    const productItems = order.items && order.items.length > 0
+      ? order.items.map(item => {
+          const variantText = item.variant_title ? ` (${item.variant_title})` : '';
+          return `<div class="small text-muted mb-1">${item.product_name}${variantText} <span class="fw-semibold">×${item.quantity}</span></div>`;
+        }).join('')
+      : '<div class="small text-muted">Không có sản phẩm</div>';
+
+    return `
+      <div class="order-card mb-3">
+        <div class="order-header">
+          <div>
+            <h5>${order.order_number}</h5>
+            <small class="text-muted">${new Date(order.created_at).toLocaleDateString('vi-VN')}</small>
+          </div>
+          <div>
+            <span class="badge bg-${getStatusColor(order.status)}">${getStatusText(order.status)}</span>
+          </div>
         </div>
-        <div>
-          <span class="badge bg-${getStatusColor(order.status)}">${getStatusText(order.status)}</span>
+        <div class="order-body">
+          <div class="mb-2">
+            <strong>Sản phẩm:</strong>
+            <div class="mt-1">${productItems}</div>
+          </div>
+          <p><strong>Tổng tiền:</strong> ${formatPrice(order.total_amount)}</p>
+          <p><strong>Thanh toán:</strong> ${getPaymentStatusText(order.payment_status)}</p>
+          ${order.estimated_delivery_date ? `<p><strong>Dự kiến giao:</strong> ${new Date(order.estimated_delivery_date).toLocaleDateString('vi-VN')}</p>` : ''}
+          ${renderTrackingInfo(order)}
+        </div>
+        <div class="order-footer">
+          <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${order.id}')">
+            Chi tiết đơn hàng
+          </button>
         </div>
       </div>
-      <div class="order-body">
-        <p><strong>Tổng tiền:</strong> ${formatPrice(order.total_amount)}</p>
-        <p><strong>Thanh toán:</strong> ${getPaymentStatusText(order.payment_status)}</p>
-        ${order.estimated_delivery_date ? `<p><strong>Dự kiến giao:</strong> ${new Date(order.estimated_delivery_date).toLocaleDateString('vi-VN')}</p>` : ''}
-        ${renderTrackingInfo(order)}
-      </div>
-      <div class="order-footer">
-        <button class="btn btn-sm btn-outline-primary" onclick="viewOrderDetails('${order.id}')">
-          Chi tiết đơn hàng
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderTrackingInfo(order) {

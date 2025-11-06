@@ -65,7 +65,7 @@ async function loadDashboard() {
 
     // 🧠 Gắn dữ liệu vào giao diện (không cần data.success)
     document.getElementById("totalRevenue").textContent =
-      (data.totalRevenue || 0).toLocaleString("vi-VN") + " ₫";
+      "$" + (data.totalRevenue || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("totalOrders").textContent = data.totalOrders || 0;
     document.getElementById("totalCollections").textContent = data.totalCollections || 0;
     document.getElementById("totalProducts").textContent = data.totalProducts || 0;

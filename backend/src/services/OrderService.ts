@@ -379,7 +379,7 @@ export class OrderService {
       const sortOrder = filters?.sortOrder || 'desc';
       const ascending = sortOrder === 'asc';
 
-      // Build query with shipping address join
+      // Build query with shipping address and items join
       let query = supabaseAdmin
         .from('orders')
         .select(`
@@ -394,6 +394,13 @@ export class OrderService {
             postal_code,
             country_code,
             phone
+          ),
+          items:order_items(
+            id,
+            product_name,
+            variant_title,
+            quantity,
+            unit_price
           )
         `, { count: 'exact' });
 
@@ -432,6 +439,7 @@ export class OrderService {
       const { data, error, count } = await query;
 
       if (error) {
+        console.error('[OrderService.getAllOrders] Supabase error:', JSON.stringify(error, null, 2));
         throw error;
       }
 
@@ -442,6 +450,7 @@ export class OrderService {
         totalPages: Math.ceil((count || 0) / limit),
       };
     } catch (error) {
+      console.error('[OrderService.getAllOrders] Full error:', error);
       throw new Error(
         `Failed to get all orders: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
