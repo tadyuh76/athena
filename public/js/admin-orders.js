@@ -1,816 +1,585 @@
-import { AuthService } from "/services/AuthService.js";
-import { Dialog } from "/js/dialog.js";
+// Admin Orders Management Component
+import { Dialog } from '/js/dialog.js';
 
-// Initialize services
-const authService = new AuthService();
-const API_URL = window.ENV ? window.ENV.getApiUrl() : '/api';
-
-// State
-let orders = [];
-let currentPage = 1;
-let totalOrders = 0;
-let limit = 20;
-let filters = {
-  search: '',
-  status: '',
-  fromDate: '',
-  toDate: ''
-};
-let sortBy = 'created_at';
-let sortOrder = 'desc';
-
-// Initialize flag to prevent double initialization
-let isInitialized = false;
-
-// Function to initialize orders management
-async function initializeOrdersManagement() {
-  if (isInitialized) {
-    // If already initialized, just reload orders
-    await loadOrders();
-    return;
+export class AdminOrders {
+  constructor() {
+    this.orders = [];
+    this.filteredOrders = [];
+    this.currentFilter = 'all';
   }
 
-  // Check if user is admin
-  if (!authService.isAuthenticated()) {
-    return;
+  async init() {
+    await this.loadOrders();
+    this.render();
+    this.attachEventListeners();
   }
 
-  const user = authService.getUser();
-  if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
-    return;
-  }
-
-  initializeEventListeners();
-  isInitialized = true;
-  await loadOrders();
-}
-
-// Initialize page when DOM is loaded (for standalone page)
-document.addEventListener("DOMContentLoaded", async () => {
-  // Only initialize if this is the standalone admin-orders.html page
-  if (window.location.pathname.includes('admin-orders.html')) {
-    // Check if user is admin
-    if (!authService.isAuthenticated()) {
-      window.location.href = "/login.html?redirect=" + encodeURIComponent(window.location.href);
-      return;
-    }
-
-    const user = authService.getUser();
-    if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
-      await Dialog.alert("Bạn không có quyền truy cập trang này.", {
-        title: "Truy cập bị từ chối"
+  async loadOrders() {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch('/api/admin/orders', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
-      window.location.href = "/";
-      return;
-    }
 
-    await initializeOrdersManagement();
-  }
-});
+      const data = await response.json();
 
-// Listen for orders tab opened event (when integrated in admin.html)
-window.addEventListener('ordersTabOpened', async () => {
-  await initializeOrdersManagement();
-});
-
-// Initialize event listeners
-function initializeEventListeners() {
-  // Filters
-  document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-  document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
-  document.getElementById('refreshBtn').addEventListener('click', () => loadOrders());
-
-  // Search on Enter key
-  document.getElementById('searchInput').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      applyFilters();
-    }
-  });
-
-  // Sorting
-  document.querySelectorAll('.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      const field = th.dataset.sort;
-      if (sortBy === field) {
-        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+      if (data.success) {
+        this.orders = data.orders;
+        this.applyFilter(this.currentFilter);
       } else {
-        sortBy = field;
-        sortOrder = 'desc';
+        throw new Error(data.message || 'Không thể tải danh sách đơn hàng');
       }
-      updateSortIndicators();
-      loadOrders();
-    });
-  });
-}
-
-// Apply filters
-function applyFilters() {
-  filters.search = document.getElementById('searchInput').value.trim();
-  filters.status = document.getElementById('statusFilter').value;
-  filters.fromDate = document.getElementById('fromDate').value;
-  filters.toDate = document.getElementById('toDate').value;
-
-  currentPage = 1;
-  loadOrders();
-}
-
-// Reset filters
-function resetFilters() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('statusFilter').value = '';
-  document.getElementById('fromDate').value = '';
-  document.getElementById('toDate').value = '';
-
-  filters = {
-    search: '',
-    status: '',
-    fromDate: '',
-    toDate: ''
-  };
-
-  currentPage = 1;
-  loadOrders();
-}
-
-// Update sort indicators
-function updateSortIndicators() {
-  document.querySelectorAll('.sortable').forEach(th => {
-    const icon = th.querySelector('i');
-    th.classList.remove('active');
-    icon.className = 'bi bi-chevron-expand';
-
-    if (th.dataset.sort === sortBy) {
-      th.classList.add('active');
-      icon.className = sortOrder === 'asc' ? 'bi bi-chevron-up' : 'bi bi-chevron-down';
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      this.showToast('Không thể tải danh sách đơn hàng', 'danger');
     }
-  });
-}
+  }
 
-// Load orders
-async function loadOrders() {
-  const tbody = document.getElementById('ordersTableBody');
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="7" class="text-center py-5">
-        <div class="spinner-border text-secondary" role="status"></div>
-        <div class="mt-2 text-muted">Đang tải đơn hàng...</div>
-      </td>
-    </tr>
-  `;
+  applyFilter(status) {
+    this.currentFilter = status;
 
-  try {
-    const params = new URLSearchParams({
-      page: currentPage.toString(),
-      limit: limit.toString(),
-      sortBy: sortBy,
-      sortOrder: sortOrder
-    });
-
-    if (filters.search) params.append('search', filters.search);
-    if (filters.status) params.append('status', filters.status);
-    if (filters.fromDate) params.append('dateFrom', filters.fromDate);
-    if (filters.toDate) params.append('dateTo', filters.toDate);
-
-    const response = await fetch(`${API_URL}/admin/orders?${params}`, {
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Không thể tải đơn hàng');
+    if (status === 'all') {
+      this.filteredOrders = [...this.orders];
+    } else {
+      this.filteredOrders = this.orders.filter(order => order.status === status);
     }
 
-    const data = await response.json();
-    orders = data.orders || [];
-    totalOrders = data.total || 0;
+    this.render();
+  }
 
-    renderOrders();
-    updatePagination(data.page, data.totalPages);
-    updateOrderCount();
-  } catch (error) {
-    console.error('Error loading orders:', error);
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="text-center py-5">
-          <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
-          <div class="mt-3 text-muted">Không thể tải đơn hàng</div>
-          <button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">
-            Thử lại
+  render() {
+    const container = document.getElementById('ordersContainer');
+    if (!container) return;
+
+    const statusCounts = this.getStatusCounts();
+
+    container.innerHTML = `
+      <div class="orders-management">
+        <div class="orders-header">
+          <h2>Quản lý đơn hàng</h2>
+          <button class="btn btn-sm btn-outline-primary" onclick="adminOrders.loadOrders()">
+            <i class="bi bi-arrow-clockwise"></i> Làm mới
           </button>
-        </td>
-      </tr>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="status-filters mb-4">
+          <button class="filter-pill ${this.currentFilter === 'all' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('all')">
+            Tất cả (${this.orders.length})
+          </button>
+          <button class="filter-pill ${this.currentFilter === 'pending' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('pending')">
+            Chờ xử lý (${statusCounts.pending})
+          </button>
+          <button class="filter-pill ${this.currentFilter === 'preparing' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('preparing')">
+            Đang chuẩn bị (${statusCounts.preparing})
+          </button>
+          <button class="filter-pill ${this.currentFilter === 'shipping' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('shipping')">
+            Đang giao (${statusCounts.shipping})
+          </button>
+          <button class="filter-pill ${this.currentFilter === 'delivered' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('delivered')">
+            Đã giao (${statusCounts.delivered})
+          </button>
+          <button class="filter-pill ${this.currentFilter === 'cancelled' ? 'active' : ''}"
+                  onclick="adminOrders.applyFilter('cancelled')">
+            Đã hủy (${statusCounts.cancelled})
+          </button>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="orders-table-container">
+          ${this.filteredOrders.length === 0 ? this.renderEmptyState() : this.renderOrdersTable()}
+        </div>
+      </div>
+
+      <style>
+        .orders-management {
+          padding: 20px;
+        }
+
+        .orders-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+
+        .status-filters {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .filter-pill {
+          padding: 8px 16px;
+          border: 1px solid #ddd;
+          border-radius: 20px;
+          background: white;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-size: 14px;
+        }
+
+        .filter-pill:hover {
+          background: #f5f5f5;
+        }
+
+        .filter-pill.active {
+          background: #007bff;
+          color: white;
+          border-color: #007bff;
+        }
+
+        .orders-table-container {
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .orders-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        .orders-table th {
+          background: #f8f9fa;
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+          border-bottom: 2px solid #dee2e6;
+        }
+
+        .orders-table td {
+          padding: 12px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .orders-table tr:hover {
+          background: #f8f9fa;
+        }
+
+        .status-badge {
+          display: inline-block;
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+
+        .status-pending {
+          background: #fff3cd;
+          color: #856404;
+        }
+
+        .status-preparing {
+          background: #cfe2ff;
+          color: #084298;
+        }
+
+        .status-shipping {
+          background: #d3d3f9;
+          color: #1d1d5a;
+        }
+
+        .status-delivered {
+          background: #d1e7dd;
+          color: #0f5132;
+        }
+
+        .status-cancelled {
+          background: #f8d7da;
+          color: #842029;
+        }
+
+        .order-actions {
+          display: flex;
+          gap: 5px;
+        }
+
+        .btn-action {
+          padding: 4px 8px;
+          font-size: 12px;
+          border-radius: 4px;
+        }
+
+        .empty-state {
+          text-align: center;
+          padding: 60px 20px;
+          color: #6c757d;
+        }
+
+        .empty-state i {
+          font-size: 48px;
+          margin-bottom: 16px;
+        }
+      </style>
     `;
   }
-}
 
-// Render orders table
-function renderOrders() {
-  const tbody = document.getElementById('ordersTableBody');
-
-  if (orders.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" class="text-center py-5">
-          <i class="bi bi-inbox display-1 text-muted"></i>
-          <div class="mt-3 text-muted">Không tìm thấy đơn hàng</div>
-        </td>
-      </tr>
+  renderOrdersTable() {
+    return `
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Mã đơn hàng</th>
+            <th>Khách hàng</th>
+            <th>Tổng tiền</th>
+            <th>Trạng thái</th>
+            <th>Thanh toán</th>
+            <th>Ngày tạo</th>
+            <th>Dự kiến giao</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${this.filteredOrders.map(order => this.renderOrderRow(order)).join('')}
+        </tbody>
+      </table>
     `;
-    return;
   }
 
-  tbody.innerHTML = orders.map(order => {
-    // Extract shipping address (it's an array, get the first shipping address)
-    const shippingAddr = order.shipping_address?.find(addr => addr) || {};
-    const customerName = shippingAddr.first_name && shippingAddr.last_name
-      ? `${shippingAddr.first_name} ${shippingAddr.last_name}`
-      : 'N/A';
-    const customerPhone = shippingAddr.phone || order.customer_phone || '';
-
-    // Render product items
-    const productItems = order.items && order.items.length > 0
-      ? order.items.map(item => {
-          const variantText = item.variant_title ? ` (${item.variant_title})` : '';
-          return `<div class="small">${item.product_name}${variantText} <span class="text-muted">×${item.quantity}</span></div>`;
-        }).join('')
-      : '<div class="small text-muted">Không có sản phẩm</div>';
+  renderOrderRow(order) {
+    const statusText = this.getStatusText(order.status);
+    const paymentStatusText = this.getPaymentStatusText(order.payment_status);
+    const createdDate = new Date(order.created_at).toLocaleDateString('vi-VN');
+    const estimatedDate = order.estimated_delivery_date
+      ? new Date(order.estimated_delivery_date).toLocaleDateString('vi-VN')
+      : '-';
 
     return `
       <tr>
+        <td><strong>${order.order_number}</strong></td>
+        <td>${order.customer_email}</td>
+        <td>${this.formatPrice(order.total_amount)}</td>
+        <td><span class="status-badge status-${order.status}">${statusText}</span></td>
+        <td><span class="status-badge status-${order.payment_status}">${paymentStatusText}</span></td>
+        <td>${createdDate}</td>
+        <td>${estimatedDate}</td>
         <td>
-          <code class="small">${order.id.substring(0, 8)}</code>
-        </td>
-        <td>
-          <div class="small">${formatDate(order.created_at)}</div>
-          <div class="text-muted" style="font-size: 0.75rem;">${formatTime(order.created_at)}</div>
-        </td>
-        <td>
-          <div class="fw-semibold">${customerName}</div>
-          <div class="small text-muted">${order.customer_email}</div>
-          ${customerPhone ? `<div class="small text-muted">${customerPhone}</div>` : ''}
-        </td>
-        <td>
-          ${productItems}
-        </td>
-        <td>
-          <span class="fw-bold">$${order.total_amount.toFixed(2)}</span>
-        </td>
-        <td>
-          ${getStatusBadge(order.status)}
-        </td>
-        <td class="text-end">
-          <div class="btn-group btn-group-sm">
-            <button class="btn btn-outline-primary" onclick="window.viewOrder('${order.id}')">
-              <i class="bi bi-eye"></i>
-            </button>
-            ${renderQuickActions(order)}
+          <div class="order-actions">
+            ${this.renderActions(order)}
           </div>
         </td>
       </tr>
     `;
-  }).join('');
-}
-
-// Render quick action buttons based on order status
-// Workflow: pending → preparing → shipping → delivered
-function renderQuickActions(order) {
-  const actions = [];
-
-  if (order.status === 'pending') {
-    // pending: can confirm (to preparing) or cancel
-    actions.push(`
-      <button class="btn btn-outline-success" onclick="window.confirmOrder('${order.id}')" title="Xác nhận & Chuẩn bị">
-        <i class="bi bi-check-lg"></i>
-      </button>
-    `);
-    actions.push(`
-      <button class="btn btn-outline-danger" onclick="window.cancelOrder('${order.id}')" title="Hủy">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    `);
-  } else if (order.status === 'preparing') {
-    // preparing: can manually move to shipping
-    actions.push(`
-      <button class="btn btn-outline-info" onclick="window.shipOrder('${order.id}')" title="Bắt đầu giao hàng">
-        <i class="bi bi-truck"></i>
-      </button>
-    `);
-  } else if (order.status === 'shipping') {
-    // shipping: can manually mark as delivered
-    actions.push(`
-      <button class="btn btn-outline-success" onclick="window.deliverOrder('${order.id}')" title="Đánh dấu đã giao">
-        <i class="bi bi-check2-all"></i>
-      </button>
-    `);
-  }
-  // delivered: no more actions needed
-
-  return actions.join('');
-}
-
-// Get status badge
-function getStatusBadge(status) {
-  const badges = {
-    pending: '<span class="badge bg-warning text-dark">Đang chờ</span>',
-    preparing: '<span class="badge bg-info">Đang chuẩn bị</span>',
-    shipping: '<span class="badge bg-primary">Đang giao hàng</span>',
-    delivered: '<span class="badge bg-success">Đã giao</span>',
-    cancelled: '<span class="badge bg-danger">Đã hủy</span>',
-    refunded: '<span class="badge bg-secondary">Đã hoàn tiền</span>'
-  };
-  return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
-}
-
-// Update pagination
-function updatePagination(page, totalPages) {
-  const pagination = document.getElementById('pagination');
-  const paginationInfo = document.getElementById('paginationInfo');
-
-  const start = (page - 1) * limit + 1;
-  const end = Math.min(page * limit, totalOrders);
-  paginationInfo.textContent = `Hiển thị ${start}-${end} trong ${totalOrders} đơn hàng`;
-
-  if (totalPages <= 1) {
-    pagination.innerHTML = '';
-    return;
   }
 
-  let html = '';
+  renderActions(order) {
+    const actions = [];
 
-  // Previous button
-  html += `
-    <li class="page-item ${page === 1 ? 'disabled' : ''}">
-      <a class="page-link" href="#" onclick="window.changePage(${page - 1}); return false;">
-        <i class="bi bi-chevron-left"></i>
-      </a>
-    </li>
-  `;
-
-  // Page numbers
-  const maxPages = 5;
-  let startPage = Math.max(1, page - Math.floor(maxPages / 2));
-  let endPage = Math.min(totalPages, startPage + maxPages - 1);
-
-  if (endPage - startPage < maxPages - 1) {
-    startPage = Math.max(1, endPage - maxPages + 1);
-  }
-
-  if (startPage > 1) {
-    html += `
-      <li class="page-item">
-        <a class="page-link" href="#" onclick="window.changePage(1); return false;">1</a>
-      </li>
-    `;
-    if (startPage > 2) {
-      html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    html += `
-      <li class="page-item ${i === page ? 'active' : ''}">
-        <a class="page-link" href="#" onclick="window.changePage(${i}); return false;">${i}</a>
-      </li>
-    `;
-  }
-
-  if (endPage < totalPages) {
-    if (endPage < totalPages - 1) {
-      html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
-    }
-    html += `
-      <li class="page-item">
-        <a class="page-link" href="#" onclick="window.changePage(${totalPages}); return false;">${totalPages}</a>
-      </li>
-    `;
-  }
-
-  // Next button
-  html += `
-    <li class="page-item ${page === totalPages ? 'disabled' : ''}">
-      <a class="page-link" href="#" onclick="window.changePage(${page + 1}); return false;">
-        <i class="bi bi-chevron-right"></i>
-      </a>
-    </li>
-  `;
-
-  pagination.innerHTML = html;
-}
-
-// Change page
-window.changePage = function(page) {
-  currentPage = page;
-  loadOrders();
-};
-
-// Update order count
-function updateOrderCount() {
-  document.getElementById('orderCount').textContent = `${totalOrders} đơn hàng`;
-}
-
-// View order details
-window.viewOrder = async function(orderId) {
-  const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
-  const content = document.getElementById('orderDetailsContent');
-
-  content.innerHTML = `
-    <div class="text-center py-5">
-      <div class="spinner-border text-secondary" role="status"></div>
-      <div class="mt-2 text-muted">Đang tải chi tiết đơn hàng...</div>
-    </div>
-  `;
-
-  modal.show();
-
-  try {
-    const response = await fetch(`${API_URL}/orders/${orderId}`, {
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Không thể tải chi tiết đơn hàng');
+    // Xác nhận đơn hàng (pending -> preparing)
+    if (order.status === 'pending' && order.payment_status === 'paid') {
+      actions.push(`
+        <button class="btn btn-sm btn-success btn-action"
+                onclick="adminOrders.confirmOrder('${order.id}')">
+          <i class="bi bi-check-circle"></i> Xác nhận
+        </button>
+      `);
     }
 
-    const data = await response.json();
-    const order = data.order || data;
-    content.innerHTML = renderOrderDetails(order);
-  } catch (error) {
-    console.error('Error loading order details:', error);
-    content.innerHTML = `
-      <div class="alert alert-danger">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        Không thể tải chi tiết đơn hàng
+    // Bắt đầu giao hàng (preparing -> shipping)
+    if (order.status === 'preparing') {
+      actions.push(`
+        <button class="btn btn-sm btn-primary btn-action"
+                onclick="adminOrders.markAsShipped('${order.id}')">
+          <i class="bi bi-truck"></i> Giao hàng
+        </button>
+      `);
+    }
+
+    // Hoàn thành đơn hàng (shipping -> delivered)
+    if (order.status === 'shipping') {
+      actions.push(`
+        <button class="btn btn-sm btn-success btn-action"
+                onclick="adminOrders.markAsDelivered('${order.id}')">
+          <i class="bi bi-box-seam"></i> Hoàn thành
+        </button>
+      `);
+    }
+
+    // Hủy đơn hàng (any -> cancelled, except delivered/cancelled)
+    if (!['delivered', 'cancelled'].includes(order.status)) {
+      actions.push(`
+        <button class="btn btn-sm btn-danger btn-action"
+                onclick="adminOrders.cancelOrder('${order.id}')">
+          <i class="bi bi-x-circle"></i> Hủy
+        </button>
+      `);
+    }
+
+    // View details (always available)
+    actions.push(`
+      <button class="btn btn-sm btn-outline-secondary btn-action"
+              onclick="adminOrders.viewOrderDetails('${order.id}')">
+        <i class="bi bi-eye"></i>
+      </button>
+    `);
+
+    return actions.join('');
+  }
+
+  renderEmptyState() {
+    return `
+      <div class="empty-state">
+        <i class="bi bi-inbox"></i>
+        <h4>Không có đơn hàng</h4>
+        <p>Chưa có đơn hàng nào trong mục này.</p>
       </div>
     `;
   }
-};
 
-// Render order details
-function renderOrderDetails(order) {
-  // Extract shipping address (it's an array, get the first shipping address)
-  const shippingAddr = order.shipping_address?.find(addr => addr) || {};
-  const customerName = shippingAddr.first_name && shippingAddr.last_name
-    ? `${shippingAddr.first_name} ${shippingAddr.last_name}`
-    : 'N/A';
-  const customerPhone = shippingAddr.phone || order.customer_phone || '';
+  async confirmOrder(orderId) {
+    const confirmed = await Dialog.confirm(
+      'Xác nhận đơn hàng này? Thời gian giao hàng dự kiến là 3 ngày.',
+      {
+        title: 'Xác nhận đơn hàng',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+        confirmClass: 'btn-success',
+      }
+    );
 
-  return `
-    <div class="row g-4">
-      <!-- Order Info -->
-      <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Thông tin đơn hàng</h6>
-        <table class="table table-sm table-borderless">
-          <tr>
-            <td class="text-muted" style="width: 120px;">Mã đơn hàng:</td>
-            <td><code>${order.id}</code></td>
-          </tr>
-          <tr>
-            <td class="text-muted">Ngày tạo:</td>
-            <td>${formatDate(order.created_at)} ${formatTime(order.created_at)}</td>
-          </tr>
-          <tr>
-            <td class="text-muted">Trạng thái:</td>
-            <td>${getStatusBadge(order.status)}</td>
-          </tr>
-        </table>
-      </div>
+    if (!confirmed) return;
 
-      <!-- Customer Info -->
-      <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Thông tin khách hàng</h6>
-        <table class="table table-sm table-borderless">
-          <tr>
-            <td class="text-muted" style="width: 120px;">Tên:</td>
-            <td>${customerName}</td>
-          </tr>
-          <tr>
-            <td class="text-muted">Email:</td>
-            <td>${order.customer_email}</td>
-          </tr>
-          ${customerPhone ? `
-          <tr>
-            <td class="text-muted">Điện thoại:</td>
-            <td>${customerPhone}</td>
-          </tr>
-          ` : ''}
-        </table>
-      </div>
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/orders/${orderId}/confirm`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-      <!-- Shipping Address -->
-      <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Địa chỉ giao hàng</h6>
-        <address class="small">
-          ${shippingAddr.address_line1 || 'N/A'}<br>
-          ${shippingAddr.address_line2 ? `${shippingAddr.address_line2}<br>` : ''}
-          ${shippingAddr.city || ''}, ${shippingAddr.state_province || ''} ${shippingAddr.postal_code || ''}
-        </address>
-      </div>
+      const data = await response.json();
 
-      <!-- Order Items -->
-      <div class="col-12">
-        <h6 class="fw-bold mb-3">Sản phẩm</h6>
-        <div class="table-responsive">
-          <table class="table table-sm">
-            <thead class="table-light">
-              <tr>
-                <th>Sản phẩm</th>
-                <th>Giá</th>
-                <th>Số lượng</th>
-                <th class="text-end">Tổng phụ</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${order.items ? order.items.map(item => `
-                <tr>
-                  <td>
-                    <div class="fw-semibold">${item.product_name || 'Sản phẩm'}</div>
-                    ${item.variant_title ?
-                      `<div class="small text-muted">${item.variant_title}</div>` : ''}
-                  </td>
-                  <td>$${item.unit_price.toFixed(2)}</td>
-                  <td>${item.quantity}</td>
-                  <td class="text-end">$${(item.unit_price * item.quantity).toFixed(2)}</td>
-                </tr>
-              `).join('') : ''}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td colspan="3" class="text-end fw-semibold">Tổng phụ:</td>
-                <td class="text-end">$${order.subtotal.toFixed(2)}</td>
-              </tr>
-              ${order.discount_amount > 0 ? `
-              <tr>
-                <td colspan="3" class="text-end text-success">Giảm giá:</td>
-                <td class="text-end text-success">-$${order.discount_amount.toFixed(2)}</td>
-              </tr>
-              ` : ''}
-              ${order.tax_amount > 0 ? `
-              <tr>
-                <td colspan="3" class="text-end">Thuế:</td>
-                <td class="text-end">$${order.tax_amount.toFixed(2)}</td>
-              </tr>
-              ` : ''}
-              ${order.shipping_amount > 0 ? `
-              <tr>
-                <td colspan="3" class="text-end">Phí vận chuyển:</td>
-                <td class="text-end">$${order.shipping_amount.toFixed(2)}</td>
-              </tr>
-              ` : ''}
-              <tr class="table-light">
-                <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
-                <td class="text-end fw-bold">$${order.total_amount.toFixed(2)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="col-12">
-        <hr>
-        <div class="d-flex gap-2 justify-content-end">
-          ${renderDetailActions(order)}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// Render detail modal actions
-function renderDetailActions(order) {
-  const actions = [];
-
-  if (order.status === 'pending') {
-    actions.push(`
-      <button class="btn btn-success" onclick="window.confirmOrder('${order.id}')">
-        <i class="bi bi-check-lg me-2"></i>Xác nhận đơn hàng
-      </button>
-    `);
-    actions.push(`
-      <button class="btn btn-danger" onclick="window.cancelOrder('${order.id}')">
-        <i class="bi bi-x-lg me-2"></i>Hủy đơn hàng
-      </button>
-    `);
-  } else if (order.status === 'preparing') {
-    actions.push(`
-      <button class="btn btn-info" onclick="window.shipOrder('${order.id}')">
-        <i class="bi bi-truck me-2"></i>Bắt đầu giao hàng
-      </button>
-    `);
-  } else if (order.status === 'shipping') {
-    actions.push(`
-      <button class="btn btn-success" onclick="window.deliverOrder('${order.id}')">
-        <i class="bi bi-check2-all me-2"></i>Đánh dấu đã giao
-      </button>
-    `);
+      if (data.success) {
+        this.showToast('Đã xác nhận đơn hàng thành công', 'success');
+        await this.loadOrders();
+      } else {
+        throw new Error(data.message || 'Không thể xác nhận đơn hàng');
+      }
+    } catch (error) {
+      console.error('Error confirming order:', error);
+      this.showToast(error.message, 'danger');
+    }
   }
 
-  return actions.join('');
-}
+  async markAsShipped(orderId) {
+    const trackingNumber = await Dialog.prompt(
+      'Nhập mã vận đơn (tùy chọn):',
+      {
+        title: 'Đánh dấu đã giao hàng',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+      }
+    );
 
-// Confirm order
-window.confirmOrder = async function(orderId) {
-  const confirmed = await Dialog.confirm(
-    "Bạn có chắc chắn muốn xác nhận đơn hàng này? Khách hàng sẽ được thông báo.",
-    {
-      title: "Xác nhận đơn hàng",
-      confirmText: "Xác nhận",
-      confirmClass: "btn-success"
+    if (trackingNumber === null) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/orders/${orderId}/ship`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ trackingNumber: trackingNumber || undefined }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.showToast('Đã đánh dấu đơn hàng đang giao', 'success');
+        await this.loadOrders();
+      } else {
+        throw new Error(data.message || 'Không thể cập nhật trạng thái');
+      }
+    } catch (error) {
+      console.error('Error marking as shipped:', error);
+      this.showToast(error.message, 'danger');
     }
-  );
+  }
 
-  if (!confirmed) return;
+  async markAsDelivered(orderId) {
+    const confirmed = await Dialog.confirm(
+      'Xác nhận đơn hàng này đã được giao thành công?',
+      {
+        title: 'Hoàn thành đơn hàng',
+        confirmText: 'Xác nhận',
+        cancelText: 'Hủy',
+        confirmClass: 'btn-success',
+      }
+    );
 
-  try {
-    const response = await fetch(`${API_URL}/admin/orders/${orderId}/confirm`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/orders/${orderId}/deliver`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.showToast('Đã đánh dấu đơn hàng đã giao', 'success');
+        await this.loadOrders();
+      } else {
+        throw new Error(data.message || 'Không thể cập nhật trạng thái');
+      }
+    } catch (error) {
+      console.error('Error marking as delivered:', error);
+      this.showToast(error.message, 'danger');
+    }
+  }
+
+  async cancelOrder(orderId) {
+    const reason = await Dialog.prompt(
+      'Nhập lý do hủy đơn hàng:',
+      {
+        title: 'Hủy đơn hàng',
+        confirmText: 'Hủy đơn',
+        cancelText: 'Quay lại',
+        confirmClass: 'btn-danger',
+      }
+    );
+
+    if (reason === null) return;
+
+    if (!reason.trim()) {
+      this.showToast('Vui lòng nhập lý do hủy đơn', 'warning');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/admin/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        this.showToast('Đã hủy đơn hàng thành công', 'success');
+        await this.loadOrders();
+      } else {
+        throw new Error(data.message || 'Không thể hủy đơn hàng');
+      }
+    } catch (error) {
+      console.error('Error canceling order:', error);
+      this.showToast(error.message, 'danger');
+    }
+  }
+
+  async viewOrderDetails(orderId) {
+    // Navigate to order details page or show modal
+    window.location.href = `/admin.html#order-details/${orderId}`;
+  }
+
+  getStatusCounts() {
+    const counts = {
+      pending: 0,
+      preparing: 0,
+      shipping: 0,
+      delivered: 0,
+      cancelled: 0,
+    };
+
+    this.orders.forEach(order => {
+      if (counts.hasOwnProperty(order.status)) {
+        counts[order.status]++;
       }
     });
 
-    if (!response.ok) {
-      throw new Error('Không thể xác nhận đơn hàng');
-    }
-
-    showToast('Đã xác nhận đơn hàng thành công', 'success');
-    await loadOrders();
-
-    // Close modal if open
-    const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
-    if (modal) modal.hide();
-  } catch (error) {
-    console.error('Error confirming order:', error);
-    showToast('Không thể xác nhận đơn hàng', 'danger');
-  }
-};
-
-// Ship order
-window.shipOrder = async function(orderId) {
-  const confirmed = await Dialog.confirm(
-    "Bắt đầu giao hàng cho đơn hàng này? Quá trình giao hàng sẽ được bắt đầu.",
-    {
-      title: "Bắt đầu giao hàng",
-      confirmText: "Bắt đầu giao",
-      confirmClass: "btn-info"
-    }
-  );
-
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch(`${API_URL}/admin/orders/${orderId}/ship`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Không thể bắt đầu giao hàng');
-    }
-
-    showToast('Đơn hàng đang được giao', 'success');
-    await loadOrders();
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
-    if (modal) modal.hide();
-  } catch (error) {
-    console.error('Error starting shipping:', error);
-    showToast('Không thể bắt đầu giao hàng', 'danger');
-  }
-};
-
-// Deliver order
-window.deliverOrder = async function(orderId) {
-  const confirmed = await Dialog.confirm(
-    "Đánh dấu đơn hàng này là đã giao? Hành động này xác nhận đơn hàng đã đến tay khách hàng.",
-    {
-      title: "Giao hàng thành công",
-      confirmText: "Đánh dấu đã giao",
-      confirmClass: "btn-success"
-    }
-  );
-
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch(`${API_URL}/admin/orders/${orderId}/deliver`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Không thể đánh dấu đã giao');
-    }
-
-    showToast('Đã đánh dấu đơn hàng là đã giao', 'success');
-    await loadOrders();
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
-    if (modal) modal.hide();
-  } catch (error) {
-    console.error('Error delivering order:', error);
-    showToast('Không thể đánh dấu đã giao', 'danger');
-  }
-};
-
-// Cancel order
-window.cancelOrder = async function(orderId) {
-  const confirmed = await Dialog.confirm(
-    "Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.",
-    {
-      title: "Hủy đơn hàng",
-      confirmText: "Hủy đơn",
-      cancelText: "Giữ đơn hàng",
-      confirmClass: "btn-danger"
-    }
-  );
-
-  if (!confirmed) return;
-
-  try {
-    const response = await fetch(`${API_URL}/admin/orders/${orderId}/cancel`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error('Không thể hủy đơn hàng');
-    }
-
-    showToast('Đã hủy đơn hàng thành công', 'success');
-    await loadOrders();
-
-    const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
-    if (modal) modal.hide();
-  } catch (error) {
-    console.error('Error cancelling order:', error);
-    showToast('Không thể hủy đơn hàng', 'danger');
-  }
-};
-
-// Format date
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-}
-
-// Format time
-function formatTime(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-}
-
-// Show toast notification
-function showToast(message, type = 'info') {
-  let toastContainer = document.getElementById("toastContainer");
-  if (!toastContainer) {
-    toastContainer = document.createElement("div");
-    toastContainer.id = "toastContainer";
-    toastContainer.className = "toast-container position-fixed top-0 end-0 p-3";
-    toastContainer.style.zIndex = "1055";
-    document.body.appendChild(toastContainer);
+    return counts;
   }
 
-  const toastId = "toast-" + Date.now();
-  const bgClass = type === 'success' ? 'bg-success' :
-                  type === 'warning' ? 'bg-warning' :
-                  type === 'danger' ? 'bg-danger' : 'bg-info';
-  const icon = type === 'success' ? 'bi-check-circle' :
-               type === 'warning' ? 'bi-exclamation-triangle' :
-               type === 'danger' ? 'bi-x-circle' : 'bi-info-circle';
+  getStatusText(status) {
+    const statusMap = {
+      pending: 'Chờ xử lý',
+      preparing: 'Đang chuẩn bị',
+      shipping: 'Đang giao',
+      delivered: 'Đã giao',
+      cancelled: 'Đã hủy',
+      refunded: 'Đã hoàn tiền',
+    };
+    return statusMap[status] || status;
+  }
 
-  const toast = document.createElement("div");
-  toast.id = toastId;
-  toast.className = `toast align-items-center text-white ${bgClass} border-0`;
-  toast.setAttribute("role", "alert");
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">
-        <i class="bi ${icon} me-2"></i>${message}
+  getPaymentStatusText(status) {
+    const statusMap = {
+      pending: 'Chờ thanh toán',
+      processing: 'Đang xử lý',
+      paid: 'Đã thanh toán',
+      failed: 'Thất bại',
+      refunded: 'Đã hoàn tiền',
+      partially_refunded: 'Hoàn một phần',
+    };
+    return statusMap[status] || status;
+  }
+
+  formatPrice(price) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  }
+
+  attachEventListeners() {
+    // Any additional event listeners can be attached here
+  }
+
+  showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || this.createToastContainer();
+    const toastId = 'toast-' + Date.now();
+
+    const bgClass = type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning' : type === 'danger' ? 'bg-danger' : 'bg-info';
+
+    const toast = document.createElement('div');
+    toast.id = toastId;
+    toast.className = `toast align-items-center text-white ${bgClass} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-    </div>
-  `;
+    `;
 
-  toastContainer.appendChild(toast);
-  const bsToast = new bootstrap.Toast(toast, { delay: 4000 });
-  bsToast.show();
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast, { delay: 4000 });
+    bsToast.show();
 
-  toast.addEventListener("hidden.bs.toast", () => toast.remove());
+    toast.addEventListener('hidden.bs.toast', () => {
+      toast.remove();
+    });
+  }
+
+  createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container position-fixed top-0 end-0 p-3';
+    container.style.zIndex = '1055';
+    document.body.appendChild(container);
+    return container;
+  }
 }
+
+// Create global instance
+window.adminOrders = new AdminOrders();
