@@ -4,7 +4,6 @@ import path from "path";
 import { setupRoutes } from "./router/routes";
 import { CartService } from "./services/CartService";
 import { setCorsHeaders, sendError } from "./utils/request-handler";
-import { startOrderStatusUpdater } from "./jobs/orderStatusUpdater";
 import { StorageService } from "./utils/storage";
 
 // Load .env from project root (parent directory)
@@ -44,9 +43,6 @@ setInterval(async () => {
     console.error("Failed to release expired reservations:", error);
   }
 }, 5 * 60 * 1000);
-
-// Start order status updater cron job (runs every hour)
-startOrderStatusUpdater();
 
 // Initialize Supabase Storage bucket for review images
 StorageService.ensureBucketExists().catch((error) => {
