@@ -7,23 +7,14 @@ export interface User {
   phone?: string;
   phone_verified: boolean;
   avatar_url?: string;
-  status: 'active' | 'inactive' | 'suspended' | 'deleted';
-  role: 'customer' | 'admin' | 'staff';
+  status: "active" | "inactive" | "suspended" | "deleted";
+  role: "customer" | "admin";
   last_login_at?: Date;
   failed_login_attempts: number;
   locked_until?: Date;
   metadata?: Record<string, any>;
   created_at: Date;
   updated_at: Date;
-}
-
-export interface EmailLog {
-  id: string;
-  to_email: string;
-  subject: string;
-  sent_at: Date;
-  status: 'sent' | 'failed' | 'pending';
-  metadata?: Record<string, any>;
 }
 
 export interface Product {
@@ -43,7 +34,7 @@ export interface Product {
   allow_backorder: boolean;
   low_stock_threshold: number;
   weight_value?: number;
-  weight_unit?: 'kg' | 'g' | 'lb' | 'oz';
+  weight_unit?: "kg" | "g" | "lb" | "oz";
   material_composition?: Record<string, any>;
   care_instructions?: string;
   sustainability_notes?: string;
@@ -52,7 +43,7 @@ export interface Product {
   meta_title?: string;
   meta_description?: string;
   featured_image_url?: string;
-  status: 'draft' | 'active' | 'archived';
+  status: "draft" | "active" | "archived";
   is_featured: boolean;
   published_at?: Date;
   view_count: number;
@@ -87,7 +78,7 @@ export interface Cart {
   id: string;
   user_id?: string;
   session_id?: string;
-  status: 'active' | 'abandoned' | 'converted' | 'merged';
+  status: "active" | "abandoned" | "converted" | "merged";
   abandoned_at?: Date;
   reminder_sent_at?: Date;
   converted_at?: Date;
@@ -109,25 +100,31 @@ export interface CartItem {
   updated_at: Date;
 }
 
-export interface Wishlist {
-  id: string;
-  user_id: string;
-  product_id: string;
-  variant_id?: string;
-  priority: number;
-  notes?: string;
-  created_at: Date;
-}
-
 export interface Order {
   id: string;
   order_number: string;
   user_id?: string;
   customer_email: string;
   customer_phone?: string;
-  status: 'pending' | 'preparing' | 'shipping' | 'delivered' | 'cancelled' | 'refunded';
-  payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
-  fulfillment_status: 'unfulfilled' | 'partially_fulfilled' | 'fulfilled' | 'returned';
+  status:
+    | "pending"
+    | "preparing"
+    | "shipping"
+    | "delivered"
+    | "cancelled"
+    | "refunded";
+  payment_status:
+    | "pending"
+    | "processing"
+    | "paid"
+    | "failed"
+    | "refunded"
+    | "partially_refunded";
+  fulfillment_status:
+    | "unfulfilled"
+    | "partially_fulfilled"
+    | "fulfilled"
+    | "returned";
   currency_code: string;
   subtotal: number;
   tax_amount: number;
@@ -172,7 +169,7 @@ export interface OrderItem {
 export interface UserAddress {
   id: string;
   user_id: string;
-  type: 'billing' | 'shipping' | 'both';
+  type: "billing" | "shipping" | "both";
   is_default: boolean;
   first_name: string;
   last_name: string;

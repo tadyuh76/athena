@@ -208,19 +208,17 @@ class SiteHeader extends HTMLElement {
         const brandLink = this.shadowRoot.getElementById('athena-brand');
         // Lấy thông tin người dùng từ Local Storage
         const user = JSON.parse(localStorage.getItem('user') || 'null');
-        const role = user?.role; // 'admin', 'staff', hoặc 'customer'
-        
+        const role = user?.role; // 'admin' hoặc 'customer'
+
         // HTML mặc định cho tên ATHENA (dùng style inline để giữ nguyên font)
         const athenaNameHTML = `<span style="font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; font-weight: 300; letter-spacing: -0.02em; color: #1a1a1a;">ATHENA</span>`;
-        
+
         if (brandLink) {
-            if (role && (role === 'admin' || role === 'staff')) {
-                const roleText = (role === 'admin' ? 'ADMIN' : 'STAFF');
-                
+            if (role === 'admin') {
                 // Hiển thị 2 dòng
                 brandLink.innerHTML = `
                     ${athenaNameHTML}
-                    <small class="admin-label">${roleText}</small>
+                    <small class="admin-label">ADMIN</small>
                 `;
             } else {
                 // Chỉ hiển thị 1 dòng
@@ -255,8 +253,8 @@ class SiteHeader extends HTMLElement {
         if (adminLink) { adminLink.style.display = 'none'; }
         if (switchContainer) { switchContainer.style.display = 'none'; }
 
-        if (role === 'admin' || role === 'staff') {
-            // Show admin link for admin/staff users
+        if (role === 'admin') {
+            // Show admin link for admin users
             if (adminLink) { adminLink.style.display = 'flex'; }
 
             const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
@@ -357,8 +355,8 @@ class SiteHeader extends HTMLElement {
             if (adminLink) { adminLink.style.display = 'none'; }
             if (authLink) { authLink.style.display = 'flex'; }
 
-            // 2. LOGIC ADMIN/STAFF: GHI ĐÈ
-            if (role === 'admin' || role === 'staff') {
+            // 2. LOGIC ADMIN: GHI ĐÈ
+            if (role === 'admin') {
                 const targetUrl = isCurrentlyAdmin ? '/' : '/admin.html';
                 const buttonText = isCurrentlyAdmin ? 'Chuyển sang Giao diện Khách hàng' : 'Chuyển sang Giao diện Quản trị';
 
@@ -371,7 +369,7 @@ class SiteHeader extends HTMLElement {
                     `;
                 }
 
-                // Show admin link for admin/staff, hide on admin page
+                // Show admin link for admin, hide on admin page
                 if (adminLink) {
                     adminLink.style.display = isCurrentlyAdmin ? 'none' : 'flex';
                 }

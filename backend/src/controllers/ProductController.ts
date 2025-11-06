@@ -29,7 +29,7 @@ export class ProductController {
       const result = await this.productService.getProducts(filter, page, limit);
       sendJSON(res, 200, result);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch products');
+      sendError(res, 500, 'Không thể tải danh sách sản phẩm');
     }
   }
 
@@ -37,12 +37,12 @@ export class ProductController {
     try {
       const product = await this.productService.getProductById(id);
       if (!product) {
-        sendError(res, 404, 'Product not found');
+        sendError(res, 404, 'Không tìm thấy sản phẩm');
         return;
       }
       sendJSON(res, 200, product);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch product');
+      sendError(res, 500, 'Không thể tải thông tin sản phẩm');
     }
   }
 
@@ -50,12 +50,12 @@ export class ProductController {
     try {
       const product = await this.productService.getProductBySlug(slug);
       if (!product) {
-        sendError(res, 404, 'Product not found');
+        sendError(res, 404, 'Không tìm thấy sản phẩm');
         return;
       }
       sendJSON(res, 200, product);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch product');
+      sendError(res, 500, 'Không thể tải thông tin sản phẩm');
     }
   }
 
@@ -64,7 +64,7 @@ export class ProductController {
       const categories = await this.productService.getCategories();
       sendJSON(res, 200, categories);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch categories');
+      sendError(res, 500, 'Không thể tải danh mục');
     }
   }
 
@@ -73,7 +73,7 @@ export class ProductController {
       const collections = await this.productService.getCollections();
       sendJSON(res, 200, collections);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch collections');
+      sendError(res, 500, 'Không thể tải bộ sưu tập');
     }
   }
 }

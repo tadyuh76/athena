@@ -18,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS "unaccent";           -- Accent-insensitive searc
 
 -- User management enums
 CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended');
-CREATE TYPE user_role AS ENUM ('customer', 'admin', 'staff');
+CREATE TYPE user_role AS ENUM ('customer', 'admin');
 
 -- Order management enums
 CREATE TYPE order_status AS ENUM (
@@ -385,21 +385,6 @@ CREATE TABLE order_addresses (
   CONSTRAINT unique_order_address_type UNIQUE (order_id, type)
 );
 
--- Payment Methods table
--- Stored payment methods for users across different providers
-CREATE TABLE payment_methods (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  provider payment_provider NOT NULL,
-  method_type payment_method_type NOT NULL,
-  provider_payment_method_id VARCHAR(255) NOT NULL,
-  display_name VARCHAR(100),
-  details JSONB, -- Provider-specific details (masked card info, etc.)
-  is_default BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  deleted_at TIMESTAMPTZ
-);
-
 -- Transactions table
 -- Payment transaction records with provider tracking
 CREATE TABLE transactions (
@@ -418,74 +403,6 @@ CREATE TABLE transactions (
   details JSONB, -- Provider response and metadata
   processed_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Shipping Zones table
--- Geographic regions for shipping rate calculation
-CREATE TABLE shipping_zones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name VARCHAR(100) NOT NULL,
-  country_codes TEXT[] NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Shipping Rates table
--- Shipping costs and delivery times by zone and calculation method
-CREATE TABLE shipping_rates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  zone_id UUID NOT NULL REFERENCES shipping_zones(id) ON DELETE CASCADE,
-  name VARCHAR(100) NOT NULL,
-  
-  -- Rate calculation
-  calculation_type VARCHAR(20) DEFAULT 'flat' CHECK (
-    calculation_type IN ('flat', 'weight_based', 'price_based')
-  ),
-  rate DECIMAL(10, 2) NOT NULL CHECK (rate >= 0),
-  min_weight DECIMAL(10, 3),
-  max_weight DECIMAL(10, 3),
-  min_price DECIMAL(10, 2),
-  max_price DECIMAL(10, 2),
-  
-  -- Delivery estimates
-  min_delivery_days INT,
-  max_delivery_days INT,
-  
-  is_active BOOLEAN DEFAULT TRUE,
-  sort_order INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Shipments table
--- Physical shipment tracking with carrier information
-CREATE TABLE shipments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  
-  -- Carrier information
-  carrier VARCHAR(100),
-  service VARCHAR(100),
-  tracking_number VARCHAR(255),
-  tracking_url TEXT,
-  
-  -- Shipment status
-  status VARCHAR(20) DEFAULT 'pending' CHECK (
-    status IN ('pending', 'ready', 'in_transit', 'delivered', 'returned', 'lost')
-  ),
-  
-  -- Package details
-  weight_value DECIMAL(10, 3),
-  weight_unit weight_unit,
-  dimensions JSONB, -- {length, width, height, unit}
-  
-  -- Status timestamps
-  shipped_at TIMESTAMPTZ,
-  delivered_at TIMESTAMPTZ,
-  
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Inventory Movements table
@@ -579,6 +496,13 @@ CREATE TABLE product_reviews (
   CONSTRAINT unique_user_product_order UNIQUE (user_id, product_id, order_id)
 );
 
+create table review_likes (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  review_id UUID NOT NULL REFERENCES product_reviews(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT unique_review_user_like UNIQUE (review_id, user_id)
+);
 
 -- =============================================
 -- INDEXES FOR PERFORMANCE
@@ -690,6 +614,10 @@ CREATE INDEX idx_reviews_user ON product_reviews(user_id);
 CREATE INDEX idx_reviews_rating ON product_reviews(rating);
 CREATE INDEX idx_reviews_featured ON product_reviews(is_featured, status);
 
+-- Review Likes indexes
+CREATE INDEX idx_review_likes_review ON review_likes(review_id);
+CREATE INDEX idx_review_likes_user ON review_likes(user_id);
+
 -- =============================================
 -- FUNCTIONS AND TRIGGERS
 -- =============================================
@@ -774,10 +702,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE cart_items;
 -- =============================================
 -- INITIAL DATA
 -- =============================================
-
--- Default shipping zone
-INSERT INTO shipping_zones (name, country_codes, is_active)
-VALUES ('United States', '{"US"}', true);
 
 -- =============================================
 -- PERMISSIONS AND GRANTS

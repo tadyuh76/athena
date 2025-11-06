@@ -15,7 +15,7 @@ let discountModal, statsModal;
 document.addEventListener('DOMContentLoaded', async () => {
   // Check admin authentication
   const user = await AuthService.getCurrentUser();
-  if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
+  if (!user || user.role !== 'admin') {
     window.location.href = '/admin-login.html';
     return;
   }

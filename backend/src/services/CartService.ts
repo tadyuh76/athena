@@ -73,8 +73,8 @@ export class CartService {
     } catch (error) {
       console.error('[CartService.getCart] Error:', error);
       throw new Error(
-        `Failed to get cart: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể tải giỏ hàng: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -114,7 +114,7 @@ export class CartService {
 
       if (!variant) {
         console.error('[CartService.addItem] Variant not found:', variantId);
-        throw new Error("Variant not found");
+        throw new Error("Không tìm thấy phiên bản sản phẩm");
       }
 
       console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
@@ -128,7 +128,7 @@ export class CartService {
       if (!reservationSuccess) {
         const available = await this.variantModel.getAvailableQuantity(variantId);
         console.error('[CartService.addItem] Insufficient inventory');
-        throw new Error(`Only ${available} items available`);
+        throw new Error(`Chỉ còn ${available} sản phẩm có sẵn`);
       }
 
       // Reserve inventory
@@ -151,8 +151,8 @@ export class CartService {
     } catch (error) {
       console.error('[CartService.addItem] Error:', error);
       throw new Error(
-        `Failed to add item to cart: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể thêm sản phẩm vào giỏ hàng: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -169,18 +169,18 @@ export class CartService {
       try {
         if (quantity <= 0) {
           await this.removeItem(itemId);
-          throw new Error("Item removed from cart");
+          throw new Error("Đã xóa sản phẩm khỏi giỏ hàng");
         }
 
         // Get current cart item with variant
         const currentItem = await this.cartModel.findByIdWithVariant(itemId);
         if (!currentItem) {
-          throw new Error("Cart item not found");
+          throw new Error("Không tìm thấy sản phẩm trong giỏ hàng");
         }
 
         const variant = currentItem.variant;
         if (!variant) {
-          throw new Error("Variant not found");
+          throw new Error("Không tìm thấy phiên bản sản phẩm");
         }
 
         const currentQuantity = currentItem.quantity;
@@ -190,7 +190,7 @@ export class CartService {
         if (quantityDiff > 0) {
           const available = variant.inventory_quantity - variant.reserved_quantity;
           if (available < quantityDiff) {
-            throw new Error(`Only ${available} additional items available`);
+            throw new Error(`Chỉ còn thêm ${available} sản phẩm có sẵn`);
           }
 
           // Try to reserve the additional inventory first
@@ -202,7 +202,7 @@ export class CartService {
 
           if (!reserved) {
             const currentAvailable = await this.variantModel.getAvailableQuantity(variant.id);
-            throw new Error(`Only ${currentAvailable} additional items available`);
+            throw new Error(`Chỉ còn thêm ${currentAvailable} sản phẩm có sẵn`);
           }
 
           // Release the old reservation
@@ -220,18 +220,18 @@ export class CartService {
 
         return updatedItem;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        const errorMessage = error instanceof Error ? error.message : "Lỗi không xác định";
 
         // Don't retry on user-facing errors
-        if (errorMessage.includes("additional items available") ||
-            errorMessage.includes("not found") ||
-            errorMessage.includes("removed from cart")) {
-          throw new Error(`Failed to update cart item: ${errorMessage}`);
+        if (errorMessage.includes("sản phẩm có sẵn") ||
+            errorMessage.includes("không tìm thấy") ||
+            errorMessage.includes("đã xóa")) {
+          throw new Error(`Không thể cập nhật sản phẩm: ${errorMessage}`);
         }
 
         // Retry on transient errors
         if (retries === maxRetries - 1) {
-          throw new Error(`Failed to update cart item after ${maxRetries} retries: ${errorMessage}`);
+          throw new Error(`Không thể cập nhật sản phẩm sau ${maxRetries} lần thử: ${errorMessage}`);
         }
 
         retries++;
@@ -239,7 +239,7 @@ export class CartService {
       }
     }
 
-    throw new Error("Failed to update cart item: Maximum retries exceeded");
+    throw new Error("Không thể cập nhật sản phẩm: Đã vượt quá số lần thử tối đa");
   }
 
   async removeItem(itemId: string): Promise<void> {
@@ -248,7 +248,7 @@ export class CartService {
       const currentItem = await this.cartModel.findByIdWithVariant(itemId);
 
       if (!currentItem) {
-        throw new Error("Cart item not found");
+        throw new Error("Không tìm thấy sản phẩm trong giỏ hàng");
       }
 
       const variant = currentItem.variant;
@@ -262,8 +262,8 @@ export class CartService {
       }
     } catch (error) {
       throw new Error(
-        `Failed to remove cart item: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể xóa sản phẩm khỏi giỏ hàng: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -304,8 +304,8 @@ export class CartService {
       }
     } catch (error) {
       throw new Error(
-        `Failed to clear cart: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể xóa giỏ hàng: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -357,8 +357,8 @@ export class CartService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to calculate cart summary: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể tính tổng giỏ hàng: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -408,8 +408,8 @@ export class CartService {
       await this.cartModel.deleteBySessionId(guestSessionId);
     } catch (error) {
       throw new Error(
-        `Failed to merge guest cart: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể hợp nhất giỏ hàng khách: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -439,10 +439,42 @@ export class CartService {
 
     } catch (error) {
       throw new Error(
-        `Failed to release expired reservations: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể giải phóng đặt chỗ hết hạn: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
+    }
+  }
+
+  /**
+   * Verify that a cart item belongs to the given user or session
+   * Returns true if authorized, false otherwise
+   */
+  async verifyCartItemOwnership(
+    itemId: string,
+    userId?: string,
+    sessionId?: string
+  ): Promise<boolean> {
+    try {
+      const item = await this.cartModel.findById(itemId);
+
+      if (!item) {
+        return false;
+      }
+
+      // Check if item belongs to the user or session
+      if (userId && item.user_id === userId) {
+        return true;
+      }
+
+      if (sessionId && item.session_id === sessionId) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('[CartService.verifyCartItemOwnership] Error:', error);
+      return false;
     }
   }
 }

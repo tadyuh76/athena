@@ -1,10 +1,11 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { AuthService } from '../services/AuthService';
+import { sendError } from '../utils/request-handler';
 
 export interface AuthRequest extends IncomingMessage {
   userId?: string;
   user?: any;
-  userRole?: 'customer' | 'admin' | 'staff';
+  userRole?: 'customer' | 'admin';
 }
 
 const authService = new AuthService();
@@ -40,13 +41,12 @@ export async function authenticateToken(req: AuthRequest): Promise<boolean> {
 
 export async function requireAuth(req: AuthRequest, res: ServerResponse): Promise<boolean> {
   const isAuthenticated = await authenticateToken(req);
-  
+
   if (!isAuthenticated) {
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Unauthorized' }));
+    sendError(res, 401, 'Unauthorized');
     return false;
   }
-  
+
   return true;
 }
 
@@ -56,7 +56,7 @@ export async function optionalAuth(req: AuthRequest): Promise<boolean> {
 
 
 // ================= Admin Role Require ================= //
-export type Role = 'customer' | 'admin' | 'staff';
+export type Role = 'customer' | 'admin';
 
 /**
  * Middleware kiểm tra người dùng đã đăng nhập VÀ có vai trò (Role) cụ thể.
@@ -67,18 +67,14 @@ export function requireRole(allowedRoles: Role[]) {
     const isAuthenticated = await authenticateToken(req);
 
     if (!isAuthenticated) {
-      // 401 Unauthorized nếu không đăng nhập
-      res.writeHead(401, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Unauthorized: Authentication required' }));
+      sendError(res, 401, 'Unauthorized: Authentication required');
       return false;
     }
 
     const userRole = req.userRole;
-    
+
     if (!userRole || !allowedRoles.includes(userRole)) {
-      // 403 Forbidden nếu không có quyền
-      res.writeHead(403, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: `Forbidden: Requires role(s): ${allowedRoles.join(', ')}` }));
+      sendError(res, 403, `Forbidden: Requires role(s): ${allowedRoles.join(', ')}`);
       return false;
     }
 

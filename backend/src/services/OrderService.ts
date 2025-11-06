@@ -54,7 +54,7 @@ export class OrderService {
         : [];
 
       if (!cartItems || cartItems.length === 0) {
-        throw new Error('Cart is empty');
+        throw new Error('Giỏ hàng trống');
       }
 
       // 2. Calculate order totals
@@ -103,7 +103,7 @@ export class OrderService {
         const available = await this.variantModel.getAvailableQuantity(item.variant_id);
         if (available < item.quantity) {
           throw new Error(
-            `Insufficient inventory for ${item.product?.name}. Only ${available} available.`
+            `Không đủ hàng tồn kho cho ${item.product?.name}. Chỉ còn ${available} sản phẩm.`
           );
         }
       }
@@ -114,7 +114,7 @@ export class OrderService {
 
       if (request.paymentMethod === 'stripe') {
         if (!isStripeConfigured()) {
-          throw new Error('Stripe is not configured. Please contact support.');
+          throw new Error('Stripe chưa được cấu hình. Vui lòng liên hệ hỗ trợ.');
         }
 
         const paymentIntent = await createPaymentIntent(total, 'usd', {
@@ -212,7 +212,7 @@ export class OrderService {
       };
     } catch (error) {
       throw new Error(
-        `Failed to create order: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể tạo đơn hàng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -234,7 +234,7 @@ export class OrderService {
       console.log('[OrderService.createStripeCheckoutSession] Cart items:', JSON.stringify(cartItems, null, 2));
 
       if (!cartItems || cartItems.length === 0) {
-        throw new Error('Cart is empty');
+        throw new Error('Giỏ hàng trống');
       }
 
       // 2. Calculate order totals
@@ -284,7 +284,7 @@ export class OrderService {
         const available = await this.variantModel.getAvailableQuantity(item.variant_id);
         if (available < item.quantity) {
           throw new Error(
-            `Insufficient inventory for ${item.product?.name}. Only ${available} available.`
+            `Không đủ hàng tồn kho cho ${item.product?.name}. Chỉ còn ${available} sản phẩm.`
           );
         }
       }
@@ -331,7 +331,7 @@ export class OrderService {
       // 6. Create Stripe Checkout Session
       console.log('[OrderService.createStripeCheckoutSession] Checking Stripe configuration');
       if (!isStripeConfigured()) {
-        throw new Error('Stripe is not configured. Please contact support.');
+        throw new Error('Stripe chưa được cấu hình. Vui lòng liên hệ hỗ trợ.');
       }
 
       const successUrl = `${baseUrl}/order-confirmation.html?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`;
@@ -390,14 +390,7 @@ export class OrderService {
         }
       }
 
-      // 9. Commit inventory (decrement inventory_quantity, release reserved_quantity)
-      console.log('[OrderService.createStripeCheckoutSession] Committing inventory');
-      for (const item of cartItems) {
-        await this.commitInventory(item.variant_id, item.quantity);
-      }
-      console.log('[OrderService.createStripeCheckoutSession] Inventory committed');
-
-      // 10. Clear user's cart
+      // 9. Clear user's cart (inventory will be committed after payment in webhook)
       console.log('[OrderService.createStripeCheckoutSession] Clearing cart');
       if (request.userId) {
         await this.cartModel.deleteByUserId(request.userId);
@@ -416,7 +409,7 @@ export class OrderService {
     } catch (error) {
       console.error('[OrderService.createStripeCheckoutSession] Fatal error:', error);
       throw new Error(
-        `Failed to create checkout session: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể tạo phiên thanh toán: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -430,7 +423,7 @@ export class OrderService {
       const variant = await this.variantModel.findById(variantId);
 
       if (!variant) {
-        throw new Error(`Variant ${variantId} not found`);
+        throw new Error(`Không tìm thấy phiên bản ${variantId}`);
       }
 
       const newInventory = Math.max(0, variant.inventory_quantity - quantity);
@@ -446,7 +439,7 @@ export class OrderService {
         .eq('id', variantId);
     } catch (error) {
       throw new Error(
-        `Failed to commit inventory: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể xác nhận tồn kho: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -549,7 +542,7 @@ export class OrderService {
     } catch (error) {
       console.error('[OrderService.getAllOrders] Full error:', error);
       throw new Error(
-        `Failed to get all orders: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể tải danh sách đơn hàng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -569,7 +562,7 @@ export class OrderService {
       return count || 0;
     } catch (error) {
       throw new Error(
-        `Failed to get order count: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể đếm số đơn hàng: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -595,7 +588,7 @@ export class OrderService {
       // 1. Get variant details with product info
       const variant = await this.variantModel.findById(variantId);
       if (!variant) {
-        throw new Error('Product variant not found');
+        throw new Error('Không tìm thấy phiên bản sản phẩm');
       }
 
       // Get product details
@@ -606,14 +599,14 @@ export class OrderService {
         .single();
 
       if (productError || !product) {
-        throw new Error('Product not found');
+        throw new Error('Không tìm thấy sản phẩm');
       }
 
       // 2. Validate inventory availability
       const available = await this.variantModel.getAvailableQuantity(variantId);
       if (available < quantity) {
         throw new Error(
-          `Insufficient inventory. Only ${available} available.`
+          `Không đủ hàng tồn kho. Chỉ còn ${available} sản phẩm.`
         );
       }
 
@@ -667,7 +660,7 @@ export class OrderService {
       // 6. Create Stripe Checkout Session
       console.log('[OrderService.createBuyNowCheckoutSession] Checking Stripe configuration');
       if (!isStripeConfigured()) {
-        throw new Error('Stripe is not configured. Please contact support.');
+        throw new Error('Stripe chưa được cấu hình. Vui lòng liên hệ hỗ trợ.');
       }
 
       const successUrl = `${baseUrl}/order-confirmation.html?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`;
@@ -710,6 +703,21 @@ export class OrderService {
       await this.reserveInventory(variantId, quantity);
       console.log('[OrderService.createBuyNowCheckoutSession] Inventory reserved');
 
+      // 9. Create temporary cart item for cleanup tracking (expires in 15 minutes)
+      console.log('[OrderService.createBuyNowCheckoutSession] Creating temporary cart item for cleanup tracking');
+      const reservationExpiry = new Date();
+      reservationExpiry.setMinutes(reservationExpiry.getMinutes() + 15);
+
+      await supabaseAdmin.from('cart_items').insert({
+        user_id: userId || null,
+        session_id: userId ? null : `buynow_${order.id}`, // Temporary session for guests
+        product_id: productId,
+        variant_id: variantId,
+        quantity: quantity,
+        inventory_reserved_until: reservationExpiry.toISOString(),
+      });
+      console.log('[OrderService.createBuyNowCheckoutSession] Temporary cart item created for cleanup');
+
       console.log('[OrderService.createBuyNowCheckoutSession] Checkout URL:', session.url);
       console.log('[OrderService.createBuyNowCheckoutSession] Buy now checkout session creation complete');
 
@@ -722,37 +730,28 @@ export class OrderService {
     } catch (error) {
       console.error('[OrderService.createBuyNowCheckoutSession] Fatal error:', error);
       throw new Error(
-        `Failed to create buy now checkout: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể tạo thanh toán mua ngay: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
 
   /**
    * Reserve inventory for an order (used by buy now)
-   * Decrements inventory_quantity and increments reserved_quantity
+   * Uses atomic operation to prevent race conditions
    */
   private async reserveInventory(variantId: string, quantity: number): Promise<void> {
     try {
-      const variant = await this.variantModel.findById(variantId);
+      // Use atomic reservation to prevent race conditions
+      const reserved = await this.variantModel.reserveInventoryAtomic(variantId, quantity, 15);
 
-      if (!variant) {
-        throw new Error(`Variant ${variantId} not found`);
+      if (!reserved) {
+        throw new Error('Không đủ hàng trong kho hoặc không thể đặt trước');
       }
 
-      const newInventory = Math.max(0, variant.inventory_quantity - quantity);
-      const newReserved = variant.reserved_quantity + quantity;
-
-      await supabaseAdmin
-        .from('product_variants')
-        .update({
-          inventory_quantity: newInventory,
-          reserved_quantity: newReserved,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', variantId);
+      console.log(`[OrderService.reserveInventory] Successfully reserved ${quantity} units of variant ${variantId}`);
     } catch (error) {
       throw new Error(
-        `Failed to reserve inventory: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể đặt trước tồn kho: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -791,7 +790,7 @@ export class OrderService {
       }
     } catch (error) {
       throw new Error(
-        `Failed to update payment status: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Không thể cập nhật trạng thái thanh toán: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
       );
     }
   }
@@ -911,6 +910,113 @@ export class OrderService {
   }
 
   /**
+   * Commit order inventory - move from reserved to committed
+   * Called after successful payment to finalize inventory allocation
+   */
+  async commitOrderInventory(orderId: string): Promise<void> {
+    try {
+      // Get order items
+      const { data: orderItems, error } = await supabaseAdmin
+        .from('order_items')
+        .select('variant_id, quantity')
+        .eq('order_id', orderId);
+
+      if (error) {
+        throw error;
+      }
+
+      if (!orderItems || orderItems.length === 0) {
+        console.log(`[OrderService.commitOrderInventory] No items found for order ${orderId}`);
+        return;
+      }
+
+      // For each order item, move reserved quantity to committed (finalize the sale)
+      for (const item of orderItems) {
+        const variant = await this.variantModel.findById(item.variant_id);
+
+        if (variant) {
+          // Decrement both inventory_quantity (finalize sale) and reserved_quantity (release reservation)
+          const newInventory = Math.max(0, variant.inventory_quantity - item.quantity);
+          const newReserved = Math.max(0, variant.reserved_quantity - item.quantity);
+
+          await supabaseAdmin
+            .from('product_variants')
+            .update({
+              inventory_quantity: newInventory,
+              reserved_quantity: newReserved,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.variant_id);
+
+          console.log(
+            `[OrderService.commitOrderInventory] Committed ${item.quantity} units of variant ${item.variant_id} (inventory: ${variant.inventory_quantity} -> ${newInventory}, reserved: ${variant.reserved_quantity} -> ${newReserved})`
+          );
+        }
+      }
+
+      console.log(`[OrderService.commitOrderInventory] Inventory committed for order ${orderId}`);
+    } catch (error) {
+      console.error('[OrderService.commitOrderInventory] Error:', error);
+      throw new Error(
+        `Không thể cam kết tồn kho: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
+      );
+    }
+  }
+
+  /**
+   * Release order inventory - restore inventory from reserved/committed back to available
+   * Called when order is cancelled to return inventory to stock
+   */
+  async releaseOrderInventory(orderId: string): Promise<void> {
+    try {
+      // Get order items
+      const { data: orderItems, error } = await supabaseAdmin
+        .from('order_items')
+        .select('variant_id, quantity')
+        .eq('order_id', orderId);
+
+      if (error) {
+        throw error;
+      }
+
+      if (!orderItems || orderItems.length === 0) {
+        console.log(`[OrderService.releaseOrderInventory] No items found for order ${orderId}`);
+        return;
+      }
+
+      // For each order item, restore inventory
+      for (const item of orderItems) {
+        const variant = await this.variantModel.findById(item.variant_id);
+
+        if (variant) {
+          const newInventory = variant.inventory_quantity + item.quantity;
+          const newReserved = Math.max(0, variant.reserved_quantity - item.quantity);
+
+          await supabaseAdmin
+            .from('product_variants')
+            .update({
+              inventory_quantity: newInventory,
+              reserved_quantity: newReserved,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', item.variant_id);
+
+          console.log(
+            `[OrderService.releaseOrderInventory] Released ${item.quantity} units of variant ${item.variant_id}`
+          );
+        }
+      }
+
+      console.log(`[OrderService.releaseOrderInventory] Inventory released for order ${orderId}`);
+    } catch (error) {
+      console.error('[OrderService.releaseOrderInventory] Error:', error);
+      throw new Error(
+        `Không thể giải phóng tồn kho: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`
+      );
+    }
+  }
+
+  /**
    * Admin cancels order
    */
   async cancelOrder(orderId: string, reason?: string): Promise<OrderWithDetails> {
@@ -939,8 +1045,10 @@ export class OrderService {
         .update(updateData)
         .eq('id', orderId);
 
-      // TODO: Refund payment if already paid
-      // TODO: Release inventory back to stock
+      // Release inventory back to stock
+      await this.releaseOrderInventory(orderId);
+
+      // TODO: Refund payment if already paid (requires Stripe refund API integration)
 
       return this.orderModel.findByIdWithDetails(orderId) as Promise<OrderWithDetails>;
     } catch (error) {

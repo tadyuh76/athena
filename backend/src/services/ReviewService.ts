@@ -110,8 +110,8 @@ export class ReviewService {
     } catch (error) {
       console.error("Error in getReviews:", error);
       throw new Error(
-        `Failed to get reviews: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể lấy danh sách đánh giá: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -143,8 +143,8 @@ export class ReviewService {
       return data;
     } catch (error) {
       throw new Error(
-        `Failed to get review: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể lấy đánh giá: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -172,7 +172,7 @@ export class ReviewService {
         .maybeSingle();
 
       if (existingReview) {
-        throw new Error("You have already reviewed this product");
+        throw new Error("Bạn đã đánh giá sản phẩm này rồi");
       }
 
       // Check if this is a verified purchase
@@ -238,8 +238,8 @@ export class ReviewService {
       return data;
     } catch (error) {
       throw new Error(
-        `Failed to create review: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể tạo đánh giá: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -266,11 +266,11 @@ export class ReviewService {
         .single();
 
       if (!existingReview) {
-        throw new Error("Review not found");
+        throw new Error("Không tìm thấy đánh giá");
       }
 
       if (existingReview.user_id !== userId) {
-        throw new Error("Unauthorized to update this review");
+        throw new Error("Không có quyền cập nhật đánh giá này");
       }
 
       // Update the review
@@ -295,8 +295,8 @@ export class ReviewService {
       return data;
     } catch (error) {
       throw new Error(
-        `Failed to update review: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể cập nhật đánh giá: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -315,11 +315,11 @@ export class ReviewService {
         .single();
 
       if (!existingReview) {
-        throw new Error("Review not found");
+        throw new Error("Không tìm thấy đánh giá");
       }
 
       if (existingReview.user_id !== userId) {
-        throw new Error("Unauthorized to delete this review");
+        throw new Error("Không có quyền xóa đánh giá này");
       }
 
       // Delete images from storage if any
@@ -351,8 +351,8 @@ export class ReviewService {
       return true;
     } catch (error) {
       throw new Error(
-        `Failed to delete review: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể xóa đánh giá: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }
@@ -451,8 +451,8 @@ export class ReviewService {
     } catch (error) {
       console.error("Error toggling review like:", error);
       throw new Error(
-        `Failed to toggle review like: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Không thể cập nhật yêu thích: ${
+          error instanceof Error ? error.message : "Lỗi không xác định"
         }`
       );
     }

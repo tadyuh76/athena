@@ -123,7 +123,7 @@ export class DiscountController {
 
       if (!code || !items || !subtotal) {
         sendJSON(res, 400, {
-          error: 'Thiếu thông tin mã giảm giá, sản phẩm hoặc tổng tiền'
+          error: 'Thiếu thông tin: mã giảm giá, sản phẩm hoặc tổng tiền'
         });
         return;
       }

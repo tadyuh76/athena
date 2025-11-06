@@ -76,6 +76,19 @@
                 </div>
                 <div class="modal-body">
                     <form id="buyNowForm">
+                        <!-- Saved Addresses Selection (shown only for logged-in users) -->
+                        <div id="buyNowSavedAddressesSection" style="display: none;">
+                            <div class="mb-3">
+                                <label for="buyNowSavedAddressSelect" class="form-label">
+                                    <i class="bi bi-geo-alt me-2"></i>Chọn Địa Chỉ Đã Lưu
+                                </label>
+                                <select class="form-select" id="buyNowSavedAddressSelect">
+                                    <option value="">Nhập địa chỉ mới...</option>
+                                </select>
+                            </div>
+                            <hr>
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="buyNowFirstName" class="form-label">Tên <span class="text-danger">*</span></label>

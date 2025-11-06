@@ -35,7 +35,7 @@ export class AddressService {
     try {
       return await this.addressModel.findByUserId(userId);
     } catch (error) {
-      throw new Error(`Failed to get user addresses: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể lấy danh sách địa chỉ: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -46,7 +46,7 @@ export class AddressService {
     try {
       return await this.addressModel.findByIdAndUserId(addressId, userId);
     } catch (error) {
-      throw new Error(`Failed to get address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể lấy địa chỉ: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -57,7 +57,7 @@ export class AddressService {
     try {
       return await this.addressModel.findDefaultByUserId(userId);
     } catch (error) {
-      throw new Error(`Failed to get default address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể lấy địa chỉ mặc định: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -101,7 +101,7 @@ export class AddressService {
       return result;
     } catch (error) {
       console.error('[AddressService.createAddress] Error:', error);
-      throw new Error(`Failed to create address: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
+      throw new Error(`Không thể tạo địa chỉ: ${error instanceof Error ? error.message : JSON.stringify(error)}`);
     }
   }
 
@@ -113,7 +113,7 @@ export class AddressService {
       // Verify address exists and belongs to user
       const existingAddress = await this.addressModel.findByIdAndUserId(addressId, userId);
       if (!existingAddress) {
-        throw new Error('Address not found or access denied');
+        throw new Error('Không tìm thấy địa chỉ hoặc không có quyền truy cập');
       }
 
       // Validate if full address data is provided
@@ -146,7 +146,7 @@ export class AddressService {
 
       return await this.addressModel.updateAddress(addressId, userId, updates);
     } catch (error) {
-      throw new Error(`Failed to update address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể cập nhật địa chỉ: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -158,7 +158,7 @@ export class AddressService {
       // Verify address exists and belongs to user
       const existingAddress = await this.addressModel.findByIdAndUserId(addressId, userId);
       if (!existingAddress) {
-        throw new Error('Address not found or access denied');
+        throw new Error('Không tìm thấy địa chỉ hoặc không có quyền truy cập');
       }
 
       // Check if this is the default address
@@ -168,13 +168,13 @@ export class AddressService {
 
         // If there are other addresses, suggest setting a new default
         if (addressCount > 1) {
-          throw new Error('Cannot delete default address. Please set another address as default first.');
+          throw new Error('Không thể xóa địa chỉ mặc định. Vui lòng đặt địa chỉ khác làm mặc định trước.');
         }
       }
 
       await this.addressModel.softDeleteAddress(addressId, userId);
     } catch (error) {
-      throw new Error(`Failed to delete address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể xóa địa chỉ: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -186,7 +186,7 @@ export class AddressService {
       // Verify address exists and belongs to user
       const existingAddress = await this.addressModel.findByIdAndUserId(addressId, userId);
       if (!existingAddress) {
-        throw new Error('Address not found or access denied');
+        throw new Error('Không tìm thấy địa chỉ hoặc không có quyền truy cập');
       }
 
       // Set as default
@@ -195,12 +195,12 @@ export class AddressService {
       // Return updated address
       const updatedAddress = await this.addressModel.findByIdAndUserId(addressId, userId);
       if (!updatedAddress) {
-        throw new Error('Failed to retrieve updated address');
+        throw new Error('Không thể lấy địa chỉ đã cập nhật');
       }
 
       return updatedAddress;
     } catch (error) {
-      throw new Error(`Failed to set default address: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`Không thể đặt địa chỉ mặc định: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
     }
   }
 
@@ -224,7 +224,7 @@ export class AddressService {
     }
 
     if (errors.length > 0) {
-      throw new Error(`Validation failed: ${errors.join(', ')}`);
+      throw new Error(`Xác thực thất bại: ${errors.join(', ')}`);
     }
   }
 

@@ -28,33 +28,33 @@ class ProductController {
             (0, request_handler_1.sendJSON)(res, 200, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, 'Failed to fetch products');
+            (0, request_handler_1.sendError)(res, 500, 'Không thể tải danh sách sản phẩm');
         }
     }
     async getProductById(_req, res, id) {
         try {
             const product = await this.productService.getProductById(id);
             if (!product) {
-                (0, request_handler_1.sendError)(res, 404, 'Product not found');
+                (0, request_handler_1.sendError)(res, 404, 'Không tìm thấy sản phẩm');
                 return;
             }
             (0, request_handler_1.sendJSON)(res, 200, product);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, 'Failed to fetch product');
+            (0, request_handler_1.sendError)(res, 500, 'Không thể tải thông tin sản phẩm');
         }
     }
     async getProductBySlug(_req, res, slug) {
         try {
             const product = await this.productService.getProductBySlug(slug);
             if (!product) {
-                (0, request_handler_1.sendError)(res, 404, 'Product not found');
+                (0, request_handler_1.sendError)(res, 404, 'Không tìm thấy sản phẩm');
                 return;
             }
             (0, request_handler_1.sendJSON)(res, 200, product);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, 'Failed to fetch product');
+            (0, request_handler_1.sendError)(res, 500, 'Không thể tải thông tin sản phẩm');
         }
     }
     async getCategories(_req, res) {
@@ -63,7 +63,7 @@ class ProductController {
             (0, request_handler_1.sendJSON)(res, 200, categories);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, 'Failed to fetch categories');
+            (0, request_handler_1.sendError)(res, 500, 'Không thể tải danh mục');
         }
     }
     async getCollections(_req, res) {
@@ -72,7 +72,7 @@ class ProductController {
             (0, request_handler_1.sendJSON)(res, 200, collections);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, 'Failed to fetch collections');
+            (0, request_handler_1.sendError)(res, 500, 'Không thể tải bộ sưu tập');
         }
     }
 }

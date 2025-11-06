@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Không Tìm Thấy Trang | Athena</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+    <script src="/js/components.js"></script>
+    <style>
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        .error-content {
+            text-align: center;
+            max-width: 600px;
+        }
+        .error-code {
+            font-size: 120px;
+            font-weight: 600;
+            font-family: 'Cormorant Garamond', serif;
+            line-height: 1;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .error-title {
+            font-size: 2rem;
+            font-family: 'Cormorant Garamond', serif;
+            margin-bottom: 1rem;
+        }
+        .error-message {
+            color: #6c757d;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        .btn-home {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <site-header></site-header>
+
+    <div class="error-container">
+        <div class="error-content">
+            <div class="error-code">404</div>
+            <h1 class="error-title">Không Tìm Thấy Trang</h1>
+            <p class="error-message">
+                Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.
+            </p>
+            <div class="d-flex gap-3 justify-content-center">
+                <a href="/" class="btn btn-dark btn-home">
+                    <i class="bi bi-house-door me-2"></i>Về Trang Chủ
+                </a>
+                <a href="/products.html" class="btn btn-outline-dark btn-home">
+                    <i class="bi bi-bag me-2"></i>Xem Sản Phẩm
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <site-footer></site-footer>
+</body>
+</html>

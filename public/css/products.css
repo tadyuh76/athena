@@ -154,41 +154,6 @@
   pointer-events: none;
 }
 
-/* Wishlist Button */
-.wishlist-btn {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1;
-  transition: all 0.3s ease;
-  opacity: 0;
-}
-
-.product-card:hover .wishlist-btn {
-  opacity: 1;
-}
-
-.wishlist-btn:hover {
-  background: var(--light-bg);
-  transform: scale(1.1);
-}
-
-.wishlist-btn.active {
-  background: var(--success-green);
-  color: white;
-  border-color: var(--success-green);
-  opacity: 1;
-}
-
 /* Quick Add Button */
 .quick-add-btn {
   position: absolute;

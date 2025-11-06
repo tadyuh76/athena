@@ -2,7 +2,6 @@ import { createServer, IncomingMessage, ServerResponse } from "http";
 import dotenv from "dotenv";
 import path from "path";
 import { setupRoutes } from "./router/routes";
-import { CartService } from "./services/CartService";
 import { setCorsHeaders, sendError } from "./utils/request-handler";
 import { StorageService } from "./utils/storage";
 
@@ -10,7 +9,6 @@ import { StorageService } from "./utils/storage";
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 const router = setupRoutes();
-const cartService = new CartService();
 
 const server = createServer(
   async (req: IncomingMessage, res: ServerResponse) => {
@@ -34,15 +32,6 @@ const server = createServer(
     }
   }
 );
-
-// Release expired inventory reservations every 5 minutes
-setInterval(async () => {
-  try {
-    await cartService.releaseExpiredReservations();
-  } catch (error) {
-    console.error("Failed to release expired reservations:", error);
-  }
-}, 5 * 60 * 1000);
 
 // Initialize Supabase Storage bucket for review images
 StorageService.ensureBucketExists().catch((error) => {
@@ -71,12 +60,6 @@ server.listen(PORT, () => {
   console.log("    GET    /api/products/slug/:slug");
   console.log("    GET    /api/categories");
   console.log("    GET    /api/collections");
-  console.log("  Wishlist:");
-  console.log("    GET    /api/wishlist");
-  console.log("    POST   /api/wishlist");
-  console.log("    PUT    /api/wishlist/:id");
-  console.log("    DELETE /api/wishlist/:id");
-  console.log("    GET    /api/wishlist/count");
   console.log("  Cart:");
   console.log("    GET    /api/cart");
   console.log("    POST   /api/cart/items");

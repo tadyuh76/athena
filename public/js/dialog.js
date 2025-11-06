@@ -13,9 +13,9 @@ export class Dialog {
   static confirm(message, options = {}) {
     return new Promise((resolve) => {
       const {
-        title = 'Confirm',
-        confirmText = 'Confirm',
-        cancelText = 'Cancel',
+        title = 'Xác nhận',
+        confirmText = 'Xác nhận',
+        cancelText = 'Hủy',
         confirmClass = 'btn-dark',
         cancelClass = 'btn-outline-secondary'
       } = options;
@@ -76,8 +76,8 @@ export class Dialog {
   static alert(message, options = {}) {
     return new Promise((resolve) => {
       const {
-        title = 'Alert',
-        buttonText = 'OK',
+        title = 'Thông báo',
+        buttonText = 'Đồng ý',
         buttonClass = 'btn-dark'
       } = options;
 
@@ -127,11 +127,11 @@ export class Dialog {
   static prompt(message, options = {}) {
     return new Promise((resolve) => {
       const {
-        title = 'Input',
+        title = 'Nhập dữ liệu',
         defaultValue = '',
         placeholder = '',
-        confirmText = 'OK',
-        cancelText = 'Cancel',
+        confirmText = 'Đồng ý',
+        cancelText = 'Hủy',
         confirmClass = 'btn-dark',
         cancelClass = 'btn-outline-secondary'
       } = options;

@@ -2,13 +2,11 @@
 import { AuthService } from "/services/AuthService.js";
 import { ProductService } from "/services/ProductService.js";
 import { CartService } from "/services/CartService.js";
-import { WishlistService } from "/services/WishlistService.js";
 
 // Initialize services
 const authService = new AuthService();
 const productService = new ProductService();
 const cartService = new CartService();
-const wishlistService = new WishlistService();
 
 // Initialize navigation
 async function initializeNavigation() {
@@ -302,8 +300,6 @@ window.athena = {
   authService,
   productService,
   cartService,
-  wishlistService,
   updateCartCount,
-  updateWishlistCount,
   showToast,
 };

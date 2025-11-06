@@ -19,8 +19,17 @@ const proxy = httpProxy.createProxyServer({
 function serveStaticFile(filePath, res) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
-      res.writeHead(404);
-      res.end("Not found");
+      // Serve 404.html instead of plain text
+      const notFoundPath = path.join(PUBLIC_DIR, '404.html');
+      fs.readFile(notFoundPath, (err404, data404) => {
+        if (err404) {
+          res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+          res.end("404 - Không Tìm Thấy Trang");
+          return;
+        }
+        res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(data404);
+      });
       return;
     }
 

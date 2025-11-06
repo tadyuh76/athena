@@ -44,7 +44,7 @@ class CartService {
         }
         catch (error) {
             console.error('[CartService.getCart] Error:', error);
-            throw new Error(`Failed to get cart: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể tải giỏ hàng: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async addItem(userId, sessionId, productId, variantId, quantity = 1) {
@@ -64,7 +64,7 @@ class CartService {
             const variant = await this.variantModel.findById(variantId);
             if (!variant) {
                 console.error('[CartService.addItem] Variant not found:', variantId);
-                throw new Error("Variant not found");
+                throw new Error("Không tìm thấy phiên bản sản phẩm");
             }
             console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
             const price = variant.price || 0;
@@ -73,7 +73,7 @@ class CartService {
             if (!reservationSuccess) {
                 const available = await this.variantModel.getAvailableQuantity(variantId);
                 console.error('[CartService.addItem] Insufficient inventory');
-                throw new Error(`Only ${available} items available`);
+                throw new Error(`Chỉ còn ${available} sản phẩm có sẵn`);
             }
             const reservationExpiry = new Date(Date.now() + 15 * 60 * 1000);
             console.log('[CartService.addItem] Inventory reserved successfully, adding item to cart...');
@@ -91,7 +91,7 @@ class CartService {
         }
         catch (error) {
             console.error('[CartService.addItem] Error:', error);
-            throw new Error(`Failed to add item to cart: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể thêm sản phẩm vào giỏ hàng: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async updateItemQuantity(itemId, quantity) {
@@ -101,27 +101,27 @@ class CartService {
             try {
                 if (quantity <= 0) {
                     await this.removeItem(itemId);
-                    throw new Error("Item removed from cart");
+                    throw new Error("Đã xóa sản phẩm khỏi giỏ hàng");
                 }
                 const currentItem = await this.cartModel.findByIdWithVariant(itemId);
                 if (!currentItem) {
-                    throw new Error("Cart item not found");
+                    throw new Error("Không tìm thấy sản phẩm trong giỏ hàng");
                 }
                 const variant = currentItem.variant;
                 if (!variant) {
-                    throw new Error("Variant not found");
+                    throw new Error("Không tìm thấy phiên bản sản phẩm");
                 }
                 const currentQuantity = currentItem.quantity;
                 const quantityDiff = quantity - currentQuantity;
                 if (quantityDiff > 0) {
                     const available = variant.inventory_quantity - variant.reserved_quantity;
                     if (available < quantityDiff) {
-                        throw new Error(`Only ${available} additional items available`);
+                        throw new Error(`Chỉ còn thêm ${available} sản phẩm có sẵn`);
                     }
                     const reserved = await this.variantModel.reserveInventoryAtomic(variant.id, quantityDiff, 15);
                     if (!reserved) {
                         const currentAvailable = await this.variantModel.getAvailableQuantity(variant.id);
-                        throw new Error(`Only ${currentAvailable} additional items available`);
+                        throw new Error(`Chỉ còn thêm ${currentAvailable} sản phẩm có sẵn`);
                     }
                     await this.variantModel.releaseReservedInventory(variant.id, currentQuantity);
                 }
@@ -135,26 +135,26 @@ class CartService {
                 return updatedItem;
             }
             catch (error) {
-                const errorMessage = error instanceof Error ? error.message : "Unknown error";
-                if (errorMessage.includes("additional items available") ||
-                    errorMessage.includes("not found") ||
-                    errorMessage.includes("removed from cart")) {
-                    throw new Error(`Failed to update cart item: ${errorMessage}`);
+                const errorMessage = error instanceof Error ? error.message : "Lỗi không xác định";
+                if (errorMessage.includes("sản phẩm có sẵn") ||
+                    errorMessage.includes("không tìm thấy") ||
+                    errorMessage.includes("đã xóa")) {
+                    throw new Error(`Không thể cập nhật sản phẩm: ${errorMessage}`);
                 }
                 if (retries === maxRetries - 1) {
-                    throw new Error(`Failed to update cart item after ${maxRetries} retries: ${errorMessage}`);
+                    throw new Error(`Không thể cập nhật sản phẩm sau ${maxRetries} lần thử: ${errorMessage}`);
                 }
                 retries++;
                 await new Promise(resolve => setTimeout(resolve, 50 * retries));
             }
         }
-        throw new Error("Failed to update cart item: Maximum retries exceeded");
+        throw new Error("Không thể cập nhật sản phẩm: Đã vượt quá số lần thử tối đa");
     }
     async removeItem(itemId) {
         try {
             const currentItem = await this.cartModel.findByIdWithVariant(itemId);
             if (!currentItem) {
-                throw new Error("Cart item not found");
+                throw new Error("Không tìm thấy sản phẩm trong giỏ hàng");
             }
             const variant = currentItem.variant;
             await this.cartModel.delete(itemId);
@@ -163,7 +163,7 @@ class CartService {
             }
         }
         catch (error) {
-            throw new Error(`Failed to remove cart item: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể xóa sản phẩm khỏi giỏ hàng: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async clearCart(userId, sessionId) {
@@ -197,7 +197,7 @@ class CartService {
             }
         }
         catch (error) {
-            throw new Error(`Failed to clear cart: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể xóa giỏ hàng: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async getCartSummary(userId, sessionId) {
@@ -231,7 +231,7 @@ class CartService {
             };
         }
         catch (error) {
-            throw new Error(`Failed to calculate cart summary: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể tính tổng giỏ hàng: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async mergeGuestCart(guestSessionId, userId) {
@@ -260,7 +260,7 @@ class CartService {
             await this.cartModel.deleteBySessionId(guestSessionId);
         }
         catch (error) {
-            throw new Error(`Failed to merge guest cart: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể hợp nhất giỏ hàng khách: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
         }
     }
     async releaseExpiredReservations() {
@@ -280,7 +280,26 @@ class CartService {
             }
         }
         catch (error) {
-            throw new Error(`Failed to release expired reservations: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw new Error(`Không thể giải phóng đặt chỗ hết hạn: ${error instanceof Error ? error.message : "Lỗi không xác định"}`);
+        }
+    }
+    async verifyCartItemOwnership(itemId, userId, sessionId) {
+        try {
+            const item = await this.cartModel.findById(itemId);
+            if (!item) {
+                return false;
+            }
+            if (userId && item.user_id === userId) {
+                return true;
+            }
+            if (sessionId && item.session_id === sessionId) {
+                return true;
+            }
+            return false;
+        }
+        catch (error) {
+            console.error('[CartService.verifyCartItemOwnership] Error:', error);
+            return false;
         }
     }
 }

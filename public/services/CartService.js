@@ -1,21 +1,7 @@
-import { ProductService } from "./ProductService.js";
-
 export class CartService {
   constructor() {
     this.baseUrl = window.ENV ? window.ENV.getApiUrl() : "/api";
     this.cart = null;
-    this.sessionId = this.getSessionId();
-    this.productService = new ProductService();
-  }
-
-  getSessionId() {
-    let sessionId = localStorage.getItem("sessionId");
-    if (!sessionId) {
-      sessionId =
-        "session_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-      localStorage.setItem("sessionId", sessionId);
-    }
-    return sessionId;
   }
 
   async makeRequest(endpoint, method = "GET", body = null) {
@@ -54,11 +40,11 @@ export class CartService {
   async getCart() {
     try {
       console.log("[CartService.getCart] Called");
-      // If user is not authenticated, use localStorage-backed cart
+
+      // Require authentication
       if (!localStorage.getItem("authToken")) {
-        console.log("[CartService.getCart] No auth token, using local cart");
-        const items = this.getLocalCart();
-        this.cart = { id: null, items };
+        console.log("[CartService.getCart] No auth token, user must login");
+        this.cart = { id: null, items: [] };
         this.updateCartBadge();
         return this.cart;
       }
@@ -72,9 +58,7 @@ export class CartService {
       return this.cart;
     } catch (error) {
       console.error("[CartService.getCart] Error:", error);
-      // If API fails, fall back to local cart
-      const items = this.getLocalCart();
-      this.cart = { id: null, items };
+      this.cart = { id: null, items: [] };
       this.updateCartBadge();
       return this.cart;
     }
@@ -89,63 +73,8 @@ export class CartService {
 
     // Require authentication for cart operations
     const authToken = localStorage.getItem("authToken");
-
-    // If unauthenticated, maintain a local cart in localStorage
     if (!authToken) {
-      try {
-        // Try to get product detail to populate cart item
-        let product = null;
-        try {
-          product = await this.productService.getProductById(productId);
-        } catch (err) {
-          console.warn(
-            "Failed to fetch product for local cart, creating minimal product",
-            err
-          );
-          product = {
-            id: productId,
-            name: "Product",
-            featured_image_url: "/images/placeholder-user.jpg",
-            base_price: 0,
-            variants: [{ id: variantId, sku: variantId }],
-          };
-        }
-
-        const variant = (product.variants || []).find(
-          (v) => String(v.id) === String(variantId)
-        ) || { id: variantId, sku: variantId };
-
-        const items = this.getLocalCart();
-        // Find existing item by product+variant
-        const existing = items.find(
-          (it) =>
-            String(it.product.id) === String(product.id) &&
-            String(it.variant.id) === String(variant.id)
-        );
-        if (existing) {
-          existing.quantity = Math.min((existing.quantity || 0) + quantity, 99);
-        } else {
-          items.push({
-            id:
-              "local_" +
-              Date.now() +
-              "_" +
-              Math.random().toString(36).substr(2, 5),
-            product,
-            variant,
-            quantity,
-            price_at_time: product.base_price || 0,
-          });
-        }
-
-        this.saveLocalCart(items);
-        this.cart = { id: null, items };
-        this.updateCartBadge();
-        return { success: true };
-      } catch (err) {
-        console.error("[CartService.addItem] Local add error:", err);
-        throw err;
-      }
+      throw new Error("Authentication required. Please login to add items to cart.");
     }
 
     try {
@@ -159,7 +88,6 @@ export class CartService {
       const result = await this.makeRequest("/cart/items", "POST", body);
       console.log("[CartService.addItem] Item added successfully:", result);
 
-      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return result;
     } catch (error) {
       console.error("[CartService.addItem] Error:", error);
@@ -170,15 +98,7 @@ export class CartService {
   async updateItemQuantity(itemId, quantity) {
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {
-      // Update local cart
-      const items = this.getLocalCart();
-      const item = items.find((i) => String(i.id) === String(itemId));
-      if (!item) throw new Error("Item not found");
-      item.quantity = Math.max(1, Math.min(quantity, 99));
-      this.saveLocalCart(items);
-      this.cart = { id: null, items };
-      this.updateCartBadge();
-      return { success: true };
+      throw new Error("Authentication required");
     }
 
     try {
@@ -186,7 +106,6 @@ export class CartService {
         quantity: quantity,
       });
 
-      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return result;
     } catch (error) {
       console.error("Failed to update item quantity:", error);
@@ -197,19 +116,11 @@ export class CartService {
   async removeItem(itemId) {
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {
-      const items = this.getLocalCart();
-      const idx = items.findIndex((i) => String(i.id) === String(itemId));
-      if (idx === -1) throw new Error("Item not found");
-      items.splice(idx, 1);
-      this.saveLocalCart(items);
-      this.cart = { id: null, items };
-      this.updateCartBadge();
-      return true;
+      throw new Error("Authentication required");
     }
 
     try {
       await this.makeRequest(`/cart/items/${itemId}`, "DELETE");
-      // Don't refresh cart here - let the calling code handle it to avoid duplicate requests
       return true;
     } catch (error) {
       console.error("Failed to remove item:", error);
@@ -221,21 +132,14 @@ export class CartService {
     try {
       const authToken = localStorage.getItem("authToken");
       if (!authToken) {
-        this.saveLocalCart([]);
-        this.cart = { id: null, items: [] };
-        this.updateCartBadge();
-        return true;
+        throw new Error("Authentication required");
       }
 
       if (!this.cart || !this.cart.id) {
         throw new Error("Cart not found");
       }
 
-      const params = new URLSearchParams();
-      if (!localStorage.getItem("authToken")) {
-        params.append("session_id", this.sessionId);
-      }
-      await this.makeRequest(`/cart/clear?${params.toString()}`, "POST");
+      await this.makeRequest(`/cart/clear`, "POST");
       await this.getCart(); // Refresh cart
       return true;
     } catch (error) {
@@ -249,33 +153,20 @@ export class CartService {
       if (!this.cart || !this.cart.id) {
         await this.getCart();
       }
+
       const authToken = localStorage.getItem("authToken");
       if (!authToken) {
-        // compute local cart summary
-        const items = this.cart.items || [];
-        const subtotal = items.reduce(
-          (s, it) => s + (it.price_at_time || 0) * (it.quantity || 0),
-          0
-        );
-        const shipping = subtotal >= 150 || subtotal === 0 ? 0 : 10;
-        const tax = subtotal * 0.1; // 10% tax for demo
-        const discount = 0;
-        const total = subtotal + shipping + tax - discount;
         return {
-          subtotal,
-          shipping,
-          tax,
-          discount,
-          total,
-          itemCount: items.reduce((c, i) => c + (i.quantity || 0), 0),
+          subtotal: 0,
+          shipping: 0,
+          tax: 0,
+          discount: 0,
+          total: 0,
+          itemCount: 0,
         };
       }
 
-      const params = new URLSearchParams();
-      if (!localStorage.getItem("authToken")) {
-        params.append("session_id", this.sessionId);
-      }
-      return await this.makeRequest(`/cart/summary?${params.toString()}`);
+      return await this.makeRequest(`/cart/summary`);
     } catch (error) {
       console.error("Failed to get cart summary:", error);
       return {
@@ -285,28 +176,6 @@ export class CartService {
         total: 0,
         itemCount: 0,
       };
-    }
-  }
-
-  async mergeGuestCart() {
-    try {
-      if (!this.sessionId || !localStorage.getItem("authToken")) {
-        return;
-      }
-
-      const result = await this.makeRequest("/cart/merge", "POST", {
-        session_id: this.sessionId,
-      });
-
-      // Clear session ID after merge
-      localStorage.removeItem("sessionId");
-      this.sessionId = null;
-
-      this.cart = result;
-      this.updateCartBadge();
-      return result;
-    } catch (error) {
-      console.error("Failed to merge guest cart:", error);
     }
   }
 
@@ -367,25 +236,5 @@ export class CartService {
       style: "currency",
       currency: "USD",
     }).format(price);
-  }
-
-  // Local cart helpers
-  getLocalCart() {
-    try {
-      const raw = localStorage.getItem("localCart");
-      if (!raw) return [];
-      return JSON.parse(raw);
-    } catch (err) {
-      console.error("Failed to read localCart:", err);
-      return [];
-    }
-  }
-
-  saveLocalCart(items) {
-    try {
-      localStorage.setItem("localCart", JSON.stringify(items || []));
-    } catch (err) {
-      console.error("Failed to save localCart:", err);
-    }
   }
 }

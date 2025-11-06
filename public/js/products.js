@@ -1,28 +1,21 @@
 import { AuthService } from "/services/AuthService.js";
 import { ProductService } from "/services/ProductService.js";
 import { CartService } from "/services/CartService.js";
-import { WishlistService } from "/services/WishlistService.js";
 
 // Initialize services
 const authService = new AuthService();
 const productService = new ProductService();
 const cartService = new CartService();
-const wishlistService = new WishlistService();
 
 // State
 let currentPage = 1;
 let currentFilters = {};
-let wishlistItems = [];
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
   await initializeNavigation();
   await loadCategories();
   await loadCollections();
-
-  if (authService.isAuthenticated()) {
-    await loadWishlist();
-  }
 
   parseUrlParams();
   await loadProducts();
@@ -49,17 +42,6 @@ async function updateCartCount() {
     }
   } catch (error) {
     console.error("Failed to update cart count:", error);
-  }
-}
-
-// Load wishlist
-async function loadWishlist() {
-  try {
-    const result = await wishlistService.getWishlist();
-    wishlistItems = Array.isArray(result) ? result : [];
-  } catch (error) {
-    console.error("Failed to load wishlist:", error);
-    wishlistItems = [];
   }
 }
 
@@ -290,9 +272,6 @@ async function loadProducts() {
           product.images?.[0]?.url ||
           "/images/placeholder-user.jpg";
         const isInStock = productService.isInStock(product);
-        const isInWishlist =
-          Array.isArray(wishlistItems) &&
-          wishlistItems.some((w) => w.product_id === product.id);
 
         return `
         <div class="col-lg-4 col-md-6">
@@ -301,25 +280,6 @@ async function loadProducts() {
               ${
                 discount
                   ? `<span class="position-absolute top-0 start-0 m-2 badge bg-danger">-${discount}%</span>`
-                  : ""
-              }
-              ${
-                authService.isAuthenticated()
-                  ? `
-                <button class="position-absolute top-0 end-0 m-2 btn btn-sm btn-light rounded-circle wishlist-btn ${
-                  isInWishlist ? "active" : ""
-                }"
-                        onclick="window.toggleWishlist(event, '${product.id}')"
-                        title="${
-                          isInWishlist
-                            ? "Xóa khỏi danh sách yêu thích"
-                            : "Thêm vào danh sách yêu thích"
-                        }">
-                  <i class="bi ${
-                    isInWishlist ? "bi-heart-fill text-danger" : "bi-heart"
-                  }"></i>
-                </button>
-              `
                   : ""
               }
               ${
@@ -613,43 +573,6 @@ function updateUrlAndReload() {
   window.history.pushState({}, "", newUrl);
   loadProducts();
 }
-
-// Toggle wishlist
-window.toggleWishlist = async function (event, productId) {
-  event.preventDefault();
-  event.stopPropagation();
-
-  if (!authService.isAuthenticated()) {
-    showToast("Vui lòng đăng nhập để sử dụng danh sách yêu thích", "warning");
-    return;
-  }
-
-  const button = event.currentTarget;
-  const icon = button.querySelector("i");
-
-  try {
-    const wishlistItem = wishlistItems.find((w) => w.product_id === productId);
-
-    if (wishlistItem) {
-      await wishlistService.removeItem(wishlistItem.id);
-      wishlistItems = wishlistItems.filter((w) => w.id !== wishlistItem.id);
-      button.classList.remove("active");
-      icon.classList.remove("bi-heart-fill", "text-danger");
-      icon.classList.add("bi-heart");
-      showToast("Đã xóa khỏi danh sách yêu thích", "info");
-    } else {
-      const result = await wishlistService.addItem(productId);
-      wishlistItems.push(result);
-      button.classList.add("active");
-      icon.classList.remove("bi-heart");
-      icon.classList.add("bi-heart-fill", "text-danger");
-      showToast("Đã thêm vào danh sách yêu thích!", "success");
-    }
-  } catch (error) {
-    console.error("Failed to toggle wishlist:", error);
-    showToast("Không thể cập nhật danh sách yêu thích", "danger");
-  }
-};
 
 // Quick add to cart
 window.quickAddToCart = async function (event, productId) {

@@ -17,7 +17,7 @@ export class AuthController {
       const result = await this.authService.register(body);
       sendJSON(res, result.success ? 201 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Registration failed");
+      sendError(res, 500, "Đăng ký thất bại");
     }
   }
 
@@ -27,7 +27,7 @@ export class AuthController {
       const result = await this.authService.login(body);
       sendJSON(res, result.success ? 200 : 401, result);
     } catch (error) {
-      sendError(res, 500, "Login failed");
+      sendError(res, 500, "Đăng nhập thất bại");
     }
   }
 
@@ -36,7 +36,7 @@ export class AuthController {
       const result = await this.authService.logout();
       sendJSON(res, 200, result);
     } catch (error) {
-      sendError(res, 500, "Logout failed");
+      sendError(res, 500, "Đăng xuất thất bại");
     }
   }
 
@@ -46,7 +46,7 @@ export class AuthController {
       const result = await this.authService.forgotPassword(body.email);
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Password reset request failed");
+      sendError(res, 500, "Yêu cầu đặt lại mật khẩu thất bại");
     }
   }
 
@@ -56,7 +56,7 @@ export class AuthController {
       const result = await this.authService.resetPassword(body.password);
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Password reset failed");
+      sendError(res, 500, "Đặt lại mật khẩu thất bại");
     }
   }
 
@@ -66,7 +66,7 @@ export class AuthController {
       const result = await this.authService.verifyOTP(body.email, body.otp);
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "OTP verification failed");
+      sendError(res, 500, "Xác thực OTP thất bại");
     }
   }
 
@@ -76,7 +76,7 @@ export class AuthController {
       const result = await this.authService.resendVerificationEmail(body.email);
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Failed to resend verification");
+      sendError(res, 500, "Gửi lại mã xác thực thất bại");
     }
   }
 
@@ -115,7 +115,7 @@ export class AuthController {
       res.writeHead(302, { Location: url });
       res.end();
     } catch (error) {
-      sendError(res, 500, "Google auth failed");
+      sendError(res, 500, "Xác thực Google thất bại");
     }
   }
 
@@ -129,7 +129,7 @@ export class AuthController {
       );
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Failed to create OAuth profile");
+      sendError(res, 500, "Không thể tạo hồ sơ OAuth");
     }
   }
 
@@ -137,7 +137,7 @@ export class AuthController {
     try {
       sendJSON(res, 200, { user: req.user });
     } catch (error) {
-      sendError(res, 500, "Failed to get user info");
+      sendError(res, 500, "Không thể lấy thông tin người dùng");
     }
   }
 
@@ -147,7 +147,7 @@ export class AuthController {
       const result = await this.authService.updateUser(req.userId!, body);
       sendJSON(res, result.success ? 200 : 400, result);
     } catch (error) {
-      sendError(res, 500, "Failed to update user");
+      sendError(res, 500, "Không thể cập nhật thông tin người dùng");
     }
   }
 }

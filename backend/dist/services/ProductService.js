@@ -26,7 +26,7 @@ class ProductService {
         }
         catch (error) {
             console.error('Error in getProducts:', error);
-            throw new Error(`Failed to get products: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Không thể lấy danh sách sản phẩm: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
         }
     }
     async getProductById(id) {
@@ -50,7 +50,7 @@ class ProductService {
             return product;
         }
         catch (error) {
-            throw new Error(`Failed to get product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            throw new Error(`Không thể lấy thông tin sản phẩm: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
         }
     }
     async createProduct(product) {

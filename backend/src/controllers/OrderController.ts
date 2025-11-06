@@ -17,11 +17,11 @@ export class OrderController {
 
       // Validate request body
       if (!body.shippingInfo) {
-        return sendError(res, 400, 'Shipping information is required');
+        return sendError(res, 400, 'Thông tin giao hàng là bắt buộc');
       }
 
       if (!body.paymentMethod) {
-        return sendError(res, 400, 'Payment method is required');
+        return sendError(res, 400, 'Phương thức thanh toán là bắt buộc');
       }
 
       // Prepare request
@@ -45,7 +45,7 @@ export class OrderController {
       sendError(
         res,
         500,
-        error instanceof Error ? error.message : 'Failed to create order'
+        error instanceof Error ? error.message : 'Không thể tạo đơn hàng'
       );
     }
   }
@@ -57,7 +57,7 @@ export class OrderController {
 
       // Validate request body
       if (!body.shippingInfo) {
-        return sendError(res, 400, 'Shipping information is required');
+        return sendError(res, 400, 'Thông tin giao hàng là bắt buộc');
       }
 
       // Prepare request
@@ -95,7 +95,7 @@ export class OrderController {
       sendError(
         res,
         500,
-        error instanceof Error ? error.message : 'Failed to create checkout session'
+        error instanceof Error ? error.message : 'Không thể tạo phiên thanh toán'
       );
     }
   }
@@ -107,19 +107,19 @@ export class OrderController {
 
       // Validate request body
       if (!body.productId) {
-        return sendError(res, 400, 'Product ID is required');
+        return sendError(res, 400, 'Mã sản phẩm là bắt buộc');
       }
 
       if (!body.variantId) {
-        return sendError(res, 400, 'Variant ID is required');
+        return sendError(res, 400, 'Mã phiên bản sản phẩm là bắt buộc');
       }
 
       if (!body.quantity || body.quantity < 1) {
-        return sendError(res, 400, 'Valid quantity is required');
+        return sendError(res, 400, 'Số lượng hợp lệ là bắt buộc');
       }
 
       if (!body.shippingInfo) {
-        return sendError(res, 400, 'Shipping information is required');
+        return sendError(res, 400, 'Thông tin giao hàng là bắt buộc');
       }
 
       // Get base URL from referer or default to frontend URL
@@ -156,7 +156,7 @@ export class OrderController {
       sendError(
         res,
         500,
-        error instanceof Error ? error.message : 'Failed to create buy now checkout session'
+        error instanceof Error ? error.message : 'Không thể tạo phiên thanh toán mua ngay'
       );
     }
   }
@@ -184,7 +184,7 @@ export class OrderController {
       sendJSON(res, 200, { success: true, ...result, role: req.userRole });
     } catch (error) {
       console.error('[OrderController.getAllOrders] Error:', error);
-      sendError(res, 500, 'Failed to fetch all orders');
+      sendError(res, 500, 'Không thể tải danh sách đơn hàng');
     }
   }
 
@@ -192,14 +192,14 @@ export class OrderController {
   async getMyOrders(req: AuthRequest, res: ServerResponse) {
     try {
       if (!req.userId) {
-        return sendError(res, 401, 'Authentication required');
+        return sendError(res, 401, 'Yêu cầu xác thực');
       }
 
       const orders = await this.orderService.getUserOrders(req.userId);
       sendJSON(res, 200, { success: true, orders });
     } catch (error) {
       console.error('[OrderController.getMyOrders] Error:', error);
-      sendError(res, 500, 'Failed to fetch orders');
+      sendError(res, 500, 'Không thể tải danh sách đơn hàng');
     }
   }
 
@@ -213,7 +213,7 @@ export class OrderController {
       }
 
       // Check if user owns this order (unless admin)
-      if (req.userRole !== 'admin' && req.userRole !== 'staff') {
+      if (req.userRole !== 'admin') {
         if (order.user_id !== req.userId) {
           return sendError(res, 403, 'Không có quyền truy cập');
         }

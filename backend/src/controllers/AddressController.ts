@@ -21,7 +21,7 @@ export class AddressController {
   async getAddresses(req: AuthRequest, res: ServerResponse) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
@@ -29,7 +29,7 @@ export class AddressController {
       sendJSON(res, 200, { addresses });
     } catch (error) {
       console.error('[AddressController.getAddresses] Error:', error);
-      sendError(res, 500, 'Failed to fetch addresses');
+      sendError(res, 500, 'Không thể tải danh sách địa chỉ');
     }
   }
 
@@ -40,21 +40,21 @@ export class AddressController {
   async getAddressById(req: AuthRequest, res: ServerResponse, addressId: string) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
       const address = await this.addressService.getAddressById(addressId, req.userId);
 
       if (!address) {
-        sendError(res, 404, 'Address not found');
+        sendError(res, 404, 'Không tìm thấy địa chỉ');
         return;
       }
 
       sendJSON(res, 200, { address });
     } catch (error) {
       console.error('[AddressController.getAddressById] Error:', error);
-      sendError(res, 500, 'Failed to fetch address');
+      sendError(res, 500, 'Không thể tải địa chỉ');
     }
   }
 
@@ -65,7 +65,7 @@ export class AddressController {
   async getDefaultAddress(req: AuthRequest, res: ServerResponse) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
@@ -79,7 +79,7 @@ export class AddressController {
       sendJSON(res, 200, { address });
     } catch (error) {
       console.error('[AddressController.getDefaultAddress] Error:', error);
-      sendError(res, 500, 'Failed to fetch default address');
+      sendError(res, 500, 'Không thể tải địa chỉ mặc định');
     }
   }
 
@@ -90,7 +90,7 @@ export class AddressController {
   async createAddress(req: AuthRequest, res: ServerResponse) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
@@ -98,7 +98,7 @@ export class AddressController {
 
       // Validate required fields
       if (!body.first_name || !body.last_name || !body.address_line1 || !body.city || !body.country_code) {
-        sendError(res, 400, 'Missing required fields');
+        sendError(res, 400, 'Thiếu các trường bắt buộc');
         return;
       }
 
@@ -106,7 +106,7 @@ export class AddressController {
       sendJSON(res, 201, { address });
     } catch (error) {
       console.error('[AddressController.createAddress] Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create address';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể tạo địa chỉ';
       sendError(res, 400, errorMessage);
     }
   }
@@ -118,7 +118,7 @@ export class AddressController {
   async updateAddress(req: AuthRequest, res: ServerResponse, addressId: string) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
@@ -127,7 +127,7 @@ export class AddressController {
       sendJSON(res, 200, { address });
     } catch (error) {
       console.error('[AddressController.updateAddress] Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update address';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể cập nhật địa chỉ';
 
       if (errorMessage.includes('not found') || errorMessage.includes('access denied')) {
         sendError(res, 404, errorMessage);
@@ -144,15 +144,15 @@ export class AddressController {
   async deleteAddress(req: AuthRequest, res: ServerResponse, addressId: string) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
       await this.addressService.deleteAddress(addressId, req.userId);
-      sendJSON(res, 200, { success: true, message: 'Address deleted successfully' });
+      sendJSON(res, 200, { success: true, message: 'Đã xóa địa chỉ thành công' });
     } catch (error) {
       console.error('[AddressController.deleteAddress] Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete address';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể xóa địa chỉ';
 
       if (errorMessage.includes('not found') || errorMessage.includes('access denied')) {
         sendError(res, 404, errorMessage);
@@ -171,15 +171,15 @@ export class AddressController {
   async setDefaultAddress(req: AuthRequest, res: ServerResponse, addressId: string) {
     try {
       if (!req.userId) {
-        sendError(res, 401, 'Unauthorized');
+        sendError(res, 401, 'Chưa xác thực');
         return;
       }
 
       const address = await this.addressService.setDefaultAddress(addressId, req.userId);
-      sendJSON(res, 200, { address, message: 'Default address updated successfully' });
+      sendJSON(res, 200, { address, message: 'Đã cập nhật địa chỉ mặc định thành công' });
     } catch (error) {
       console.error('[AddressController.setDefaultAddress] Error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to set default address';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể đặt địa chỉ mặc định';
 
       if (errorMessage.includes('not found') || errorMessage.includes('access denied')) {
         sendError(res, 404, errorMessage);

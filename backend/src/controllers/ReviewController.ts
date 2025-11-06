@@ -36,7 +36,7 @@ export class ReviewController {
       sendJSON(res, 200, result);
     } catch (error) {
       console.error('Error fetching product reviews:', error);
-      sendError(res, 500, 'Failed to fetch reviews');
+      sendError(res, 500, 'Không thể tải đánh giá');
     }
   }
 
@@ -65,7 +65,7 @@ export class ReviewController {
       sendJSON(res, 200, result);
     } catch (error) {
       console.error('Error fetching user reviews:', error);
-      sendError(res, 500, 'Failed to fetch reviews');
+      sendError(res, 500, 'Không thể tải đánh giá');
     }
   }
 
@@ -77,13 +77,13 @@ export class ReviewController {
     try {
       const review = await this.reviewService.getReviewById(id);
       if (!review) {
-        sendError(res, 404, 'Review not found');
+        sendError(res, 404, 'Không tìm thấy đánh giá');
         return;
       }
       sendJSON(res, 200, review);
     } catch (error) {
       console.error('Error fetching review:', error);
-      sendError(res, 500, 'Failed to fetch review');
+      sendError(res, 500, 'Không thể tải đánh giá');
     }
   }
 
@@ -95,7 +95,7 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
@@ -104,23 +104,23 @@ export class ReviewController {
 
       // Validate required fields
       if (!product_id || !rating) {
-        sendError(res, 400, 'Product ID and rating are required');
+        sendError(res, 400, 'ID sản phẩm và đánh giá là bắt buộc');
         return;
       }
 
       if (rating < 1 || rating > 5) {
-        sendError(res, 400, 'Rating must be between 1 and 5');
+        sendError(res, 400, 'Đánh giá phải từ 1 đến 5 sao');
         return;
       }
 
       // Validate images if provided
       if (images && !Array.isArray(images)) {
-        sendError(res, 400, 'Images must be an array of URLs');
+        sendError(res, 400, 'Hình ảnh phải là một mảng URL');
         return;
       }
 
       if (images && images.length > 5) {
-        sendError(res, 400, 'Maximum 5 images allowed per review');
+        sendError(res, 400, 'Tối đa 5 hình ảnh cho mỗi đánh giá');
         return;
       }
 
@@ -137,7 +137,7 @@ export class ReviewController {
       sendJSON(res, 201, newReview);
     } catch (error) {
       console.error('Error creating review:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create review';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể tạo đánh giá';
       sendError(res, 400, errorMessage);
     }
   }
@@ -150,7 +150,7 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
@@ -159,7 +159,7 @@ export class ReviewController {
 
       // Validate rating if provided
       if (rating !== undefined && (rating < 1 || rating > 5)) {
-        sendError(res, 400, 'Rating must be between 1 and 5');
+        sendError(res, 400, 'Đánh giá phải từ 1 đến 5 sao');
         return;
       }
 
@@ -172,9 +172,9 @@ export class ReviewController {
       sendJSON(res, 200, updatedReview);
     } catch (error) {
       console.error('Error updating review:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update review';
-      const statusCode = errorMessage.includes('Unauthorized') ? 403 :
-                        errorMessage.includes('not found') ? 404 : 400;
+      const errorMessage = error instanceof Error ? error.message : 'Không thể cập nhật đánh giá';
+      const statusCode = errorMessage.includes('Unauthorized') || errorMessage.includes('Không có quyền') ? 403 :
+                        errorMessage.includes('not found') || errorMessage.includes('không tìm thấy') ? 404 : 400;
       sendError(res, statusCode, errorMessage);
     }
   }
@@ -187,17 +187,17 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
       await this.reviewService.deleteReview(id, userId);
-      sendJSON(res, 200, { success: true, message: 'Review deleted successfully' });
+      sendJSON(res, 200, { success: true, message: 'Đã xóa đánh giá thành công' });
     } catch (error) {
       console.error('Error deleting review:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete review';
-      const statusCode = errorMessage.includes('Unauthorized') ? 403 :
-                        errorMessage.includes('not found') ? 404 : 400;
+      const errorMessage = error instanceof Error ? error.message : 'Không thể xóa đánh giá';
+      const statusCode = errorMessage.includes('Unauthorized') || errorMessage.includes('Không có quyền') ? 403 :
+                        errorMessage.includes('not found') || errorMessage.includes('không tìm thấy') ? 404 : 400;
       sendError(res, statusCode, errorMessage);
     }
   }
@@ -209,10 +209,10 @@ export class ReviewController {
   async markHelpful(_req: IncomingMessage, res: ServerResponse, id: string) {
     try {
       await this.reviewService.incrementHelpfulCount(id);
-      sendJSON(res, 200, { success: true, message: 'Review marked as helpful' });
+      sendJSON(res, 200, { success: true, message: 'Đã đánh dấu hữu ích' });
     } catch (error) {
       console.error('Error marking review as helpful:', error);
-      sendError(res, 500, 'Failed to mark review as helpful');
+      sendError(res, 500, 'Không thể đánh dấu hữu ích');
     }
   }
 
@@ -224,7 +224,7 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
@@ -232,7 +232,7 @@ export class ReviewController {
       sendJSON(res, 200, result);
     } catch (error) {
       console.error('Error toggling review like:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to toggle review like';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể cập nhật yêu thích';
       sendError(res, 500, errorMessage);
     }
   }
@@ -245,7 +245,7 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
@@ -253,7 +253,7 @@ export class ReviewController {
       sendJSON(res, 200, eligibility);
     } catch (error) {
       console.error('Error checking review eligibility:', error);
-      sendError(res, 500, 'Failed to check review eligibility');
+      sendError(res, 500, 'Không thể kiểm tra điều kiện đánh giá');
     }
   }
 
@@ -265,14 +265,14 @@ export class ReviewController {
     try {
       const userId = (req as any).user?.id;
       if (!userId) {
-        sendError(res, 401, 'Authentication required');
+        sendError(res, 401, 'Yêu cầu đăng nhập');
         return;
       }
 
       // Check content type
       const contentType = req.headers['content-type'];
       if (!contentType || !contentType.includes('multipart/form-data')) {
-        sendError(res, 400, 'Content-Type must be multipart/form-data');
+        sendError(res, 400, 'Content-Type phải là multipart/form-data');
         return;
       }
 
@@ -281,7 +281,7 @@ export class ReviewController {
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (contentLength > maxSize) {
-        sendError(res, 413, 'File size exceeds 5MB limit');
+        sendError(res, 413, 'Kích thước file vượt quá giới hạn 5MB');
         return;
       }
 
@@ -289,7 +289,7 @@ export class ReviewController {
       const formData = await MultipartParser.parse(req);
 
       if (formData.files.length === 0) {
-        sendError(res, 400, 'No file uploaded');
+        sendError(res, 400, 'Không có file nào được tải lên');
         return;
       }
 
@@ -316,7 +316,7 @@ export class ReviewController {
       sendJSON(res, 200, { url: publicUrl });
     } catch (error) {
       console.error('Error uploading review image:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      const errorMessage = error instanceof Error ? error.message : 'Không thể tải lên hình ảnh';
       sendError(res, 500, errorMessage);
     }
   }

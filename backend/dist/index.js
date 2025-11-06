@@ -7,12 +7,10 @@ const http_1 = require("http");
 const dotenv_1 = __importDefault(require("dotenv"));
 const path_1 = __importDefault(require("path"));
 const routes_1 = require("./router/routes");
-const CartService_1 = require("./services/CartService");
 const request_handler_1 = require("./utils/request-handler");
 const storage_1 = require("./utils/storage");
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
 const router = (0, routes_1.setupRoutes)();
-const cartService = new CartService_1.CartService();
 const server = (0, http_1.createServer)(async (req, res) => {
     (0, request_handler_1.setCorsHeaders)(res);
     if (req.method === "OPTIONS") {
@@ -31,14 +29,6 @@ const server = (0, http_1.createServer)(async (req, res) => {
         (0, request_handler_1.sendError)(res, 500, "Internal server error");
     }
 });
-setInterval(async () => {
-    try {
-        await cartService.releaseExpiredReservations();
-    }
-    catch (error) {
-        console.error("Failed to release expired reservations:", error);
-    }
-}, 5 * 60 * 1000);
 storage_1.StorageService.ensureBucketExists().catch((error) => {
     console.error("Failed to initialize review images bucket:", error);
 });
@@ -63,12 +53,6 @@ server.listen(PORT, () => {
     console.log("    GET    /api/products/slug/:slug");
     console.log("    GET    /api/categories");
     console.log("    GET    /api/collections");
-    console.log("  Wishlist:");
-    console.log("    GET    /api/wishlist");
-    console.log("    POST   /api/wishlist");
-    console.log("    PUT    /api/wishlist/:id");
-    console.log("    DELETE /api/wishlist/:id");
-    console.log("    GET    /api/wishlist/count");
     console.log("  Cart:");
     console.log("    GET    /api/cart");
     console.log("    POST   /api/cart/items");

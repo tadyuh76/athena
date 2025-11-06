@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -114,18 +114,11 @@
                     // Success state
                     btnText.textContent = 'Thành công!';
 
-                    // Merge guest cart if exists
-                    try {
-                        await cartService.mergeGuestCart();
-                    } catch (error) {
-                        console.log('No guest cart to merge');
-                    }
-
                     // Redirect to account or original destination
                     const user = authService.getUser();
                     let redirect = new URLSearchParams(window.location.search).get('redirect') || '/';
                     // THÊM LOGIC CHUYỂN HƯỚNG ADMIN
-                    if (user && (user.role === 'admin' || user.role === 'staff')) {
+                    if (user && user.role === 'admin') {
                         redirect = '/admin.html'; // Chuyển hướng cứng đến Admin Dashboard
                         }
                     window.location.href = redirect;

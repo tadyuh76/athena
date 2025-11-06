@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'http';
+import { ServerResponse } from 'http';
 import { CartService } from '../services/CartService';
 import { AuthRequest } from '../middleware/auth';
 import { parseBody, sendJSON, sendError, parseUrl } from '../utils/request-handler';
@@ -23,7 +23,7 @@ export class CartController {
       sendJSON(res, 200, cart);
     } catch (error) {
       console.error('[CartController.getCart] Error:', error);
-      sendError(res, 500, 'Failed to fetch cart');
+      sendError(res, 500, 'Không thể tải giỏ hàng');
     }
   }
 
@@ -37,6 +37,19 @@ export class CartController {
       const sessionId = body.session_id || query.get('session_id') || undefined;
       console.log('[CartController.addItem] sessionId:', sessionId);
 
+      // Validate input
+      if (!body.product_id || typeof body.product_id !== 'string') {
+        return sendError(res, 400, 'product_id là bắt buộc và phải là chuỗi');
+      }
+
+      if (!body.variant_id || typeof body.variant_id !== 'string') {
+        return sendError(res, 400, 'variant_id là bắt buộc và phải là chuỗi');
+      }
+
+      if (!Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 999) {
+        return sendError(res, 400, 'Số lượng phải là số nguyên từ 1 đến 999');
+      }
+
       const result = await this.cartService.addItem(
         req.userId,
         sessionId,
@@ -48,26 +61,59 @@ export class CartController {
       sendJSON(res, 201, result);
     } catch (error) {
       console.error('[CartController.addItem] Error:', error);
-      sendError(res, 500, 'Failed to add item to cart');
+      sendError(res, 500, 'Không thể thêm sản phẩm vào giỏ hàng');
     }
   }
 
-  async updateItemQuantity(req: IncomingMessage, res: ServerResponse, itemId: string) {
+  async updateItemQuantity(req: AuthRequest, res: ServerResponse, itemId: string) {
     try {
       const body = await parseBody(req);
+      const { query } = parseUrl(req);
+      const sessionId = query.get('session_id') || undefined;
+
+      // Validate input
+      if (!Number.isInteger(body.quantity) || body.quantity < 1 || body.quantity > 999) {
+        return sendError(res, 400, 'Số lượng phải là số nguyên từ 1 đến 999');
+      }
+
+      // Verify ownership before update
+      const authorized = await this.cartService.verifyCartItemOwnership(
+        itemId,
+        req.userId,
+        sessionId
+      );
+
+      if (!authorized) {
+        return sendError(res, 403, 'Không có quyền truy cập mục giỏ hàng này');
+      }
+
       const result = await this.cartService.updateItemQuantity(itemId, body.quantity);
       sendJSON(res, 200, result);
     } catch (error) {
-      sendError(res, 500, 'Failed to update item quantity');
+      sendError(res, 500, 'Không thể cập nhật số lượng');
     }
   }
 
-  async removeItem(_req: IncomingMessage, res: ServerResponse, itemId: string) {
+  async removeItem(req: AuthRequest, res: ServerResponse, itemId: string) {
     try {
+      const { query } = parseUrl(req);
+      const sessionId = query.get('session_id') || undefined;
+
+      // Verify ownership before delete
+      const authorized = await this.cartService.verifyCartItemOwnership(
+        itemId,
+        req.userId,
+        sessionId
+      );
+
+      if (!authorized) {
+        return sendError(res, 403, 'Không có quyền truy cập mục giỏ hàng này');
+      }
+
       await this.cartService.removeItem(itemId);
       sendJSON(res, 200, { success: true });
     } catch (error) {
-      sendError(res, 500, 'Failed to remove item from cart');
+      sendError(res, 500, 'Không thể xóa sản phẩm khỏi giỏ hàng');
     }
   }
 
@@ -78,7 +124,7 @@ export class CartController {
       const summary = await this.cartService.getCartSummary(req.userId, sessionId);
       sendJSON(res, 200, summary);
     } catch (error) {
-      sendError(res, 500, 'Failed to fetch cart summary');
+      sendError(res, 500, 'Không thể tải tóm tắt giỏ hàng');
     }
   }
 
@@ -89,7 +135,7 @@ export class CartController {
       await this.cartService.clearCart(req.userId, sessionId);
       sendJSON(res, 200, { success: true });
     } catch (error) {
-      sendError(res, 500, 'Failed to clear cart');
+      sendError(res, 500, 'Không thể xóa giỏ hàng');
     }
   }
 
@@ -99,7 +145,7 @@ export class CartController {
       await this.cartService.mergeGuestCart(body.session_id, req.userId!);
       sendJSON(res, 200, { success: true });
     } catch (error) {
-      sendError(res, 500, 'Failed to merge cart');
+      sendError(res, 500, 'Không thể hợp nhất giỏ hàng');
     }
   }
 }

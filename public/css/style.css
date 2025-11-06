@@ -155,17 +155,7 @@ body {
     gap: 30px;
 }
 
-/* Wishlist & Cart */
-.wishlist-button,
-.add-to-cart-button {
-    position: relative;
-    overflow: hidden;
-}
-
-.wishlist-button.active {
-    color: red;
-}
-
+/* Cart */
 .cart-item {
     border-bottom: 1px solid var(--medium-gray);
     padding: 20px 0;

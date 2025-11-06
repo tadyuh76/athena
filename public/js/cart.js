@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCart();
   } catch (error) {
     console.error("Failed to load cart:", error);
-    showError("Failed to load cart. Please refresh the page.");
+    showError("Không thể tải giỏ hàng. Vui lòng làm mới trang.");
   }
 });
 

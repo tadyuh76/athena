@@ -30,7 +30,7 @@ export function registerAdminProductImagesRoutes(router: Router) {
       console.error("Error reading images directory:", err);
       sendError(res, 500, "Failed to read images directory");
     }
-  }, [Router.requireRole(['admin', 'staff'])]);
+  }, [Router.requireRole(['admin'])]);
 
   // ======================
   // 🟢 POST: Thêm ảnh vào bảng product_images (nếu bạn vẫn cần)
@@ -55,5 +55,5 @@ export function registerAdminProductImagesRoutes(router: Router) {
     } catch (err: any) {
       sendError(res, 500, err.message || "Failed to insert product image");
     }
-  }, [Router.requireRole(['admin', 'staff'])]);
+  }, [Router.requireRole(['admin'])]);
 }

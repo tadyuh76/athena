@@ -41,6 +41,14 @@ export class StripeWebhookController {
 
       // Handle different event types
       switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutSessionCompleted(event.data.object);
+          break;
+
+        case 'checkout.session.expired':
+          await this.handleCheckoutSessionExpired(event.data.object);
+          break;
+
         case 'payment_intent.succeeded':
           await this.handlePaymentIntentSucceeded(event.data.object);
           break;
@@ -66,6 +74,109 @@ export class StripeWebhookController {
         400,
         error instanceof Error ? error.message : 'Webhook handling failed'
       );
+    }
+  }
+
+  /**
+   * Handle Stripe Checkout Session completed
+   * This is triggered when a customer completes the Checkout Session payment
+   */
+  private async handleCheckoutSessionCompleted(session: any) {
+    try {
+      console.log(
+        `[Stripe Webhook] Checkout session completed: ${session.id}`
+      );
+
+      // Find order by transaction provider_transaction_id (session.id)
+      const { data: transaction, error } = await supabaseAdmin
+        .from('transactions')
+        .select('order_id')
+        .eq('provider_transaction_id', session.id)
+        .single();
+
+      if (error || !transaction) {
+        console.error(
+          `[Stripe Webhook] Order not found for checkout session: ${session.id}`
+        );
+        return;
+      }
+
+      const orderId = transaction.order_id;
+
+      // Update transaction status to completed
+      await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('provider_transaction_id', session.id);
+
+      // Update order payment status to paid
+      await this.orderService.updatePaymentStatus(orderId, 'paid');
+
+      // Commit inventory (move from reserved to committed)
+      await this.orderService.commitOrderInventory(orderId);
+
+      // Clean up temporary cart items created for Buy Now reservations
+      await this.cleanupBuyNowCartItems(orderId);
+
+      console.log(
+        `[Stripe Webhook] Order ${orderId} marked as paid and inventory committed`
+      );
+    } catch (error) {
+      console.error('[Stripe Webhook] Error handling checkout session completed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle Stripe Checkout Session expired
+   * This is triggered when a checkout session expires without payment
+   */
+  private async handleCheckoutSessionExpired(session: any) {
+    try {
+      console.log(
+        `[Stripe Webhook] Checkout session expired: ${session.id}`
+      );
+
+      // Find order by transaction provider_transaction_id (session.id)
+      const { data: transaction, error } = await supabaseAdmin
+        .from('transactions')
+        .select('order_id')
+        .eq('provider_transaction_id', session.id)
+        .single();
+
+      if (error || !transaction) {
+        console.error(
+          `[Stripe Webhook] Order not found for expired session: ${session.id}`
+        );
+        return;
+      }
+
+      const orderId = transaction.order_id;
+
+      // Update transaction status to cancelled
+      await supabaseAdmin
+        .from('transactions')
+        .update({
+          status: 'cancelled',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('provider_transaction_id', session.id);
+
+      // Update order payment status to failed (which will cancel the order)
+      await this.orderService.updatePaymentStatus(orderId, 'failed');
+
+      // Release reserved inventory back to available stock
+      await this.orderService.releaseOrderInventory(orderId);
+
+      console.log(
+        `[Stripe Webhook] Order ${orderId} marked as cancelled and inventory released`
+      );
+    } catch (error) {
+      console.error('[Stripe Webhook] Error handling checkout session expired:', error);
+      throw error;
     }
   }
 
@@ -146,8 +257,11 @@ export class StripeWebhookController {
       // Update order status to cancelled
       await this.orderService.updatePaymentStatus(payment.order_id, 'failed');
 
+      // Release reserved inventory back to available stock
+      await this.orderService.releaseOrderInventory(payment.order_id);
+
       console.log(
-        `[Stripe Webhook] Order ${payment.order_id} marked as failed`
+        `[Stripe Webhook] Order ${payment.order_id} marked as failed and inventory released`
       );
     } catch (error) {
       console.error('[Stripe Webhook] Error handling payment failure:', error);
@@ -167,6 +281,38 @@ export class StripeWebhookController {
     } catch (error) {
       console.error('[Stripe Webhook] Error handling payment cancel:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Clean up temporary cart items created for Buy Now reservations
+   */
+  private async cleanupBuyNowCartItems(orderId: string): Promise<void> {
+    try {
+      // Get order items to find variant IDs
+      const { data: orderItems, error } = await supabaseAdmin
+        .from('order_items')
+        .select('variant_id, quantity')
+        .eq('order_id', orderId);
+
+      if (error || !orderItems || orderItems.length === 0) {
+        console.log(`[Stripe Webhook] No order items found for cleanup: ${orderId}`);
+        return;
+      }
+
+      // Delete temporary cart items for each variant in the order
+      for (const item of orderItems) {
+        await supabaseAdmin
+          .from('cart_items')
+          .delete()
+          .eq('variant_id', item.variant_id)
+          .or(`session_id.eq.buynow_${orderId},user_id.is.null`);
+      }
+
+      console.log(`[Stripe Webhook] Cleaned up temporary cart items for order ${orderId}`);
+    } catch (error) {
+      console.error('[Stripe Webhook] Error cleaning up cart items:', error);
+      // Don't throw - this is cleanup and shouldn't fail the webhook
     }
   }
 

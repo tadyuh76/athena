@@ -1,13 +1,11 @@
 import { AuthService } from "/services/AuthService.js";
 import { ProductService } from "/services/ProductService.js";
 import { CartService } from "/services/CartService.js";
-import { WishlistService } from "/services/WishlistService.js";
 
 // Initialize services
 const authService = new AuthService();
 const productService = new ProductService();
 const cartService = new CartService();
-const wishlistService = new WishlistService();
 
 // Initialize navigation
 async function initializeNavigation() {
@@ -28,7 +26,6 @@ async function initializeNavigation() {
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/account.html"><i class="bi bi-person me-2"></i>My Account</a></li>
                     <li><a class="dropdown-item" href="/orders.html"><i class="bi bi-bag me-2"></i>My Orders</a></li>
-                    <li><a class="dropdown-item" href="/wishlist.html"><i class="bi bi-heart me-2"></i>Wishlist</a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                 </ul>
@@ -76,7 +73,7 @@ async function loadFeaturedProducts() {
   container.innerHTML = `
         <div class="col-12 text-center">
             <div class="spinner-border text-secondary" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden">Đang tải...</span>
             </div>
         </div>
     `;

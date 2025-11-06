@@ -16,7 +16,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 201 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Registration failed");
+            (0, request_handler_1.sendError)(res, 500, "Đăng ký thất bại");
         }
     }
     async login(req, res) {
@@ -26,7 +26,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 401, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Login failed");
+            (0, request_handler_1.sendError)(res, 500, "Đăng nhập thất bại");
         }
     }
     async logout(_req, res) {
@@ -35,7 +35,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, 200, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Logout failed");
+            (0, request_handler_1.sendError)(res, 500, "Đăng xuất thất bại");
         }
     }
     async forgotPassword(req, res) {
@@ -45,7 +45,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Password reset request failed");
+            (0, request_handler_1.sendError)(res, 500, "Yêu cầu đặt lại mật khẩu thất bại");
         }
     }
     async resetPassword(req, res) {
@@ -55,7 +55,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Password reset failed");
+            (0, request_handler_1.sendError)(res, 500, "Đặt lại mật khẩu thất bại");
         }
     }
     async verifyOTP(req, res) {
@@ -65,7 +65,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "OTP verification failed");
+            (0, request_handler_1.sendError)(res, 500, "Xác thực OTP thất bại");
         }
     }
     async resendVerification(req, res) {
@@ -75,7 +75,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Failed to resend verification");
+            (0, request_handler_1.sendError)(res, 500, "Gửi lại mã xác thực thất bại");
         }
     }
     async googleAuth(req, res) {
@@ -106,7 +106,7 @@ class AuthController {
             res.end();
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Google auth failed");
+            (0, request_handler_1.sendError)(res, 500, "Xác thực Google thất bại");
         }
     }
     async createOAuthProfile(req, res) {
@@ -116,7 +116,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Failed to create OAuth profile");
+            (0, request_handler_1.sendError)(res, 500, "Không thể tạo hồ sơ OAuth");
         }
     }
     async getMe(req, res) {
@@ -124,7 +124,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, 200, { user: req.user });
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Failed to get user info");
+            (0, request_handler_1.sendError)(res, 500, "Không thể lấy thông tin người dùng");
         }
     }
     async updateMe(req, res) {
@@ -134,7 +134,7 @@ class AuthController {
             (0, request_handler_1.sendJSON)(res, result.success ? 200 : 400, result);
         }
         catch (error) {
-            (0, request_handler_1.sendError)(res, 500, "Failed to update user");
+            (0, request_handler_1.sendError)(res, 500, "Không thể cập nhật thông tin người dùng");
         }
     }
 }

@@ -191,29 +191,6 @@ footer a:hover {
   color: var(--success-green) !important;
 }
 
-/* Wishlist button */
-.wishlist-btn {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.wishlist-btn:hover {
-  background: var(--light-bg);
-}
-
-.wishlist-btn.active {
-  background: var(--success-green);
-  color: white;
-  border-color: var(--success-green);
-}
-
 /* Index page specific styles */
 body {
   padding-top: 80px;

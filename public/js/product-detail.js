@@ -1,31 +1,30 @@
 import { AuthService } from "/services/AuthService.js";
 import { ProductService } from "/services/ProductService.js";
 import { CartService } from "/services/CartService.js";
-import { WishlistService } from "/services/WishlistService.js";
 import { ReviewService } from "/services/ReviewService.js";
 import { OrderService } from "/services/OrderService.js";
+import { AddressService } from "/services/AddressService.js";
 import { Dialog } from "/js/dialog.js";
 
 // Initialize services
 const authService = new AuthService();
 const productService = new ProductService();
 const cartService = new CartService();
-const wishlistService = new WishlistService();
 const reviewService = new ReviewService();
 const orderService = new OrderService();
+const addressService = new AddressService();
 
 // State
 let currentProduct = null;
 let selectedVariant = null;
 let quantity = 1;
-let isInWishlist = false;
-let wishlistItemId = null;
 let isAddingToCart = false;
 let currentReviews = null;
 let selectedRating = 0;
 let reviewModal = null;
 let buyNowModal = null;
 let reviewImageFiles = [];
+let savedAddresses = [];
 
 // Initialize page
 document.addEventListener("DOMContentLoaded", async () => {
@@ -35,9 +34,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (productId) {
     await loadProduct(productId);
-    if (authService.isAuthenticated()) {
-      await checkWishlistStatus(productId);
-    }
     await loadReviews(productId);
     await loadRelatedProducts();
     initializeReviewModal();
@@ -278,7 +274,7 @@ function renderProductDetail(product) {
                 ${
                   product.description ||
                   product.short_description ||
-                  "No description available."
+                  "Không có mô tả."
                 }
               </div>
             </div>
@@ -598,7 +594,7 @@ function renderVariantSelectors(variants) {
 
 // Render material composition
 function renderMaterialComposition(composition) {
-  if (!composition) return "100% Quality Materials";
+  if (!composition) return "100% Chất Liệu Cao Cấp";
 
   if (typeof composition === "object") {
     return Object.entries(composition)
@@ -987,6 +983,9 @@ window.buyNow = async function () {
     quantity,
   });
 
+  // Load saved addresses for authenticated users
+  await loadBuyNowSavedAddresses();
+
   // Pre-fill email from user profile if available
   if (authService.user) {
     const emailInput = document.getElementById("buyNowEmail");
@@ -994,74 +993,31 @@ window.buyNow = async function () {
       emailInput.value = authService.user.email;
     }
 
-    const firstNameInput = document.getElementById("buyNowFirstName");
-    if (firstNameInput && authService.user.first_name) {
-      firstNameInput.value = authService.user.first_name;
-    }
+    // Only pre-fill name and phone if no saved address was auto-selected
+    const addressSelect = document.getElementById("buyNowSavedAddressSelect");
+    const hasSelectedAddress = addressSelect && addressSelect.value;
 
-    const lastNameInput = document.getElementById("buyNowLastName");
-    if (lastNameInput && authService.user.last_name) {
-      lastNameInput.value = authService.user.last_name;
-    }
+    if (!hasSelectedAddress) {
+      const firstNameInput = document.getElementById("buyNowFirstName");
+      if (firstNameInput && authService.user.first_name) {
+        firstNameInput.value = authService.user.first_name;
+      }
 
-    const phoneInput = document.getElementById("buyNowPhone");
-    if (phoneInput && authService.user.phone) {
-      phoneInput.value = authService.user.phone;
+      const lastNameInput = document.getElementById("buyNowLastName");
+      if (lastNameInput && authService.user.last_name) {
+        lastNameInput.value = authService.user.last_name;
+      }
+
+      const phoneInput = document.getElementById("buyNowPhone");
+      if (phoneInput && authService.user.phone) {
+        phoneInput.value = authService.user.phone;
+      }
     }
   }
 
   // Show modal
   buyNowModal.show();
 };
-
-window.toggleWishlist = async function () {
-  if (!authService.isAuthenticated()) {
-    showToast("Vui lòng đăng nhập để sử dụng danh sách yêu thích", "warning");
-    return;
-  }
-
-  const button = document.querySelector(".btn-wishlist");
-  const icon = button.querySelector("i");
-
-  try {
-    if (isInWishlist) {
-      await wishlistService.removeItem(wishlistItemId);
-      isInWishlist = false;
-      wishlistItemId = null;
-      button.classList.remove("active");
-      icon.classList.replace("bi-heart-fill", "bi-heart");
-      button.innerHTML = '<i class="bi bi-heart me-2"></i>Thêm Vào Yêu Thích';
-      showToast("Đã xóa khỏi danh sách yêu thích", "info");
-    } else {
-      const result = await wishlistService.addItem(currentProduct.id);
-      isInWishlist = true;
-      wishlistItemId = result.id;
-      button.classList.add("active");
-      icon.classList.replace("bi-heart", "bi-heart-fill");
-      button.innerHTML = '<i class="bi bi-heart-fill me-2"></i>Trong Danh Sách';
-      showToast("Đã thêm vào danh sách yêu thích!", "success");
-    }
-  } catch (error) {
-    console.error("Failed to toggle wishlist:", error);
-    showToast("Không thể cập nhật danh sách yêu thích", "danger");
-  }
-};
-
-// Check wishlist status
-async function checkWishlistStatus(productId) {
-  if (!authService.isAuthenticated()) return;
-
-  try {
-    const wishlist = await wishlistService.getWishlist();
-    const item = wishlist.find((w) => w.product_id === productId);
-    if (item) {
-      isInWishlist = true;
-      wishlistItemId = item.id;
-    }
-  } catch (error) {
-    console.error("Failed to check wishlist status:", error);
-  }
-}
 
 // Load related products
 async function loadRelatedProducts() {
@@ -1523,10 +1479,102 @@ function initializeBuyNowModal() {
     .getElementById("confirmBuyNowBtn")
     .addEventListener("click", confirmBuyNow);
 
+  // Setup saved address selection handler
+  const addressSelect = document.getElementById("buyNowSavedAddressSelect");
+  if (addressSelect) {
+    addressSelect.addEventListener("change", (e) => {
+      const selectedAddressId = e.target.value;
+
+      if (!selectedAddressId) {
+        // User selected "Enter new address", clear the form
+        document.getElementById("buyNowFirstName").value = "";
+        document.getElementById("buyNowLastName").value = "";
+        document.getElementById("buyNowPhone").value = "";
+        document.getElementById("buyNowAddress").value = "";
+        document.getElementById("buyNowCity").value = "";
+        document.getElementById("buyNowState").value = "";
+        document.getElementById("buyNowZip").value = "";
+
+        // Keep email from user profile if available
+        if (authService.user && authService.user.email) {
+          document.getElementById("buyNowEmail").value = authService.user.email;
+        }
+        return;
+      }
+
+      // Find and fill the selected address
+      const selectedAddress = savedAddresses.find(
+        (addr) => addr.id === selectedAddressId
+      );
+      if (selectedAddress) {
+        fillBuyNowAddressForm(selectedAddress);
+      }
+    });
+  }
+
   // Reset form when modal is closed
   modalEl.addEventListener("hidden.bs.modal", () => {
     document.getElementById("buyNowForm").reset();
   });
+}
+
+// Load saved addresses for Buy Now modal
+async function loadBuyNowSavedAddresses() {
+  try {
+    if (!authService.isAuthenticated()) {
+      // User not logged in, hide saved addresses section
+      document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+      return;
+    }
+
+    // Fetch saved addresses
+    savedAddresses = await addressService.getAddresses();
+
+    if (savedAddresses.length === 0) {
+      // No saved addresses, hide the section
+      document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+      return;
+    }
+
+    // Show saved addresses section
+    document.getElementById("buyNowSavedAddressesSection").style.display = "block";
+
+    // Populate address select dropdown
+    const addressSelect = document.getElementById("buyNowSavedAddressSelect");
+    addressSelect.innerHTML = '<option value="">Nhập địa chỉ mới...</option>';
+
+    savedAddresses.forEach((address) => {
+      const option = document.createElement("option");
+      option.value = address.id;
+      option.textContent = `${address.first_name} ${address.last_name} - ${address.address_line1}, ${address.city}${address.is_default ? " (Mặc định)" : ""}`;
+      addressSelect.appendChild(option);
+    });
+
+    // Auto-select default address if exists
+    const defaultAddress = savedAddresses.find((addr) => addr.is_default);
+    if (defaultAddress) {
+      addressSelect.value = defaultAddress.id;
+      fillBuyNowAddressForm(defaultAddress);
+    }
+  } catch (error) {
+    console.error("Failed to load saved addresses for Buy Now:", error);
+    // Don't show error to user, just hide the section
+    document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+  }
+}
+
+// Fill Buy Now address form with selected address data - Vietnamese format
+function fillBuyNowAddressForm(address) {
+  document.getElementById("buyNowFirstName").value = address.first_name || "";
+  document.getElementById("buyNowLastName").value = address.last_name || "";
+  if (authService.user && authService.user.email) {
+    document.getElementById("buyNowEmail").value = authService.user.email;
+  }
+  document.getElementById("buyNowPhone").value = address.phone || "";
+  document.getElementById("buyNowAddress").value = address.address_line1 || ""; // Số nhà + Tên đường
+  document.getElementById("buyNowCity").value = address.city || ""; // Phường/Xã
+  document.getElementById("buyNowState").value = address.state_province || ""; // Quận/Huyện
+  document.getElementById("buyNowZip").value = address.country_code || ""; // Tỉnh/Thành phố
 }
 
 // Confirm buy now and create order

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Verified - Athena</title>
+    <title>Email Đã Được Xác Thực - Athena</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
@@ -17,28 +17,28 @@
         <div class="text-center">
             <div id="loadingState">
                 <div class="spinner-border mb-3" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden">Đang tải...</span>
                 </div>
-                <h5>Verifying your email...</h5>
-                <p class="text-muted">Please wait while we complete the verification.</p>
+                <h5>Đang xác thực email của bạn...</h5>
+                <p class="text-muted">Vui lòng đợi trong khi chúng tôi hoàn tất xác thực.</p>
             </div>
             
             <div id="successState" style="display: none;">
                 <div class="mb-4">
                     <i class="bi bi-check-circle-fill text-success" style="font-size: 80px;"></i>
                 </div>
-                <h2 class="mb-3" style="font-family: 'Cormorant Garamond', serif;">Email Verified!</h2>
-                <p class="text-muted mb-4">Your email has been successfully verified.</p>
-                <a href="/login.html" class="btn btn-dark btn-lg">Sign In to Your Account</a>
+                <h2 class="mb-3" style="font-family: 'Cormorant Garamond', serif;">Email Đã Được Xác Thực!</h2>
+                <p class="text-muted mb-4">Email của bạn đã được xác thực thành công.</p>
+                <a href="/login.html" class="btn btn-dark btn-lg">Đăng Nhập Vào Tài Khoản</a>
             </div>
             
             <div id="errorState" style="display: none;">
                 <div class="mb-4">
                     <i class="bi bi-x-circle-fill text-danger" style="font-size: 80px;"></i>
                 </div>
-                <h2 class="mb-3">Verification Failed</h2>
-                <p class="text-muted mb-4" id="errorMessage">Unable to verify your email. The link may have expired.</p>
-                <a href="/login.html" class="btn btn-dark">Return to Sign In</a>
+                <h2 class="mb-3">Xác Thực Thất Bại</h2>
+                <p class="text-muted mb-4" id="errorMessage">Không thể xác thực email của bạn. Liên kết có thể đã hết hạn.</p>
+                <a href="/login.html" class="btn btn-dark">Quay Lại Đăng Nhập</a>
             </div>
         </div>
     </div>
@@ -131,7 +131,7 @@
                 console.error('Verification error:', error);
                 loadingState.style.display = 'none';
                 errorState.style.display = 'block';
-                errorMessage.textContent = error.message || 'Unable to verify your email. The link may have expired.';
+                errorMessage.textContent = error.message || 'Không thể xác thực email của bạn. Liên kết có thể đã hết hạn.';
             }
         }
 

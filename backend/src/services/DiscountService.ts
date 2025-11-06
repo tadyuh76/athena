@@ -36,22 +36,22 @@ export class DiscountService {
   async createDiscount(data: CreateDiscountData): Promise<Discount> {
     // Validate data
     if (!data.type || !data.value) {
-      throw new Error('Loại và giá trị giảm giá là bắt buộc');
+      throw new Error('Vui lòng nhập loại và giá trị giảm giá');
     }
 
     if (data.type === 'percentage' && (data.value <= 0 || data.value > 100)) {
-      throw new Error('Giá trị phần trăm phải từ 0-100');
+      throw new Error('Giá trị phần trăm phải trong khoảng 1-100');
     }
 
     if ((data.type === 'fixed_amount' || data.type === 'free_shipping') && data.value < 0) {
-      throw new Error('Giá trị giảm giá phải lớn hơn 0');
+      throw new Error('Giá trị giảm giá phải lớn hơn hoặc bằng 0');
     }
 
     // Kiểm tra mã code đã tồn tại chưa
     if (data.code) {
       const existing = await this.discountModel.findByCode(data.code);
       if (existing) {
-        throw new Error('Mã giảm giá đã tồn tại');
+        throw new Error('Mã giảm giá này đã tồn tại trong hệ thống');
       }
     }
 
@@ -69,19 +69,19 @@ export class DiscountService {
 
     // Validate data
     if (data.type === 'percentage' && data.value && (data.value <= 0 || data.value > 100)) {
-      throw new Error('Giá trị phần trăm phải từ 0-100');
+      throw new Error('Giá trị phần trăm phải trong khoảng 1-100');
     }
 
     if (data.type && (data.type === 'fixed_amount' || data.type === 'free_shipping') &&
         data.value && data.value < 0) {
-      throw new Error('Giá trị giảm giá phải lớn hơn 0');
+      throw new Error('Giá trị giảm giá phải lớn hơn hoặc bằng 0');
     }
 
     // Kiểm tra mã code nếu thay đổi
     if (data.code && data.code !== discount.code) {
       const existing = await this.discountModel.findByCode(data.code);
       if (existing) {
-        throw new Error('Mã giảm giá đã tồn tại');
+        throw new Error('Mã giảm giá này đã tồn tại trong hệ thống');
       }
     }
 

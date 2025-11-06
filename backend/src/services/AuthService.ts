@@ -36,7 +36,15 @@ export class AuthService {
       (process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
         : "https://ueh-athena.vercel.app");
-    this.jwtSecret = process.env.JWT_SECRET || "default-jwt-secret";
+
+    // JWT_SECRET is required - fail fast if not provided
+    if (!process.env.JWT_SECRET) {
+      throw new Error(
+        'JWT_SECRET environment variable is required but not set. ' +
+        'Please set a strong random secret in your .env file.'
+      );
+    }
+    this.jwtSecret = process.env.JWT_SECRET;
   }
 
   private generateToken(userId: string): string {
@@ -68,7 +76,7 @@ export class AuthService {
       }
 
       if (!authData.user) {
-        throw new Error("Failed to create user");
+        throw new Error("Không thể tạo người dùng");
       }
 
       // Create user profile in public.users table
@@ -101,12 +109,12 @@ export class AuthService {
         token,
         requiresVerification: true,
         message:
-          "Registration successful! Please check your email to verify your account.",
+          "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản của bạn.",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Registration failed",
+        error: error instanceof Error ? error.message : "Đăng ký thất bại",
       };
     }
   }
@@ -126,13 +134,13 @@ export class AuthService {
         console.error("Supabase login error:", authError);
         // Provide more specific error messages
         if (authError.message.includes("Invalid login credentials")) {
-          throw new Error("Invalid email or password");
+          throw new Error("Email hoặc mật khẩu không hợp lệ");
         }
         throw authError;
       }
 
       if (!authData.user) {
-        throw new Error("Invalid credentials");
+        throw new Error("Thông tin đăng nhập không hợp lệ");
       }
 
       // Get or create user profile
@@ -178,7 +186,7 @@ export class AuthService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Login failed",
+        error: error instanceof Error ? error.message : "Đăng nhập thất bại",
       };
     }
   }
@@ -193,12 +201,12 @@ export class AuthService {
 
       return {
         success: true,
-        message: "Logged out successfully",
+        message: "Đăng xuất thành công",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Logout failed",
+        error: error instanceof Error ? error.message : "Đăng xuất thất bại",
       };
     }
   }
@@ -288,7 +296,7 @@ export class AuthService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Update failed",
+        error: error instanceof Error ? error.message : "Cập nhật thất bại",
       };
     }
   }
@@ -307,12 +315,12 @@ export class AuthService {
       return {
         success: true,
         message:
-          "If an account exists with this email, you will receive password reset instructions.",
+          "Nếu tài khoản với email này tồn tại, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Password reset failed",
+        error: error instanceof Error ? error.message : "Đặt lại mật khẩu thất bại",
       };
     }
   }
@@ -330,12 +338,12 @@ export class AuthService {
 
       return {
         success: true,
-        message: "Password has been reset successfully",
+        message: "Mật khẩu đã được đặt lại thành công",
       };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Password reset failed",
+        error: error instanceof Error ? error.message : "Đặt lại mật khẩu thất bại",
       };
     }
   }
@@ -357,7 +365,7 @@ export class AuthService {
 
       return {
         success: true,
-        message: "Verification email has been resent",
+        message: "Email xác thực đã được gửi lại",
       };
     } catch (error) {
       return {
@@ -365,7 +373,7 @@ export class AuthService {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to resend verification email",
+            : "Gửi lại email xác thực thất bại",
       };
     }
   }
@@ -401,19 +409,19 @@ export class AuthService {
           success: true,
           user: userProfile || undefined,
           token,
-          message: "Email verified successfully",
+          message: "Email đã được xác thực thành công",
         };
       }
 
       return {
         success: false,
-        error: "Invalid OTP",
+        error: "Mã OTP không hợp lệ",
       };
     } catch (error) {
       return {
         success: false,
         error:
-          error instanceof Error ? error.message : "OTP verification failed",
+          error instanceof Error ? error.message : "Xác thực OTP thất bại",
       };
     }
   }
@@ -448,7 +456,7 @@ export class AuthService {
       return { url: data.url };
     } catch (error) {
       throw new Error(
-        error instanceof Error ? error.message : "Google auth failed"
+        error instanceof Error ? error.message : "Xác thực Google thất bại"
       );
     }
   }
@@ -539,7 +547,7 @@ export class AuthService {
         error:
           error instanceof Error
             ? error.message
-            : "Failed to create OAuth profile",
+            : "Không thể tạo hồ sơ OAuth",
       };
     }
   }

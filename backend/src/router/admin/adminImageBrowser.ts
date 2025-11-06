@@ -23,5 +23,5 @@ export function registerAdminImageBrowser(router: Router) {
       console.error("Error loading images:", err);
       sendError(res, 500, err.message || "Failed to load images");
     }
-  }, [Router.requireRole(['admin', 'staff'])]);
+  }, [Router.requireRole(['admin'])]);
 }

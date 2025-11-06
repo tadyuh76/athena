@@ -29,5 +29,6 @@ export declare class CartService {
     getCartSummary(userId?: string, sessionId?: string): Promise<CartSummary>;
     mergeGuestCart(guestSessionId: string, userId: string): Promise<void>;
     releaseExpiredReservations(): Promise<void>;
+    verifyCartItemOwnership(itemId: string, userId?: string, sessionId?: string): Promise<boolean>;
 }
 //# sourceMappingURL=CartService.d.ts.map

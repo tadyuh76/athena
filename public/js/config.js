@@ -20,7 +20,11 @@ const ENV = {
   
   // Site configuration
   SITE_NAME: 'ATHENA',
-  DEFAULT_PRODUCTION_URL: 'https://ueh-athena.vercel.app'
+  DEFAULT_PRODUCTION_URL: 'https://ueh-athena.vercel.app',
+
+  // Supabase configuration
+  SUPABASE_URL: "https://ktapuasvoisugsrppczx.supabase.co",
+  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0YXB1YXN2b2lzdWdzcnBwY3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NjYzODMsImV4cCI6MjA3NTE0MjM4M30.hypmyvPXXgzYsG7MtbsvCehjHE23fbxS-sSGa-5DJFY"
 };
 
 // Make it globally available
@@ -36,12 +40,9 @@ console.log('Environment:', {
 // ==============================
 // 🔹 Supabase Initialization
 // ==============================
-const SUPABASE_URL = "https://ktapuasvoisugsrppczx.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0YXB1YXN2b2lzdWdzcnBwY3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1NjYzODMsImV4cCI6MjA3NTE0MjM4M30.hypmyvPXXgzYsG7MtbsvCehjHE23fbxS-sSGa-5DJFY";
-
 // Đảm bảo thư viện Supabase đã được load trước (từ CDN)
 if (window.supabase) {
-  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabaseClient = window.supabase.createClient(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY);
   window.supabase = supabaseClient;
   console.log("✅ Supabase initialized:", supabaseClient);
 } else {

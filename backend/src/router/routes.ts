@@ -2,13 +2,12 @@ import { Router } from './Router';
 import { AuthController } from '../controllers/AuthController';
 import { ProductController } from '../controllers/ProductController';
 import { CartController } from '../controllers/CartController';
-import { WishlistController } from '../controllers/WishlistController';
 import { OrderController } from '../controllers/OrderController';
 import { ReviewController } from '../controllers/ReviewController';
 import { StripeWebhookController } from '../controllers/StripeWebhookController';
 import { AddressController } from '../controllers/AddressController';
 import { DiscountController } from '../controllers/DiscountController';
-import { sendJSON } from '../utils/request-handler';
+import { sendJSON, sendError } from '../utils/request-handler';
 import { supabase } from "../utils/supabase";
 import { CollectionController } from "../controllers/CollectionController";
 import { registerAdminProductRoutes } from "./admin/adminProducts";
@@ -23,7 +22,6 @@ export function setupRoutes(): Router {
   const authController = new AuthController();
   const productController = new ProductController();
   const cartController = new CartController();
-  const wishlistController = new WishlistController();
   const orderController = new OrderController();
   const reviewController = new ReviewController();
   const stripeWebhookController = new StripeWebhookController();
@@ -53,18 +51,11 @@ export function setupRoutes(): Router {
   // Cart routes
   router.get('/api/cart', (req, res) => cartController.getCart(req, res), [Router.optionalAuth]);
   router.post('/api/cart/items', (req, res) => cartController.addItem(req, res), [Router.optionalAuth]);
-  router.put('/api/cart/items/:id', (req, res, params) => cartController.updateItemQuantity(req, res, params.id));
-  router.delete('/api/cart/items/:id', (req, res, params) => cartController.removeItem(req, res, params.id));
+  router.put('/api/cart/items/:id', (req, res, params) => cartController.updateItemQuantity(req, res, params.id), [Router.optionalAuth]);
+  router.delete('/api/cart/items/:id', (req, res, params) => cartController.removeItem(req, res, params.id), [Router.optionalAuth]);
   router.get('/api/cart/summary', (req, res) => cartController.getCartSummary(req, res), [Router.optionalAuth]);
   router.post('/api/cart/clear', (req, res) => cartController.clearCart(req, res), [Router.optionalAuth]);
   router.post('/api/cart/merge', (req, res) => cartController.mergeGuestCart(req, res), [Router.requireAuth]);
-
-  // Wishlist routes
-  router.get('/api/wishlist', (req, res) => wishlistController.getUserWishlist(req, res), [Router.requireAuth]);
-  router.post('/api/wishlist', (req, res) => wishlistController.addToWishlist(req, res), [Router.requireAuth]);
-  router.put('/api/wishlist/:id', (req, res, params) => wishlistController.updateWishlistItem(req, res, params.id), [Router.requireAuth]);
-  router.delete('/api/wishlist/:id', (req, res, params) => wishlistController.removeFromWishlist(req, res, params.id), [Router.requireAuth]);
-  router.get('/api/wishlist/count', (req, res) => wishlistController.getWishlistCount(req, res), [Router.requireAuth]);
 
   // Address routes
   router.get('/api/addresses', (req, res) => addressController.getAddresses(req, res), [Router.requireAuth]);
@@ -90,31 +81,31 @@ export function setupRoutes(): Router {
   router.get(
     '/api/admin/orders',
     (req, res) => orderController.getAllOrders(req, res),
-    [Router.requireRole(['admin', 'staff'])]
+    [Router.requireRole(['admin'])]
   );
   // ADMIN: Confirm order
   router.post(
     '/api/admin/orders/:id/confirm',
     (req, res, params) => orderController.confirmOrder(req, res, params.id),
-    [Router.requireRole(['admin', 'staff'])]
+    [Router.requireRole(['admin'])]
   );
   // ADMIN: Mark as shipped
   router.post(
     '/api/admin/orders/:id/ship',
     (req, res, params) => orderController.markAsShipped(req, res, params.id),
-    [Router.requireRole(['admin', 'staff'])]
+    [Router.requireRole(['admin'])]
   );
   // ADMIN: Mark as delivered
   router.post(
     '/api/admin/orders/:id/deliver',
     (req, res, params) => orderController.markAsDelivered(req, res, params.id),
-    [Router.requireRole(['admin', 'staff'])]
+    [Router.requireRole(['admin'])]
   );
   // ADMIN: Cancel order
   router.post(
     '/api/admin/orders/:id/cancel',
     (req, res, params) => orderController.cancelOrder(req, res, params.id),
-    [Router.requireRole(['admin', 'staff'])]
+    [Router.requireRole(['admin'])]
   );
 
   // Stripe Webhook route (must be before other POST routes to handle raw body)
@@ -136,19 +127,19 @@ export function setupRoutes(): Router {
   // CUSTOMER: Validate discount code for checkout
   router.post('/api/discounts/validate', (req, res) => discountController.validateDiscount(req, res), [Router.optionalAuth]);
   // ADMIN: Get all discounts
-  router.get('/api/admin/discounts', (req, res) => discountController.getDiscounts(req, res), [Router.requireRole(['admin', 'staff'])]);
+  router.get('/api/admin/discounts', (req, res) => discountController.getDiscounts(req, res), [Router.requireRole(['admin'])]);
   // ADMIN: Get discount by ID
-  router.get('/api/admin/discounts/:id', (req, res, params) => discountController.getDiscountById(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  router.get('/api/admin/discounts/:id', (req, res, params) => discountController.getDiscountById(req, res, params), [Router.requireRole(['admin'])]);
   // ADMIN: Create discount
-  router.post('/api/admin/discounts', (req, res) => discountController.createDiscount(req, res), [Router.requireRole(['admin', 'staff'])]);
+  router.post('/api/admin/discounts', (req, res) => discountController.createDiscount(req, res), [Router.requireRole(['admin'])]);
   // ADMIN: Update discount
-  router.put('/api/admin/discounts/:id', (req, res, params) => discountController.updateDiscount(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  router.put('/api/admin/discounts/:id', (req, res, params) => discountController.updateDiscount(req, res, params), [Router.requireRole(['admin'])]);
   // ADMIN: Delete discount
-  router.delete('/api/admin/discounts/:id', (req, res, params) => discountController.deleteDiscount(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  router.delete('/api/admin/discounts/:id', (req, res, params) => discountController.deleteDiscount(req, res, params), [Router.requireRole(['admin'])]);
   // ADMIN: Get discount stats
-  router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  router.get('/api/admin/discounts/:id/stats', (req, res, params) => discountController.getDiscountStats(req, res, params), [Router.requireRole(['admin'])]);
   // ADMIN: Get discount usage history
-  router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router.requireRole(['admin', 'staff'])]);
+  router.get('/api/admin/discounts/:id/usage', (req, res, params) => discountController.getDiscountUsage(req, res, params), [Router.requireRole(['admin'])]);
 
   // Health check
   router.get('/api/health', async (_req, res) => {
@@ -196,17 +187,16 @@ export function setupRoutes(): Router {
 
     } catch (error) {
       console.error("Dashboard API Error:", error);
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ message: "Error loading admin dashboard" }));
+      sendError(res, 500, "Error loading admin dashboard");
     }
   });
 
   // Collection routes
-  router.get("/api/admin/collections", CollectionController.getAll, [Router.requireRole(['admin', 'staff'])]);
-  router.post("/api/admin/collections", CollectionController.create, [Router.requireRole(['admin', 'staff'])]);
-  router.put("/api/admin/collections/:id", CollectionController.update, [Router.requireRole(['admin', 'staff'])]);
-  router.delete("/api/admin/collections/:id", CollectionController.remove, [Router.requireRole(['admin', 'staff'])]);
-  router.post("/api/admin/collections/upload-image", CollectionController.uploadImage, [Router.requireRole(['admin', 'staff'])]);
+  router.get("/api/admin/collections", CollectionController.getAll, [Router.requireRole(['admin'])]);
+  router.post("/api/admin/collections", CollectionController.create, [Router.requireRole(['admin'])]);
+  router.put("/api/admin/collections/:id", CollectionController.update, [Router.requireRole(['admin'])]);
+  router.delete("/api/admin/collections/:id", CollectionController.remove, [Router.requireRole(['admin'])]);
+  router.post("/api/admin/collections/upload-image", CollectionController.uploadImage, [Router.requireRole(['admin'])]);
 
   // Register Admin Product Routes
   registerAdminProductRoutes(router);

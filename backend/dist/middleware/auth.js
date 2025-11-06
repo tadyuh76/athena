@@ -5,6 +5,7 @@ exports.requireAuth = requireAuth;
 exports.optionalAuth = optionalAuth;
 exports.requireRole = requireRole;
 const AuthService_1 = require("../services/AuthService");
+const request_handler_1 = require("../utils/request-handler");
 const authService = new AuthService_1.AuthService();
 async function authenticateToken(req) {
     try {
@@ -33,8 +34,7 @@ async function authenticateToken(req) {
 async function requireAuth(req, res) {
     const isAuthenticated = await authenticateToken(req);
     if (!isAuthenticated) {
-        res.writeHead(401, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Unauthorized' }));
+        (0, request_handler_1.sendError)(res, 401, 'Unauthorized');
         return false;
     }
     return true;
@@ -46,14 +46,12 @@ function requireRole(allowedRoles) {
     return async (req, res) => {
         const isAuthenticated = await authenticateToken(req);
         if (!isAuthenticated) {
-            res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Unauthorized: Authentication required' }));
+            (0, request_handler_1.sendError)(res, 401, 'Unauthorized: Authentication required');
             return false;
         }
         const userRole = req.userRole;
         if (!userRole || !allowedRoles.includes(userRole)) {
-            res.writeHead(403, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: `Forbidden: Requires role(s): ${allowedRoles.join(', ')}` }));
+            (0, request_handler_1.sendError)(res, 403, `Forbidden: Requires role(s): ${allowedRoles.join(', ')}`);
             return false;
         }
         return true;
