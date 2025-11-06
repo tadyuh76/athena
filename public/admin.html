@@ -67,15 +67,16 @@
                 </button>
             </div>
 
-            <div class="table-responsive mt-3"> 
+            <div class="table-responsive mt-3">
                 <table class="table table-bordered align-middle" id="adminProductTable">
                 <thead class="table-light">
                     <tr>
+                    <th>Hình ảnh</th>
                     <th>Tên sản phẩm</th>
                     <th>Collection</th>
+                    <th>Biến thể</th>
                     <th>Giá gốc</th>
                     <th>Giá bán</th>
-                    <th>Hình ảnh</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,31 +99,31 @@
                             <div class="row g-3">
                                 <!-- Search -->
                                 <div class="col-md-4">
-                                    <label class="form-label small fw-semibold">Search</label>
+                                    <label class="form-label small fw-semibold">Tìm kiếm</label>
                                     <input type="text" class="form-control" id="searchInput"
-                                           placeholder="Order ID, customer email, phone...">
+                                           placeholder="Mã đơn hàng, email, số điện thoại...">
                                 </div>
 
                                 <!-- Status Filter -->
                                 <div class="col-md-2">
-                                    <label class="form-label small fw-semibold">Status</label>
+                                    <label class="form-label small fw-semibold">Trạng thái</label>
                                     <select class="form-select" id="statusFilter">
-                                        <option value="">All Status</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="preparing">Preparing</option>
-                                        <option value="shipping">Shipping</option>
-                                        <option value="delivered">Delivered</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="">Tất cả trạng thái</option>
+                                        <option value="pending">Đang chờ</option>
+                                        <option value="preparing">Đang chuẩn bị</option>
+                                        <option value="shipping">Đang giao hàng</option>
+                                        <option value="delivered">Đã giao</option>
+                                        <option value="cancelled">Đã hủy</option>
                                     </select>
                                 </div>
 
                                 <!-- Date Range -->
                                 <div class="col-md-2">
-                                    <label class="form-label small fw-semibold">From Date</label>
+                                    <label class="form-label small fw-semibold">Từ ngày</label>
                                     <input type="date" class="form-control" id="fromDate">
                                 </div>
                                 <div class="col-md-2">
-                                    <label class="form-label small fw-semibold">To Date</label>
+                                    <label class="form-label small fw-semibold">Đến ngày</label>
                                     <input type="date" class="form-control" id="toDate">
                                 </div>
 
@@ -131,7 +132,7 @@
                                     <label class="form-label small fw-semibold">&nbsp;</label>
                                     <div class="d-flex gap-2">
                                         <button class="btn btn-primary flex-fill" id="applyFiltersBtn">
-                                            <i class="bi bi-funnel me-1"></i>Filter
+                                            <i class="bi bi-funnel me-1"></i>Lọc
                                         </button>
                                         <button class="btn btn-outline-secondary" id="resetFiltersBtn">
                                             <i class="bi bi-x-lg"></i>
@@ -150,9 +151,9 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">Orders</h5>
+                                <h5 class="mb-0">Đơn hàng</h5>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <span class="text-muted small" id="orderCount">0 orders</span>
+                                    <span class="text-muted small" id="orderCount">0 đơn hàng</span>
                                     <button class="btn btn-sm btn-outline-secondary" id="refreshBtn">
                                         <i class="bi bi-arrow-clockwise"></i>
                                     </button>
@@ -165,19 +166,19 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="sortable" data-sort="id">
-                                                Order ID <i class="bi bi-chevron-expand"></i>
+                                                Mã đơn hàng <i class="bi bi-chevron-expand"></i>
                                             </th>
                                             <th class="sortable" data-sort="created_at">
-                                                Date <i class="bi bi-chevron-expand"></i>
+                                                Ngày tạo <i class="bi bi-chevron-expand"></i>
                                             </th>
-                                            <th>Customer</th>
+                                            <th>Khách hàng</th>
                                             <th class="sortable" data-sort="total_amount">
-                                                Total <i class="bi bi-chevron-expand"></i>
+                                                Tổng tiền <i class="bi bi-chevron-expand"></i>
                                             </th>
                                             <th class="sortable" data-sort="status">
-                                                Status <i class="bi bi-chevron-expand"></i>
+                                                Trạng thái <i class="bi bi-chevron-expand"></i>
                                             </th>
-                                            <th class="text-end">Actions</th>
+                                            <th class="text-end">Hành động</th>
                                         </tr>
                                     </thead>
                                     <tbody id="ordersTableBody">

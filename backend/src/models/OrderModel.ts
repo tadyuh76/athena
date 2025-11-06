@@ -133,7 +133,7 @@ export class OrderModel extends BaseModel<Order> {
           city: orderData.shippingAddress.city,
           state_province: orderData.shippingAddress.state,
           postal_code: orderData.shippingAddress.postal_code,
-          country_code: orderData.shippingAddress.country || 'US',
+          country_code: orderData.shippingAddress.country || 'VN',
           phone: orderData.shippingAddress.phone,
         });
 

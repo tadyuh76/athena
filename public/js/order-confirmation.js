@@ -131,7 +131,7 @@ function displayOrder(order) {
         ${addr.address_line1}<br>
         ${addr.address_line2 ? `${addr.address_line2}<br>` : ''}
         ${addr.city}, ${addr.state_province || addr.state} ${addr.postal_code}<br>
-        ${addr.country_code || 'US'}<br>
+        ${addr.country_code || 'VN'}<br>
         ${addr.phone ? `<span class="text-muted">Điện thoại: ${addr.phone}</span>` : ''}
       </div>
     `;

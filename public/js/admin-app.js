@@ -47,6 +47,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 // 🔹 3. CÁC HÀM HỖ TRỢ
 // ===============================
 
+// Helper function to format material composition
+function formatMaterialComposition(composition) {
+  if (!composition || typeof composition !== 'object' || Object.keys(composition).length === 0) {
+    return '-';
+  }
+
+  // Convert material names to Vietnamese and format percentages
+  const materialNames = {
+    'cotton': 'Cotton',
+    'organic_cotton': 'Cotton hữu cơ',
+    'polyester': 'Polyester',
+    'elastane': 'Elastane',
+    'spandex': 'Spandex',
+    'nylon': 'Nylon',
+    'wool': 'Len',
+    'silk': 'Lụa',
+    'linen': 'Vải lanh',
+    'rayon': 'Rayon',
+    'viscose': 'Viscose',
+    'modal': 'Modal',
+    'lyocell': 'Lyocell',
+    'bamboo': 'Tre'
+  };
+
+  return Object.entries(composition)
+    .map(([material, percentage]) => {
+      const displayName = materialNames[material.toLowerCase()] || material;
+      return `${displayName} ${percentage}%`;
+    })
+    .join(', ');
+}
+
 // Helper function to get auth headers
 function getAuthHeaders() {
   const token = localStorage.getItem('authToken');
@@ -322,7 +354,7 @@ async function loadAdminProducts() {
 
   // Loading
   tableBody.innerHTML = `
-    <tr><td colspan="5" class="text-center text-muted py-3">Đang tải sản phẩm...</td></tr>
+    <tr><td colspan="6" class="text-center text-muted py-3">Đang tải sản phẩm...</td></tr>
   `;
 
   try {
@@ -339,28 +371,49 @@ async function loadAdminProducts() {
 
     if (products.length === 0) {
       tableBody.innerHTML = `
-        <tr><td colspan="5" class="text-center text-muted py-3">Chưa có sản phẩm nào</td></tr>
+        <tr><td colspan="6" class="text-center text-muted py-3">Chưa có sản phẩm nào</td></tr>
       `;
       return;
     }
 
-    tableBody.innerHTML = products.map(p => `
+    // Fetch variants for all products to show counts and images
+    const productsWithVariants = await Promise.all(
+      products.map(async (p) => {
+        const variants = await getProductVariants(p.id);
+        return { ...p, variants };
+      })
+    );
+
+    tableBody.innerHTML = productsWithVariants.map(p => {
+      const variantCount = p.variants.length;
+      const variantImages = p.variants
+        .filter(v => v.image_url)
+        .slice(0, 3)
+        .map(v => `<img src="${v.image_url}" alt="${v.size || ''} ${v.color || ''}" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:4px;" title="${v.size || ''} ${v.color || ''}">`).join("");
+
+      return `
     <tr>
+      <td>
+        <div class="d-flex gap-2 align-items-center">
+          <img src="${p.featured_image_url || '/images/no-image.png'}"
+              alt="${p.name}"
+              style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #dee2e6;">
+          ${variantImages ? `<div class="d-flex flex-wrap">${variantImages}</div>` : ''}
+        </div>
+      </td>
       <td>
         <a href="#" class="product-detail-link" data-id="${p.id}">
           ${p.name || "-"}
         </a>
       </td>
       <td>${p.collection_name || "-"}</td>
+      <td>
+        <span class="badge bg-primary">${variantCount} biến thể</span>
+      </td>
       <td>${p.compare_price ? "$" + p.compare_price.toLocaleString("en-US") : "-"}</td>
       <td>${p.final_price ? "$" + p.final_price.toLocaleString("en-US") : "-"}</td>
-      <td>
-        <img src="${p.featured_image_url || '/images/no-image.png'}"
-            alt="${p.name}"
-            style="width:50px;height:50px;object-fit:cover;border-radius:6px;">
-      </td>
     </tr>
-  `).join("");
+  `}).join("");
 
   // Gắn sự kiện click cho tất cả link chi tiết sản phẩm
   section.querySelectorAll(".product-detail-link").forEach(link => {
@@ -374,7 +427,7 @@ async function loadAdminProducts() {
   } catch (err) {
     console.error("Lỗi tải sản phẩm:", err);
     tableBody.innerHTML = `
-      <tr><td colspan="5" class="text-danger text-center py-3">
+      <tr><td colspan="6" class="text-danger text-center py-3">
         ⚠️ Lỗi tải dữ liệu sản phẩm: ${err.message}
       </td></tr>
     `;
@@ -386,7 +439,7 @@ async function getProductVariants(productId) {
   try {
     const { data, error } = await supabase
       .from('product_variants')
-      .select('id, size, color, color_hex, price, inventory_quantity')
+      .select('id, size, color, color_hex, price, inventory_quantity, image_url, sku')
       .eq('product_id', productId);
 
     if (error) throw error;
@@ -426,7 +479,16 @@ async function showProductDetail(productId) {
 
     const sizes = [...new Set(variants.map(v => v.size).filter(Boolean))];
     const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
-    const images = (p.images || []).map(img => img.url);
+
+    // Get product images - handle both array of objects and array of strings
+    let images = [];
+    if (p.images && Array.isArray(p.images)) {
+      images = p.images.map(img => typeof img === 'string' ? img : img.url).filter(Boolean);
+    }
+    // If no images array, use featured_image_url as fallback
+    if (images.length === 0 && p.featured_image_url) {
+      images = [p.featured_image_url];
+    }
 
     // 🔹 Hiển thị modal
     const modalBody = document.querySelector("#productDetailModal .modal-body");
@@ -434,7 +496,7 @@ async function showProductDetail(productId) {
       <div class="row g-5">
         <div class="col-md-6">
           <div class="product-gallery d-flex flex-wrap gap-2">
-            ${images.length ? images.map(url => `<img src="${url}" alt="${p.name}" style="width:500px;height:fit;object-fit:cover;">`).join("") : `<div class="text-muted">Không có hình ảnh</div>`}
+            ${images.length ? images.map(url => `<img src="${url}" alt="${p.name}" style="width:100%;max-width:500px;height:auto;object-fit:cover;border-radius:8px;">`).join("") : `<div class="text-muted">Không có hình ảnh</div>`}
           </div>
         </div>
         <div class="col-md-6">
@@ -471,6 +533,7 @@ async function showProductDetail(productId) {
             <table class="table table-sm table-bordered" id="variantsTable">
               <thead>
                 <tr>
+                  <th>Hình ảnh</th>
                   <th>Kích cỡ</th>
                   <th>Màu</th>
                   <th>Mã màu</th>
@@ -483,6 +546,9 @@ async function showProductDetail(productId) {
               <tbody>
                 ${variants.map(v => `
                   <tr data-id="${v.id || ""}">
+                    <td>
+                      ${v.image_url ? `<img src="${v.image_url}" alt="${v.size || ''} ${v.color || ''}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">` : '<span class="text-muted small">Không có ảnh</span>'}
+                    </td>
                     <td>${v.size || ""}</td>
                     <td>${v.color || ""}</td>
                     <td>${v.color_hex || ""}</td>
@@ -500,12 +566,12 @@ async function showProductDetail(productId) {
             <p><strong>Mã sản phẩm (SKU):</strong> ${p.sku || "-"}</p>
             <p><strong>Đường dẫn (Slug):</strong> ${p.slug || "-"}</p>
             <p><strong>Danh mục:</strong> ${p.category?.name || "-"}</p>
-            <p><strong>Thành phần vật liệu:</strong> ${JSON.stringify(p.material_composition) || "-"}</p>
+            <p><strong>Thành phần vật liệu:</strong> ${formatMaterialComposition(p.material_composition)}</p>
             <p><strong>Hướng dẫn bảo quản:</strong> ${p.care_instructions || "-"}</p>
             <p><strong>Ghi chú bền vững:</strong> ${p.sustainability_notes || "-"}</p>
             <p><strong>Phương pháp sản xuất:</strong> ${p.production_method || "-"}</p>
             <p><strong>Chứng nhận:</strong> ${(p.certification_labels || []).join(", ") || "-"}</p>
-            
+
             <hr>
             <div class="d-flex justify-content-end gap-2 mt-3">
               <button class="btn btn-primary" id="editProductBtn">Sửa</button>
@@ -864,7 +930,7 @@ if (addProductBtn) {
 function openVariantsModal(productId, variants) {
   const modalHtml = `
     <div class="modal fade" id="variantsModal" tabindex="-1">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Quản lý Biến Thể</h5>
@@ -874,32 +940,40 @@ function openVariantsModal(productId, variants) {
             <div class="d-flex justify-content-end mb-2">
               <button class="btn btn-sm btn-success" id="addVariantBtn">Thêm Biến Thể</button>
             </div>
-            <table class="table table-sm table-bordered" id="variantsEditTable">
-              <thead>
-                <tr>
-                  <th>Kích cỡ</th>
-                  <th>Màu sắc</th>
-                  <th>Mã màu</th>
-                  <th>Giá (USD)</th>
-                  <th>Tồn kho</th>
-                  <th>SKU</th>
-                  <th>Hành động</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${variants.map(v => `
-                  <tr data-id="${v.id || ""}">
-                    <td><input type="text" class="form-control form-control-sm size" value="${v.size || ""}"></td>
-                    <td><input type="text" class="form-control form-control-sm color" value="${v.color || ""}"></td>
-                    <td><input type="text" class="form-control form-control-sm color-hex" value="${v.color_hex || ""}"></td>
-                    <td><input type="number" class="form-control form-control-sm price" value="${v.price || ""}"></td>
-                    <td><input type="number" class="form-control form-control-sm inventory" value="${v.inventory_quantity || ""}"></td>
-                    <td><input type="text" class="form-control form-control-sm sku" value="${v.sku || ""}"></td>
-                    <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
+            <div class="table-responsive">
+              <table class="table table-sm table-bordered" id="variantsEditTable">
+                <thead>
+                  <tr>
+                    <th>Hình ảnh</th>
+                    <th>Kích cỡ</th>
+                    <th>Màu sắc</th>
+                    <th>Mã màu</th>
+                    <th>Giá (USD)</th>
+                    <th>Tồn kho</th>
+                    <th>SKU</th>
+                    <th>Hành động</th>
                   </tr>
-                `).join("")}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  ${variants.map(v => `
+                    <tr data-id="${v.id || ""}">
+                      <td style="min-width:120px;">
+                        ${v.image_url ? `<img src="${v.image_url}" alt="${v.size || ''} ${v.color || ''}" style="width:50px;height:50px;object-fit:cover;border-radius:4px;margin-bottom:4px;" class="d-block">` : ''}
+                        <input type="text" class="form-control form-control-sm image-url" value="${v.image_url || ""}" placeholder="URL hình ảnh">
+                        <small class="text-muted">Nhập URL ảnh</small>
+                      </td>
+                      <td><input type="text" class="form-control form-control-sm size" value="${v.size || ""}"></td>
+                      <td><input type="text" class="form-control form-control-sm color" value="${v.color || ""}"></td>
+                      <td><input type="text" class="form-control form-control-sm color-hex" value="${v.color_hex || ""}"></td>
+                      <td><input type="number" class="form-control form-control-sm price" value="${v.price || ""}"></td>
+                      <td><input type="number" class="form-control form-control-sm inventory" value="${v.inventory_quantity || ""}"></td>
+                      <td><input type="text" class="form-control form-control-sm sku" value="${v.sku || ""}"></td>
+                      <td><button class="btn btn-sm btn-danger delete-variant-btn">Xoá</button></td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
           </div>
           <div class="modal-footer">
             <button class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
@@ -920,6 +994,10 @@ function openVariantsModal(productId, variants) {
     const tbody = modalEl.querySelector("#variantsEditTable tbody");
     const newRow = document.createElement("tr");
     newRow.innerHTML = `
+      <td style="min-width:120px;">
+        <input type="text" class="form-control form-control-sm image-url" placeholder="URL hình ảnh">
+        <small class="text-muted">Nhập URL ảnh</small>
+      </td>
       <td><input type="text" class="form-control form-control-sm size"></td>
       <td><input type="text" class="form-control form-control-sm color"></td>
       <td><input type="text" class="form-control form-control-sm color-hex"></td>
@@ -952,6 +1030,7 @@ function openVariantsModal(productId, variants) {
         price: Number(row.querySelector(".price").value) || 0,
         inventory_quantity: Number(row.querySelector(".inventory").value) || 0,
         sku: row.querySelector(".sku").value.trim(),
+        image_url: row.querySelector(".image-url").value.trim() || null,
         product_id: productId
       };
 
@@ -985,7 +1064,8 @@ function openVariantsModal(productId, variants) {
             color_hex: v.color_hex,
             price: v.price,
             inventory_quantity: v.inventory_quantity,
-            sku: v.sku
+            sku: v.sku,
+            image_url: v.image_url
           })
           .eq("id", v.id);
 
@@ -996,8 +1076,9 @@ function openVariantsModal(productId, variants) {
       modalInstance.hide();
       modalEl.remove();
 
-      // Reload chi tiết sản phẩm
-      showProductDetail(productId);
+      // Reload chi tiết sản phẩm và product list
+      await showProductDetail(productId);
+      await loadAdminProducts();
     } catch (err) {
       alert("❌ " + err.message);
     }

@@ -121,7 +121,7 @@ export class OrderService {
           city: request.shippingInfo.city,
           state: request.shippingInfo.state,
           postal_code: request.shippingInfo.zip,
-          country: 'US',
+          country: 'VN',
           phone: request.shippingInfo.phone,
         },
       };
@@ -238,7 +238,7 @@ export class OrderService {
           city: request.shippingInfo.city,
           state: request.shippingInfo.state,
           postal_code: request.shippingInfo.zip,
-          country: 'US',
+          country: 'VN',
           phone: request.shippingInfo.phone,
         },
       };
@@ -557,7 +557,7 @@ export class OrderService {
           city: shippingInfo.city,
           state: shippingInfo.state,
           postal_code: shippingInfo.zip,
-          country: 'US',
+          country: 'VN',
           phone: shippingInfo.phone,
         },
       };

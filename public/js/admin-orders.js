@@ -57,8 +57,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const user = authService.getUser();
     if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
-      await Dialog.alert("You don't have permission to access this page.", {
-        title: "Access Denied"
+      await Dialog.alert("Bạn không có quyền truy cập trang này.", {
+        title: "Truy cập bị từ chối"
       });
       window.location.href = "/";
       return;
@@ -153,7 +153,7 @@ async function loadOrders() {
     <tr>
       <td colspan="7" class="text-center py-5">
         <div class="spinner-border text-secondary" role="status"></div>
-        <div class="mt-2 text-muted">Loading orders...</div>
+        <div class="mt-2 text-muted">Đang tải đơn hàng...</div>
       </td>
     </tr>
   `;
@@ -178,7 +178,7 @@ async function loadOrders() {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to load orders');
+      throw new Error('Không thể tải đơn hàng');
     }
 
     const data = await response.json();
@@ -194,9 +194,9 @@ async function loadOrders() {
       <tr>
         <td colspan="7" class="text-center py-5">
           <i class="bi bi-exclamation-triangle display-1 text-danger"></i>
-          <div class="mt-3 text-muted">Failed to load orders</div>
+          <div class="mt-3 text-muted">Không thể tải đơn hàng</div>
           <button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">
-            Retry
+            Thử lại
           </button>
         </td>
       </tr>
@@ -213,7 +213,7 @@ function renderOrders() {
       <tr>
         <td colspan="7" class="text-center py-5">
           <i class="bi bi-inbox display-1 text-muted"></i>
-          <div class="mt-3 text-muted">No orders found</div>
+          <div class="mt-3 text-muted">Không tìm thấy đơn hàng</div>
         </td>
       </tr>
     `;
@@ -234,7 +234,7 @@ function renderOrders() {
           const variantText = item.variant_title ? ` (${item.variant_title})` : '';
           return `<div class="small">${item.product_name}${variantText} <span class="text-muted">×${item.quantity}</span></div>`;
         }).join('')
-      : '<div class="small text-muted">No items</div>';
+      : '<div class="small text-muted">Không có sản phẩm</div>';
 
     return `
       <tr>
@@ -280,26 +280,26 @@ function renderQuickActions(order) {
   if (order.status === 'pending') {
     // pending: can confirm (to preparing) or cancel
     actions.push(`
-      <button class="btn btn-outline-success" onclick="window.confirmOrder('${order.id}')" title="Confirm & Prepare">
+      <button class="btn btn-outline-success" onclick="window.confirmOrder('${order.id}')" title="Xác nhận & Chuẩn bị">
         <i class="bi bi-check-lg"></i>
       </button>
     `);
     actions.push(`
-      <button class="btn btn-outline-danger" onclick="window.cancelOrder('${order.id}')" title="Cancel">
+      <button class="btn btn-outline-danger" onclick="window.cancelOrder('${order.id}')" title="Hủy">
         <i class="bi bi-x-lg"></i>
       </button>
     `);
   } else if (order.status === 'preparing') {
     // preparing: can manually move to shipping
     actions.push(`
-      <button class="btn btn-outline-info" onclick="window.shipOrder('${order.id}')" title="Start Shipping">
+      <button class="btn btn-outline-info" onclick="window.shipOrder('${order.id}')" title="Bắt đầu giao hàng">
         <i class="bi bi-truck"></i>
       </button>
     `);
   } else if (order.status === 'shipping') {
     // shipping: can manually mark as delivered
     actions.push(`
-      <button class="btn btn-outline-success" onclick="window.deliverOrder('${order.id}')" title="Mark as Delivered">
+      <button class="btn btn-outline-success" onclick="window.deliverOrder('${order.id}')" title="Đánh dấu đã giao">
         <i class="bi bi-check2-all"></i>
       </button>
     `);
@@ -312,12 +312,12 @@ function renderQuickActions(order) {
 // Get status badge
 function getStatusBadge(status) {
   const badges = {
-    pending: '<span class="badge bg-warning text-dark">Pending</span>',
-    preparing: '<span class="badge bg-info">Preparing</span>',
-    shipping: '<span class="badge bg-primary">Shipping</span>',
-    delivered: '<span class="badge bg-success">Delivered</span>',
-    cancelled: '<span class="badge bg-danger">Cancelled</span>',
-    refunded: '<span class="badge bg-secondary">Refunded</span>'
+    pending: '<span class="badge bg-warning text-dark">Đang chờ</span>',
+    preparing: '<span class="badge bg-info">Đang chuẩn bị</span>',
+    shipping: '<span class="badge bg-primary">Đang giao hàng</span>',
+    delivered: '<span class="badge bg-success">Đã giao</span>',
+    cancelled: '<span class="badge bg-danger">Đã hủy</span>',
+    refunded: '<span class="badge bg-secondary">Đã hoàn tiền</span>'
   };
   return badges[status] || `<span class="badge bg-secondary">${status}</span>`;
 }
@@ -329,7 +329,7 @@ function updatePagination(page, totalPages) {
 
   const start = (page - 1) * limit + 1;
   const end = Math.min(page * limit, totalOrders);
-  paginationInfo.textContent = `Showing ${start}-${end} of ${totalOrders} orders`;
+  paginationInfo.textContent = `Hiển thị ${start}-${end} trong ${totalOrders} đơn hàng`;
 
   if (totalPages <= 1) {
     pagination.innerHTML = '';
@@ -406,7 +406,7 @@ window.changePage = function(page) {
 
 // Update order count
 function updateOrderCount() {
-  document.getElementById('orderCount').textContent = `${totalOrders} order${totalOrders !== 1 ? 's' : ''}`;
+  document.getElementById('orderCount').textContent = `${totalOrders} đơn hàng`;
 }
 
 // View order details
@@ -417,7 +417,7 @@ window.viewOrder = async function(orderId) {
   content.innerHTML = `
     <div class="text-center py-5">
       <div class="spinner-border text-secondary" role="status"></div>
-      <div class="mt-2 text-muted">Loading order details...</div>
+      <div class="mt-2 text-muted">Đang tải chi tiết đơn hàng...</div>
     </div>
   `;
 
@@ -431,7 +431,7 @@ window.viewOrder = async function(orderId) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to load order details');
+      throw new Error('Không thể tải chi tiết đơn hàng');
     }
 
     const data = await response.json();
@@ -442,7 +442,7 @@ window.viewOrder = async function(orderId) {
     content.innerHTML = `
       <div class="alert alert-danger">
         <i class="bi bi-exclamation-triangle me-2"></i>
-        Failed to load order details
+        Không thể tải chi tiết đơn hàng
       </div>
     `;
   }
@@ -461,18 +461,18 @@ function renderOrderDetails(order) {
     <div class="row g-4">
       <!-- Order Info -->
       <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Order Information</h6>
+        <h6 class="fw-bold mb-3">Thông tin đơn hàng</h6>
         <table class="table table-sm table-borderless">
           <tr>
-            <td class="text-muted" style="width: 120px;">Order ID:</td>
+            <td class="text-muted" style="width: 120px;">Mã đơn hàng:</td>
             <td><code>${order.id}</code></td>
           </tr>
           <tr>
-            <td class="text-muted">Date:</td>
+            <td class="text-muted">Ngày tạo:</td>
             <td>${formatDate(order.created_at)} ${formatTime(order.created_at)}</td>
           </tr>
           <tr>
-            <td class="text-muted">Status:</td>
+            <td class="text-muted">Trạng thái:</td>
             <td>${getStatusBadge(order.status)}</td>
           </tr>
         </table>
@@ -480,10 +480,10 @@ function renderOrderDetails(order) {
 
       <!-- Customer Info -->
       <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Customer Information</h6>
+        <h6 class="fw-bold mb-3">Thông tin khách hàng</h6>
         <table class="table table-sm table-borderless">
           <tr>
-            <td class="text-muted" style="width: 120px;">Name:</td>
+            <td class="text-muted" style="width: 120px;">Tên:</td>
             <td>${customerName}</td>
           </tr>
           <tr>
@@ -492,7 +492,7 @@ function renderOrderDetails(order) {
           </tr>
           ${customerPhone ? `
           <tr>
-            <td class="text-muted">Phone:</td>
+            <td class="text-muted">Điện thoại:</td>
             <td>${customerPhone}</td>
           </tr>
           ` : ''}
@@ -501,7 +501,7 @@ function renderOrderDetails(order) {
 
       <!-- Shipping Address -->
       <div class="col-md-6">
-        <h6 class="fw-bold mb-3">Shipping Address</h6>
+        <h6 class="fw-bold mb-3">Địa chỉ giao hàng</h6>
         <address class="small">
           ${shippingAddr.address_line1 || 'N/A'}<br>
           ${shippingAddr.address_line2 ? `${shippingAddr.address_line2}<br>` : ''}
@@ -511,28 +511,24 @@ function renderOrderDetails(order) {
 
       <!-- Order Items -->
       <div class="col-12">
-        <h6 class="fw-bold mb-3">Order Items</h6>
+        <h6 class="fw-bold mb-3">Sản phẩm</h6>
         <div class="table-responsive">
           <table class="table table-sm">
             <thead class="table-light">
               <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th class="text-end">Subtotal</th>
+                <th>Sản phẩm</th>
+                <th>Giá</th>
+                <th>Số lượng</th>
+                <th class="text-end">Tổng phụ</th>
               </tr>
             </thead>
             <tbody>
               ${order.items ? order.items.map(item => `
                 <tr>
                   <td>
-                    <div class="fw-semibold">${item.product_name || 'Product'}</div>
-                    ${item.variant_size || item.variant_color ?
-                      `<div class="small text-muted">
-                        ${item.variant_size ? `Size: ${item.variant_size}` : ''}
-                        ${item.variant_size && item.variant_color ? ' • ' : ''}
-                        ${item.variant_color ? `Color: ${item.variant_color}` : ''}
-                      </div>` : ''}
+                    <div class="fw-semibold">${item.product_name || 'Sản phẩm'}</div>
+                    ${item.variant_title ?
+                      `<div class="small text-muted">${item.variant_title}</div>` : ''}
                   </td>
                   <td>$${item.unit_price.toFixed(2)}</td>
                   <td>${item.quantity}</td>
@@ -542,29 +538,29 @@ function renderOrderDetails(order) {
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
+                <td colspan="3" class="text-end fw-semibold">Tổng phụ:</td>
                 <td class="text-end">$${order.subtotal.toFixed(2)}</td>
               </tr>
               ${order.discount_amount > 0 ? `
               <tr>
-                <td colspan="3" class="text-end text-success">Discount:</td>
+                <td colspan="3" class="text-end text-success">Giảm giá:</td>
                 <td class="text-end text-success">-$${order.discount_amount.toFixed(2)}</td>
               </tr>
               ` : ''}
               ${order.tax_amount > 0 ? `
               <tr>
-                <td colspan="3" class="text-end">Tax:</td>
+                <td colspan="3" class="text-end">Thuế:</td>
                 <td class="text-end">$${order.tax_amount.toFixed(2)}</td>
               </tr>
               ` : ''}
               ${order.shipping_amount > 0 ? `
               <tr>
-                <td colspan="3" class="text-end">Shipping:</td>
+                <td colspan="3" class="text-end">Phí vận chuyển:</td>
                 <td class="text-end">$${order.shipping_amount.toFixed(2)}</td>
               </tr>
               ` : ''}
               <tr class="table-light">
-                <td colspan="3" class="text-end fw-bold">Total:</td>
+                <td colspan="3" class="text-end fw-bold">Tổng cộng:</td>
                 <td class="text-end fw-bold">$${order.total_amount.toFixed(2)}</td>
               </tr>
             </tfoot>
@@ -590,24 +586,24 @@ function renderDetailActions(order) {
   if (order.status === 'pending') {
     actions.push(`
       <button class="btn btn-success" onclick="window.confirmOrder('${order.id}')">
-        <i class="bi bi-check-lg me-2"></i>Confirm Order
+        <i class="bi bi-check-lg me-2"></i>Xác nhận đơn hàng
       </button>
     `);
     actions.push(`
       <button class="btn btn-danger" onclick="window.cancelOrder('${order.id}')">
-        <i class="bi bi-x-lg me-2"></i>Cancel Order
+        <i class="bi bi-x-lg me-2"></i>Hủy đơn hàng
       </button>
     `);
   } else if (order.status === 'preparing') {
     actions.push(`
       <button class="btn btn-info" onclick="window.shipOrder('${order.id}')">
-        <i class="bi bi-truck me-2"></i>Start Shipping
+        <i class="bi bi-truck me-2"></i>Bắt đầu giao hàng
       </button>
     `);
   } else if (order.status === 'shipping') {
     actions.push(`
       <button class="btn btn-success" onclick="window.deliverOrder('${order.id}')">
-        <i class="bi bi-check2-all me-2"></i>Mark as Delivered
+        <i class="bi bi-check2-all me-2"></i>Đánh dấu đã giao
       </button>
     `);
   }
@@ -618,10 +614,10 @@ function renderDetailActions(order) {
 // Confirm order
 window.confirmOrder = async function(orderId) {
   const confirmed = await Dialog.confirm(
-    "Are you sure you want to confirm this order? The customer will be notified.",
+    "Bạn có chắc chắn muốn xác nhận đơn hàng này? Khách hàng sẽ được thông báo.",
     {
-      title: "Confirm Order",
-      confirmText: "Confirm Order",
+      title: "Xác nhận đơn hàng",
+      confirmText: "Xác nhận",
       confirmClass: "btn-success"
     }
   );
@@ -637,10 +633,10 @@ window.confirmOrder = async function(orderId) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to confirm order');
+      throw new Error('Không thể xác nhận đơn hàng');
     }
 
-    showToast('Order confirmed successfully', 'success');
+    showToast('Đã xác nhận đơn hàng thành công', 'success');
     await loadOrders();
 
     // Close modal if open
@@ -648,17 +644,17 @@ window.confirmOrder = async function(orderId) {
     if (modal) modal.hide();
   } catch (error) {
     console.error('Error confirming order:', error);
-    showToast('Failed to confirm order', 'danger');
+    showToast('Không thể xác nhận đơn hàng', 'danger');
   }
 };
 
 // Ship order
 window.shipOrder = async function(orderId) {
   const confirmed = await Dialog.confirm(
-    "Start shipping this order? This will begin the delivery process.",
+    "Bắt đầu giao hàng cho đơn hàng này? Quá trình giao hàng sẽ được bắt đầu.",
     {
-      title: "Start Shipping",
-      confirmText: "Start Shipping",
+      title: "Bắt đầu giao hàng",
+      confirmText: "Bắt đầu giao",
       confirmClass: "btn-info"
     }
   );
@@ -674,27 +670,27 @@ window.shipOrder = async function(orderId) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to start shipping');
+      throw new Error('Không thể bắt đầu giao hàng');
     }
 
-    showToast('Order is now shipping', 'success');
+    showToast('Đơn hàng đang được giao', 'success');
     await loadOrders();
 
     const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
     if (modal) modal.hide();
   } catch (error) {
     console.error('Error starting shipping:', error);
-    showToast('Failed to start shipping', 'danger');
+    showToast('Không thể bắt đầu giao hàng', 'danger');
   }
 };
 
 // Deliver order
 window.deliverOrder = async function(orderId) {
   const confirmed = await Dialog.confirm(
-    "Mark this order as delivered? This action confirms the order has reached the customer.",
+    "Đánh dấu đơn hàng này là đã giao? Hành động này xác nhận đơn hàng đã đến tay khách hàng.",
     {
-      title: "Deliver Order",
-      confirmText: "Mark as Delivered",
+      title: "Giao hàng thành công",
+      confirmText: "Đánh dấu đã giao",
       confirmClass: "btn-success"
     }
   );
@@ -710,28 +706,28 @@ window.deliverOrder = async function(orderId) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to deliver order');
+      throw new Error('Không thể đánh dấu đã giao');
     }
 
-    showToast('Order marked as delivered', 'success');
+    showToast('Đã đánh dấu đơn hàng là đã giao', 'success');
     await loadOrders();
 
     const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
     if (modal) modal.hide();
   } catch (error) {
     console.error('Error delivering order:', error);
-    showToast('Failed to deliver order', 'danger');
+    showToast('Không thể đánh dấu đã giao', 'danger');
   }
 };
 
 // Cancel order
 window.cancelOrder = async function(orderId) {
   const confirmed = await Dialog.confirm(
-    "Are you sure you want to cancel this order? This action cannot be undone.",
+    "Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.",
     {
-      title: "Cancel Order",
-      confirmText: "Cancel Order",
-      cancelText: "Keep Order",
+      title: "Hủy đơn hàng",
+      confirmText: "Hủy đơn",
+      cancelText: "Giữ đơn hàng",
       confirmClass: "btn-danger"
     }
   );
@@ -747,17 +743,17 @@ window.cancelOrder = async function(orderId) {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to cancel order');
+      throw new Error('Không thể hủy đơn hàng');
     }
 
-    showToast('Order cancelled successfully', 'success');
+    showToast('Đã hủy đơn hàng thành công', 'success');
     await loadOrders();
 
     const modal = bootstrap.Modal.getInstance(document.getElementById('orderDetailsModal'));
     if (modal) modal.hide();
   } catch (error) {
     console.error('Error cancelling order:', error);
-    showToast('Failed to cancel order', 'danger');
+    showToast('Không thể hủy đơn hàng', 'danger');
   }
 };
 
