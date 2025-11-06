@@ -10,6 +10,7 @@ const routes_1 = require("./router/routes");
 const CartService_1 = require("./services/CartService");
 const request_handler_1 = require("./utils/request-handler");
 const orderStatusUpdater_1 = require("./jobs/orderStatusUpdater");
+const storage_1 = require("./utils/storage");
 dotenv_1.default.config({ path: path_1.default.resolve(__dirname, "../../.env") });
 const router = (0, routes_1.setupRoutes)();
 const cartService = new CartService_1.CartService();
@@ -40,6 +41,9 @@ setInterval(async () => {
     }
 }, 5 * 60 * 1000);
 (0, orderStatusUpdater_1.startOrderStatusUpdater)();
+storage_1.StorageService.ensureBucketExists().catch((error) => {
+    console.error("Failed to initialize review images bucket:", error);
+});
 const PORT = process.env.API_PORT || 3001;
 server.listen(PORT, () => {
     console.log(`🚀 API server running at http://localhost:${PORT}`);

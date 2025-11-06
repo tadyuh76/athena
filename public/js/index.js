@@ -190,6 +190,11 @@ async function loadFeaturedProducts() {
                                     )}${"☆".repeat(
                                     5 - Math.round(product.rating)
                                   )}
+                                    ${
+                                      product.review_count
+                                        ? `<span class="text-muted ms-1">(${product.review_count})</span>`
+                                        : ""
+                                    }
                                 </div>`
                                 : ""
                             }

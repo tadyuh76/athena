@@ -69,6 +69,7 @@ function setupRoutes() {
     router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router_1.Router.requireAuth]);
     router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
     router.post('/api/reviews', (req, res) => reviewController.createReview(req, res), [Router_1.Router.requireAuth]);
+    router.post('/api/reviews/upload-image', (req, res) => reviewController.uploadReviewImage(req, res), [Router_1.Router.requireAuth]);
     router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router_1.Router.requireAuth]);
     router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router_1.Router.requireAuth]);
     router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
@@ -114,6 +115,7 @@ function setupRoutes() {
     router.post("/api/admin/collections", CollectionController_1.CollectionController.create, [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.put("/api/admin/collections/:id", CollectionController_1.CollectionController.update, [Router_1.Router.requireRole(['admin', 'staff'])]);
     router.delete("/api/admin/collections/:id", CollectionController_1.CollectionController.remove, [Router_1.Router.requireRole(['admin', 'staff'])]);
+    router.post("/api/admin/collections/upload-image", CollectionController_1.CollectionController.uploadImage, [Router_1.Router.requireRole(['admin', 'staff'])]);
     (0, adminProducts_1.registerAdminProductRoutes)(router);
     (0, adminProductVariant_1.registerAdminProductVariantRoutes)(router);
     (0, adminProductImages_1.registerAdminProductImagesRoutes)(router);

@@ -70,7 +70,15 @@ export class AdminProductController {
   // =============================
   async update(req: IncomingMessage & { body: Partial<ProductInput> }, res: ServerResponse, id: string) {
     try {
+      console.log("🔍 [UPDATE] Product ID:", id);
+      console.log("🔍 [UPDATE] Request body received:", JSON.stringify(req.body, null, 2));
+      console.log("🔍 [UPDATE] featured_image_url in body:", req.body.featured_image_url);
+
       const product = await this.service.update(id, req.body);
+
+      console.log("✅ [UPDATE] Product updated successfully");
+      console.log("🔍 [UPDATE] Updated product featured_image_url:", product.featured_image_url);
+
       sendJSON(res, 200, { success: true, data: product });
     } catch (err: any) {
       console.error("❌ [update] Error:", err);

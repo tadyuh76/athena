@@ -6,6 +6,7 @@ export interface ProductWithVariants extends Product {
   images?: ProductImage[];
   category?: any;
   collection?: any;
+  reviews?: Array<{ rating: number }>;
 }
 
 export interface ProductFilter {
@@ -46,7 +47,8 @@ export class ProductModel extends BaseModel<Product> {
           variants:product_variants(*),
           images:product_images(*),
           category:product_categories(*),
-          collection:product_collections(*)
+          collection:product_collections(*),
+          reviews:product_reviews(rating)
         `, { count: 'exact' })
         .eq('status', filter.status || 'active');
 
@@ -101,8 +103,25 @@ export class ProductModel extends BaseModel<Product> {
         throw error;
       }
 
+      // Calculate rating and review_count from reviews array
+      const products = (data || []).map((product: any) => {
+        const reviews = product.reviews || [];
+        const review_count = reviews.length;
+        const rating = review_count > 0
+          ? parseFloat((reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / review_count).toFixed(1))
+          : null;
+
+        // Remove the reviews array and add calculated fields
+        const { reviews: _, ...productWithoutReviews } = product;
+        return {
+          ...productWithoutReviews,
+          rating,
+          review_count
+        };
+      });
+
       return {
-        products: (data || []) as ProductWithVariants[],
+        products: products as ProductWithVariants[],
         total: count || 0,
         page,
         totalPages: Math.ceil((count || 0) / limit)
@@ -124,7 +143,8 @@ export class ProductModel extends BaseModel<Product> {
           variants:product_variants(*),
           images:product_images(*),
           category:product_categories(*),
-          collection:product_collections(*)
+          collection:product_collections(*),
+          reviews:product_reviews(rating)
         `)
         .eq('id', id)
         .single();
@@ -136,7 +156,21 @@ export class ProductModel extends BaseModel<Product> {
         throw error;
       }
 
-      return data as ProductWithVariants;
+      // Calculate rating and review_count from reviews array
+      const product: any = data;
+      const reviews = product.reviews || [];
+      const review_count = reviews.length;
+      const rating = review_count > 0
+        ? parseFloat((reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / review_count).toFixed(1))
+        : null;
+
+      // Remove the reviews array and add calculated fields
+      const { reviews: _, ...productWithoutReviews } = product;
+      return {
+        ...productWithoutReviews,
+        rating,
+        review_count
+      } as ProductWithVariants;
     } catch (error) {
       throw new Error(`Failed to find product by ID with relations: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
@@ -154,7 +188,8 @@ export class ProductModel extends BaseModel<Product> {
           variants:product_variants(*),
           images:product_images(*),
           category:product_categories(*),
-          collection:product_collections(*)
+          collection:product_collections(*),
+          reviews:product_reviews(rating)
         `)
         .eq('slug', slug)
         .single();
@@ -166,7 +201,21 @@ export class ProductModel extends BaseModel<Product> {
         throw error;
       }
 
-      return data as ProductWithVariants;
+      // Calculate rating and review_count from reviews array
+      const product: any = data;
+      const reviews = product.reviews || [];
+      const review_count = reviews.length;
+      const rating = review_count > 0
+        ? parseFloat((reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / review_count).toFixed(1))
+        : null;
+
+      // Remove the reviews array and add calculated fields
+      const { reviews: _, ...productWithoutReviews } = product;
+      return {
+        ...productWithoutReviews,
+        rating,
+        review_count
+      } as ProductWithVariants;
     } catch (error) {
       throw new Error(`Failed to find product by slug with relations: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

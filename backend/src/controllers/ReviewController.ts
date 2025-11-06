@@ -1,6 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { ReviewService } from '../services/ReviewService';
 import { sendJSON, sendError, parseUrl, parseBody } from '../utils/request-handler';
+import { MultipartParser } from '../utils/multipart-parser';
+import { StorageService } from '../utils/storage';
 
 export class ReviewController {
   private reviewService: ReviewService;
@@ -252,6 +254,70 @@ export class ReviewController {
     } catch (error) {
       console.error('Error checking review eligibility:', error);
       sendError(res, 500, 'Failed to check review eligibility');
+    }
+  }
+
+  /**
+   * POST /api/reviews/upload-image
+   * Upload a review image to Supabase Storage
+   */
+  async uploadReviewImage(req: IncomingMessage, res: ServerResponse) {
+    try {
+      const userId = (req as any).user?.id;
+      if (!userId) {
+        sendError(res, 401, 'Authentication required');
+        return;
+      }
+
+      // Check content type
+      const contentType = req.headers['content-type'];
+      if (!contentType || !contentType.includes('multipart/form-data')) {
+        sendError(res, 400, 'Content-Type must be multipart/form-data');
+        return;
+      }
+
+      // Check content length (max 5MB)
+      const contentLength = MultipartParser.getContentLength(req);
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (contentLength > maxSize) {
+        sendError(res, 413, 'File size exceeds 5MB limit');
+        return;
+      }
+
+      // Parse multipart form data
+      const formData = await MultipartParser.parse(req);
+
+      if (formData.files.length === 0) {
+        sendError(res, 400, 'No file uploaded');
+        return;
+      }
+
+      // Get the first file (single file upload)
+      const file = formData.files[0];
+
+      // Validate file
+      try {
+        StorageService.validateReviewImage(file.mimeType, file.data.length);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Invalid file';
+        sendError(res, 400, errorMessage);
+        return;
+      }
+
+      // Upload to Supabase Storage
+      const publicUrl = await StorageService.uploadReviewImage(
+        file.data,
+        userId,
+        file.filename,
+        file.mimeType
+      );
+
+      sendJSON(res, 200, { url: publicUrl });
+    } catch (error) {
+      console.error('Error uploading review image:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload image';
+      sendError(res, 500, errorMessage);
     }
   }
 }

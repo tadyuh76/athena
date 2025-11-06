@@ -66,6 +66,8 @@ export class AdminProductService {
   }
 
   async update(id: string, input: Partial<ProductInput>): Promise<Product> {
+    console.log("🔍 [SERVICE] Update input featured_image_url:", input.featured_image_url);
+
     const sanitizedInput = {
       ...input,
       sku: input.sku ?? '',
@@ -93,7 +95,12 @@ export class AdminProductService {
       low_stock_threshold: input.low_stock_threshold ?? null,
     } as Partial<Product>;
 
+    console.log("🔍 [SERVICE] Sanitized input featured_image_url:", sanitizedInput.featured_image_url);
+
     const product = await this.productModel.update(id, sanitizedInput);
+
+    console.log("🔍 [SERVICE] Updated product from DB featured_image_url:", product.featured_image_url);
+
     return product;
   }
 

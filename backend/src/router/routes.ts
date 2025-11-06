@@ -113,6 +113,7 @@ export function setupRoutes(): Router {
   router.get('/api/reviews/user', (req, res) => reviewController.getUserReviews(req, res), [Router.requireAuth]);
   router.get('/api/reviews/:id', (req, res, params) => reviewController.getReviewById(req, res, params.id));
   router.post('/api/reviews', (req, res) => reviewController.createReview(req, res), [Router.requireAuth]);
+  router.post('/api/reviews/upload-image', (req, res) => reviewController.uploadReviewImage(req, res), [Router.requireAuth]);
   router.put('/api/reviews/:id', (req, res, params) => reviewController.updateReview(req, res, params.id), [Router.requireAuth]);
   router.delete('/api/reviews/:id', (req, res, params) => reviewController.deleteReview(req, res, params.id), [Router.requireAuth]);
   router.post('/api/reviews/:id/helpful', (req, res, params) => reviewController.markHelpful(req, res, params.id));
@@ -174,6 +175,7 @@ export function setupRoutes(): Router {
   router.post("/api/admin/collections", CollectionController.create, [Router.requireRole(['admin', 'staff'])]);
   router.put("/api/admin/collections/:id", CollectionController.update, [Router.requireRole(['admin', 'staff'])]);
   router.delete("/api/admin/collections/:id", CollectionController.remove, [Router.requireRole(['admin', 'staff'])]);
+  router.post("/api/admin/collections/upload-image", CollectionController.uploadImage, [Router.requireRole(['admin', 'staff'])]);
 
   // Register Admin Product Routes
   registerAdminProductRoutes(router);

@@ -5,6 +5,7 @@ import { setupRoutes } from "./router/routes";
 import { CartService } from "./services/CartService";
 import { setCorsHeaders, sendError } from "./utils/request-handler";
 import { startOrderStatusUpdater } from "./jobs/orderStatusUpdater";
+import { StorageService } from "./utils/storage";
 
 // Load .env from project root (parent directory)
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -46,6 +47,11 @@ setInterval(async () => {
 
 // Start order status updater cron job (runs every hour)
 startOrderStatusUpdater();
+
+// Initialize Supabase Storage bucket for review images
+StorageService.ensureBucketExists().catch((error) => {
+  console.error("Failed to initialize review images bucket:", error);
+});
 
 const PORT = process.env.API_PORT || 3001;
 

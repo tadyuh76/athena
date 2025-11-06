@@ -284,8 +284,11 @@ async function loadProducts() {
           product.base_price,
           product.compare_price
         );
-        const primaryImage =
-          product.images?.find((img) => img.is_primary) || product.images?.[0];
+        // Prioritize featured_image_url as it's the uploaded image
+        const imageUrl = product.featured_image_url ||
+          product.images?.find((img) => img.is_primary)?.url ||
+          product.images?.[0]?.url ||
+          "/images/placeholder-user.jpg";
         const isInStock = productService.isInStock(product);
         const isInWishlist =
           Array.isArray(wishlistItems) &&
@@ -325,11 +328,7 @@ async function loadProducts() {
                   : ""
               }
               <a href="/product-detail.html?id=${product.id}">
-                <img src="${
-                  primaryImage?.url ||
-                  product.featured_image_url ||
-                  "/images/placeholder-user.jpg"
-                }"
+                <img src="${imageUrl}"
                      class="card-img-top" alt="${
                        product.name
                      }" style="height: 350px; object-fit: cover;">

@@ -140,13 +140,15 @@ async function loadProduct(productId) {
 function renderProductDetail(product) {
   const discount = calculateDiscount(product.base_price, product.compare_price);
   const stockStatus = getStockStatus(product);
-  const primaryImage =
-    product.images?.find((img) => img.is_primary) || product.images?.[0];
+  // Prioritize featured_image_url as it's the uploaded image
+  const primaryImageUrl = product.featured_image_url ||
+    product.images?.find((img) => img.is_primary)?.url ||
+    product.images?.[0]?.url;
 
   return `
     <!-- Image Gallery -->
     <div class="col-lg-6">
-      ${renderImageGallery(product.images, primaryImage)}
+      ${renderImageGallery(product.images, primaryImageUrl)}
     </div>
 
     <!-- Product Info -->
@@ -395,7 +397,7 @@ function renderProductDetail(product) {
 }
 
 // Render image gallery - filters images by selected variant
-function renderImageGallery(images, primaryImage) {
+function renderImageGallery(images, primaryImageUrl) {
   // Filter images for current variant if one is selected
   let displayImages = images || [];
 
@@ -417,10 +419,10 @@ function renderImageGallery(images, primaryImage) {
   }
 
   if (displayImages.length === 0) {
-    // Fallback to variant image or primary image or placeholder
+    // Fallback to variant image, then primary image URL, then placeholder
     const fallbackUrl =
       selectedVariant?.image_url ||
-      primaryImage?.url ||
+      primaryImageUrl ||
       "/images/placeholder-user.jpg";
     return `
       <div class="product-image-container">
@@ -1089,9 +1091,11 @@ async function loadRelatedProducts() {
               product.base_price,
               product.compare_price
             );
-            const primaryImage =
-              product.images?.find((img) => img.is_primary) ||
-              product.images?.[0];
+            // Prioritize featured_image_url as it's the uploaded image
+            const imageUrl = product.featured_image_url ||
+              product.images?.find((img) => img.is_primary)?.url ||
+              product.images?.[0]?.url ||
+              "/images/placeholder-user.jpg";
             const isInStock = productService.isInStock(product);
 
             return `
@@ -1109,11 +1113,7 @@ async function loadRelatedProducts() {
                       : ""
                   }
                   <a href="/product-detail.html?id=${product.id}">
-                    <img src="${
-                      primaryImage?.url ||
-                      product.featured_image_url ||
-                      "/images/placeholder-user.jpg"
-                    }"
+                    <img src="${imageUrl}"
                          class="card-img-top" alt="${
                            product.name
                          }" style="height: 250px; object-fit: cover;">

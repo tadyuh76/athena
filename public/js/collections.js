@@ -85,13 +85,17 @@ async function loadCollections() {
         const productCount = collection.product_count || 0;
         const productCountText = productCount === 1 ? "sản phẩm" : "sản phẩm";
 
+        // Use hero_image_url first (from schema), then fallback to placeholder
+        const imageUrl = collection.hero_image_url || 'https://via.placeholder.com/800x600/f8f9fa/6c757d?text=No+Image';
+
         return `
           <div class="col-lg-4 col-md-6">
             <div class="card collection-card" onclick="viewCollection('${collection.id}', '${collection.slug || collection.id}')">
               <div class="collection-image">
-                <img src="${collection.image_url || collection.featured_image_url || '/images/placeholder-collection.jpg'}"
+                <img src="${imageUrl}"
                      alt="${collection.name}"
-                     onerror="this.src='/images/placeholder-collection.jpg'">
+                     loading="lazy"
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600/f8f9fa/6c757d?text=No+Image'">
               </div>
               <div class="collection-info">
                 <h3 class="collection-title">${collection.name}</h3>

@@ -1,18 +1,51 @@
 import { supabase } from "../utils/supabase";
 import { slugify } from "../utils/slugify";
 
+interface CollectionCreateInput {
+  name: string;
+  description?: string;
+  theme_name?: string;
+  hero_image_url?: string;
+  is_featured?: boolean;
+  is_active?: boolean;
+  sort_order?: number;
+  starts_at?: string;
+  ends_at?: string;
+}
+
+interface CollectionUpdateInput {
+  name?: string;
+  description?: string;
+  theme_name?: string;
+  hero_image_url?: string;
+  is_featured?: boolean;
+  is_active?: boolean;
+  sort_order?: number;
+  starts_at?: string;
+  ends_at?: string;
+}
+
 export class CollectionService {
   static async getAll() {
     const { data, error } = await supabase
       .from("product_collections")
-      .select("*")
+      .select(`
+        *,
+        product_count:products(count)
+      `)
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
-    return data;
+
+    // Transform the product_count from nested array to number
+    return data?.map((collection: any) => ({
+      ...collection,
+      product_count: collection.product_count?.[0]?.count || 0
+    })) || [];
   }
 
-  static async create(collection: { name: string; description?: string; image_url?: string }) {
+  static async create(collection: CollectionCreateInput) {
     // ✅ Tự động tạo slug
     const slug = slugify(collection.name);
 
@@ -31,10 +64,7 @@ export class CollectionService {
     return data;
   }
 
-  static async update(
-    id: string,
-    updates: Partial<{ name: string; description: string; image_url: string }>
-  ) {
+  static async update(id: string, updates: CollectionUpdateInput) {
     // ✅ Nếu có cập nhật tên, thì cập nhật luôn slug
     let finalUpdates: Record<string, any> = { ...updates };
     if (updates.name) {

@@ -281,10 +281,10 @@ export class ReviewService {
    */
   async deleteReview(reviewId: string, userId: string): Promise<boolean> {
     try {
-      // Verify the review belongs to the user
+      // Verify the review belongs to the user and get images
       const { data: existingReview } = await supabase
         .from('product_reviews')
-        .select('user_id, product_id')
+        .select('user_id, product_id, images')
         .eq('id', reviewId)
         .single();
 
@@ -294,6 +294,17 @@ export class ReviewService {
 
       if (existingReview.user_id !== userId) {
         throw new Error('Unauthorized to delete this review');
+      }
+
+      // Delete images from storage if any
+      if (existingReview.images && existingReview.images.length > 0) {
+        try {
+          const { StorageService } = await import('../utils/storage');
+          await StorageService.deleteReviewImages(existingReview.images);
+        } catch (storageError) {
+          // Log error but don't fail the deletion
+          console.error('Error deleting review images from storage:', storageError);
+        }
       }
 
       const { error } = await supabase

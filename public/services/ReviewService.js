@@ -118,18 +118,39 @@ export class ReviewService {
    * Returns the public URL of the uploaded image
    */
   async uploadReviewImage(file) {
-    // For now, we'll use a simple approach: convert to base64 and store
-    // In production, you'd want to upload to Supabase Storage or another service
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // For demo purposes, we're using data URLs
-        // In production, upload to Supabase Storage and return the public URL
-        resolve(reader.result);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+    try {
+      // Create FormData and append the file
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Get auth token
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication required to upload images');
+      }
+
+      // Upload to backend endpoint
+      const url = `${this.baseUrl}/reviews/upload-image`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type - let browser set it with boundary
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.url; // Return the public URL from Supabase Storage
+    } catch (error) {
+      console.error('Error uploading review image:', error);
+      throw error;
+    }
   }
 
   /**
