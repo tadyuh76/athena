@@ -1,12 +1,14 @@
 // Import services
 import { AdminProductService } from "/services/AdminProductService.js";
 import { CollectionService } from "/services/CollectionService.js";
+import { AdminOrders } from "/js/admin-orders.js";
 import { initDiscountsTab, loadDiscounts } from "/js/admin-discounts-tab.js";
 import { initUsersTab, loadUsers } from "/js/admin-users-tab.js";
 
 // Initialize services
 const adminProductService = new AdminProductService();
 const collectionService = new CollectionService();
+const adminOrders = new AdminOrders();
 
 document.addEventListener("DOMContentLoaded", async () => {
   // ===============================
@@ -190,9 +192,8 @@ function setupNavigation() {
       if (target === "#collections") loadCollections();
       if (target === "#products") loadAdminProducts();
       if (target === "#orders") {
-        // Trigger orders loading - the admin-orders.js module handles this
-        const ordersInitEvent = new CustomEvent("ordersTabOpened");
-        window.dispatchEvent(ordersInitEvent);
+        // Initialize and load orders
+        adminOrders.init();
       }
       if (target === "#discounts") {
         // Initialize and load discounts

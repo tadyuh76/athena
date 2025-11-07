@@ -97,6 +97,11 @@
             </div>
 
         <div id="ordersSection" style="display:none;">
+            <!-- Orders container for admin-orders.js -->
+            <div id="ordersContainer"></div>
+
+            <!-- Fallback: Static table (hidden when ordersContainer is populated) -->
+            <div id="ordersStaticTable" style="display:none;">
             <div class="admin-header d-flex justify-content-between align-items-center">
                 <h1>Quản Lý Đơn Hàng</h1>
             </div>
@@ -219,7 +224,8 @@
                     </div>
                 </div>
             </div>
-        </div>
+            </div><!-- End ordersStaticTable -->
+        </div><!-- End ordersSection -->
 
         <!-- Discounts Section -->
         <div id="discountsSection" style="display:none;">

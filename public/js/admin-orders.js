@@ -1,11 +1,11 @@
 // Admin Orders Management Component
-import { Dialog } from '/js/dialog.js';
+import { Dialog } from "/js/dialog.js";
 
 export class AdminOrders {
   constructor() {
     this.orders = [];
     this.filteredOrders = [];
-    this.currentFilter = 'all';
+    this.currentFilter = "all";
   }
 
   async init() {
@@ -16,10 +16,10 @@ export class AdminOrders {
 
   async loadOrders() {
     try {
-      const token = localStorage.getItem('authToken');
-      const response = await fetch('/api/admin/orders', {
+      const token = localStorage.getItem("authToken");
+      const response = await fetch("/api/admin/orders", {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -29,28 +29,53 @@ export class AdminOrders {
         this.orders = data.orders;
         this.applyFilter(this.currentFilter);
       } else {
-        throw new Error(data.message || 'Không thể tải danh sách đơn hàng');
+        throw new Error(data.message || "Không thể tải danh sách đơn hàng");
       }
     } catch (error) {
-      console.error('Error loading orders:', error);
-      this.showToast('Không thể tải danh sách đơn hàng', 'danger');
+      console.error("Error loading orders:", error);
+      this.showToast("Không thể tải danh sách đơn hàng", "danger");
     }
   }
 
   applyFilter(status) {
     this.currentFilter = status;
 
-    if (status === 'all') {
+    if (status === "all") {
       this.filteredOrders = [...this.orders];
     } else {
-      this.filteredOrders = this.orders.filter(order => order.status === status);
+      this.filteredOrders = this.orders.filter(
+        (order) => order.status === status
+      );
     }
+
+    // Sort orders: pending first, then by creation date (newest first)
+    this.filteredOrders.sort((a, b) => {
+      // Priority order: pending > preparing > shipping > delivered > cancelled
+      const statusPriority = {
+        pending: 1,
+        preparing: 2,
+        shipping: 3,
+        delivered: 4,
+        cancelled: 5,
+      };
+
+      const priorityA = statusPriority[a.status] || 999;
+      const priorityB = statusPriority[b.status] || 999;
+
+      // Sort by status priority first
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      // If same status, sort by creation date (newest first)
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
 
     this.render();
   }
 
   render() {
-    const container = document.getElementById('ordersContainer');
+    const container = document.getElementById("ordersContainer");
     if (!container) return;
 
     const statusCounts = this.getStatusCounts();
@@ -66,27 +91,39 @@ export class AdminOrders {
 
         <!-- Status Filter Pills -->
         <div class="status-filters mb-4">
-          <button class="filter-pill ${this.currentFilter === 'all' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "all" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('all')">
             Tất cả (${this.orders.length})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'pending' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "pending" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('pending')">
             Chờ xử lý (${statusCounts.pending})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'preparing' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "preparing" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('preparing')">
             Đang chuẩn bị (${statusCounts.preparing})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'shipping' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "shipping" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('shipping')">
             Đang giao (${statusCounts.shipping})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'delivered' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "delivered" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('delivered')">
             Đã giao (${statusCounts.delivered})
           </button>
-          <button class="filter-pill ${this.currentFilter === 'cancelled' ? 'active' : ''}"
+          <button class="filter-pill ${
+            this.currentFilter === "cancelled" ? "active" : ""
+          }"
                   onclick="adminOrders.applyFilter('cancelled')">
             Đã hủy (${statusCounts.cancelled})
           </button>
@@ -94,7 +131,11 @@ export class AdminOrders {
 
         <!-- Orders Table -->
         <div class="orders-table-container">
-          ${this.filteredOrders.length === 0 ? this.renderEmptyState() : this.renderOrdersTable()}
+          ${
+            this.filteredOrders.length === 0
+              ? this.renderEmptyState()
+              : this.renderOrdersTable()
+          }
         </div>
       </div>
 
@@ -232,14 +273,15 @@ export class AdminOrders {
             <th>Khách hàng</th>
             <th>Tổng tiền</th>
             <th>Trạng thái</th>
-            <th>Thanh toán</th>
             <th>Ngày tạo</th>
             <th>Dự kiến giao</th>
             <th>Thao tác</th>
           </tr>
         </thead>
         <tbody>
-          ${this.filteredOrders.map(order => this.renderOrderRow(order)).join('')}
+          ${this.filteredOrders
+            .map((order) => this.renderOrderRow(order))
+            .join("")}
         </tbody>
       </table>
     `;
@@ -247,19 +289,19 @@ export class AdminOrders {
 
   renderOrderRow(order) {
     const statusText = this.getStatusText(order.status);
-    const paymentStatusText = this.getPaymentStatusText(order.payment_status);
-    const createdDate = new Date(order.created_at).toLocaleDateString('vi-VN');
+    const createdDate = new Date(order.created_at).toLocaleDateString("vi-VN");
     const estimatedDate = order.estimated_delivery_date
-      ? new Date(order.estimated_delivery_date).toLocaleDateString('vi-VN')
-      : '-';
+      ? new Date(order.estimated_delivery_date).toLocaleDateString("vi-VN")
+      : "-";
 
     return `
       <tr>
         <td><strong>${order.order_number}</strong></td>
         <td>${order.customer_email}</td>
         <td>${this.formatPrice(order.total_amount)}</td>
-        <td><span class="status-badge status-${order.status}">${statusText}</span></td>
-        <td><span class="status-badge status-${order.payment_status}">${paymentStatusText}</span></td>
+        <td><span class="status-badge status-${
+          order.status
+        }">${statusText}</span></td>
         <td>${createdDate}</td>
         <td>${estimatedDate}</td>
         <td>
@@ -274,55 +316,44 @@ export class AdminOrders {
   renderActions(order) {
     const actions = [];
 
-    // Xác nhận đơn hàng (pending -> preparing)
-    if (order.status === 'pending' && order.payment_status === 'paid') {
-      actions.push(`
-        <button class="btn btn-sm btn-success btn-action"
-                onclick="adminOrders.confirmOrder('${order.id}')">
-          <i class="bi bi-check-circle"></i> Xác nhận
-        </button>
-      `);
-    }
-
-    // Bắt đầu giao hàng (preparing -> shipping)
-    if (order.status === 'preparing') {
-      actions.push(`
-        <button class="btn btn-sm btn-primary btn-action"
-                onclick="adminOrders.markAsShipped('${order.id}')">
-          <i class="bi bi-truck"></i> Giao hàng
-        </button>
-      `);
-    }
-
-    // Hoàn thành đơn hàng (shipping -> delivered)
-    if (order.status === 'shipping') {
-      actions.push(`
-        <button class="btn btn-sm btn-success btn-action"
-                onclick="adminOrders.markAsDelivered('${order.id}')">
-          <i class="bi bi-box-seam"></i> Hoàn thành
-        </button>
-      `);
-    }
-
-    // Hủy đơn hàng (any -> cancelled, except delivered/cancelled)
-    if (!['delivered', 'cancelled'].includes(order.status)) {
-      actions.push(`
-        <button class="btn btn-sm btn-danger btn-action"
-                onclick="adminOrders.cancelOrder('${order.id}')">
-          <i class="bi bi-x-circle"></i> Hủy
-        </button>
-      `);
-    }
-
     // View details (always available)
     actions.push(`
       <button class="btn btn-sm btn-outline-secondary btn-action"
-              onclick="adminOrders.viewOrderDetails('${order.id}')">
+              onclick="adminOrders.viewOrderDetails('${order.id}')"
+              title="Xem chi tiết">
         <i class="bi bi-eye"></i>
       </button>
     `);
 
-    return actions.join('');
+    // Single dynamic status transition button
+    if (order.status === "pending") {
+      actions.push(`
+        <button class="btn btn-sm btn-success btn-action"
+                onclick="adminOrders.confirmOrder('${order.id}')"
+                title="Xác nhận đơn hàng">
+          <i class="bi bi-check-circle"></i>
+        </button>
+      `);
+    } else if (order.status === "preparing") {
+      // Backend uses 'preparing' which maps to 'processing' in UI
+      actions.push(`
+        <button class="btn btn-sm btn-primary btn-action"
+                onclick="adminOrders.markAsShipped('${order.id}')"
+                title="Chuyển sang vận chuyển">
+          <i class="bi bi-truck"></i>
+        </button>
+      `);
+    } else if (order.status === "shipping") {
+      actions.push(`
+        <button class="btn btn-sm btn-success btn-action"
+                onclick="adminOrders.markAsDelivered('${order.id}')"
+                title="Đánh dấu đã giao">
+          <i class="bi bi-box-seam"></i>
+        </button>
+      `);
+    }
+
+    return actions.join("");
   }
 
   renderEmptyState() {
@@ -337,59 +368,56 @@ export class AdminOrders {
 
   async confirmOrder(orderId) {
     const confirmed = await Dialog.confirm(
-      'Xác nhận đơn hàng này? Thời gian giao hàng dự kiến là 3 ngày.',
+      "Xác nhận đơn hàng này? Thời gian giao hàng dự kiến là 3 ngày.",
       {
-        title: 'Xác nhận đơn hàng',
-        confirmText: 'Xác nhận',
-        cancelText: 'Hủy',
-        confirmClass: 'btn-success',
+        title: "Xác nhận đơn hàng",
+        confirmText: "Xác nhận",
+        cancelText: "Hủy",
+        confirmClass: "btn-success",
       }
     );
 
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const response = await fetch(`/api/admin/orders/${orderId}/confirm`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       const data = await response.json();
 
       if (data.success) {
-        this.showToast('Đã xác nhận đơn hàng thành công', 'success');
+        this.showToast("Đã xác nhận đơn hàng thành công", "success");
         await this.loadOrders();
       } else {
-        throw new Error(data.message || 'Không thể xác nhận đơn hàng');
+        throw new Error(data.message || "Không thể xác nhận đơn hàng");
       }
     } catch (error) {
-      console.error('Error confirming order:', error);
-      this.showToast(error.message, 'danger');
+      console.error("Error confirming order:", error);
+      this.showToast(error.message, "danger");
     }
   }
 
   async markAsShipped(orderId) {
-    const trackingNumber = await Dialog.prompt(
-      'Nhập mã vận đơn (tùy chọn):',
-      {
-        title: 'Đánh dấu đã giao hàng',
-        confirmText: 'Xác nhận',
-        cancelText: 'Hủy',
-      }
-    );
+    const trackingNumber = await Dialog.prompt("Nhập mã vận đơn (tùy chọn):", {
+      title: "Đánh dấu đã giao hàng",
+      confirmText: "Xác nhận",
+      cancelText: "Hủy",
+    });
 
     if (trackingNumber === null) return;
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const response = await fetch(`/api/admin/orders/${orderId}/ship`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ trackingNumber: trackingNumber || undefined }),
       });
@@ -397,78 +425,75 @@ export class AdminOrders {
       const data = await response.json();
 
       if (data.success) {
-        this.showToast('Đã đánh dấu đơn hàng đang giao', 'success');
+        this.showToast("Đã đánh dấu đơn hàng đang giao", "success");
         await this.loadOrders();
       } else {
-        throw new Error(data.message || 'Không thể cập nhật trạng thái');
+        throw new Error(data.message || "Không thể cập nhật trạng thái");
       }
     } catch (error) {
-      console.error('Error marking as shipped:', error);
-      this.showToast(error.message, 'danger');
+      console.error("Error marking as shipped:", error);
+      this.showToast(error.message, "danger");
     }
   }
 
   async markAsDelivered(orderId) {
     const confirmed = await Dialog.confirm(
-      'Xác nhận đơn hàng này đã được giao thành công?',
+      "Xác nhận đơn hàng này đã được giao thành công?",
       {
-        title: 'Hoàn thành đơn hàng',
-        confirmText: 'Xác nhận',
-        cancelText: 'Hủy',
-        confirmClass: 'btn-success',
+        title: "Hoàn thành đơn hàng",
+        confirmText: "Xác nhận",
+        cancelText: "Hủy",
+        confirmClass: "btn-success",
       }
     );
 
     if (!confirmed) return;
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const response = await fetch(`/api/admin/orders/${orderId}/deliver`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       const data = await response.json();
 
       if (data.success) {
-        this.showToast('Đã đánh dấu đơn hàng đã giao', 'success');
+        this.showToast("Đã đánh dấu đơn hàng đã giao", "success");
         await this.loadOrders();
       } else {
-        throw new Error(data.message || 'Không thể cập nhật trạng thái');
+        throw new Error(data.message || "Không thể cập nhật trạng thái");
       }
     } catch (error) {
-      console.error('Error marking as delivered:', error);
-      this.showToast(error.message, 'danger');
+      console.error("Error marking as delivered:", error);
+      this.showToast(error.message, "danger");
     }
   }
 
   async cancelOrder(orderId) {
-    const reason = await Dialog.prompt(
-      'Nhập lý do hủy đơn hàng:',
-      {
-        title: 'Hủy đơn hàng',
-        confirmText: 'Hủy đơn',
-        cancelText: 'Quay lại',
-        confirmClass: 'btn-danger',
-      }
-    );
+    const reason = await Dialog.prompt("Nhập lý do hủy đơn hàng:", {
+      title: "Hủy đơn hàng",
+      confirmText: "Hủy đơn",
+      cancelText: "Quay lại",
+      confirmClass: "btn-danger",
+    });
 
     if (reason === null) return;
 
     if (!reason.trim()) {
-      this.showToast('Vui lòng nhập lý do hủy đơn', 'warning');
+      this.showToast("Vui lòng nhập lý do hủy đơn", "warning");
       return;
     }
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const response = await fetch(`/api/admin/orders/${orderId}/cancel`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ reason }),
       });
@@ -476,14 +501,14 @@ export class AdminOrders {
       const data = await response.json();
 
       if (data.success) {
-        this.showToast('Đã hủy đơn hàng thành công', 'success');
+        this.showToast("Đã hủy đơn hàng thành công", "success");
         await this.loadOrders();
       } else {
-        throw new Error(data.message || 'Không thể hủy đơn hàng');
+        throw new Error(data.message || "Không thể hủy đơn hàng");
       }
     } catch (error) {
-      console.error('Error canceling order:', error);
-      this.showToast(error.message, 'danger');
+      console.error("Error canceling order:", error);
+      this.showToast(error.message, "danger");
     }
   }
 
@@ -501,7 +526,7 @@ export class AdminOrders {
       cancelled: 0,
     };
 
-    this.orders.forEach(order => {
+    this.orders.forEach((order) => {
       if (counts.hasOwnProperty(order.status)) {
         counts[order.status]++;
       }
@@ -512,32 +537,32 @@ export class AdminOrders {
 
   getStatusText(status) {
     const statusMap = {
-      pending: 'Chờ xử lý',
-      preparing: 'Đang chuẩn bị',
-      shipping: 'Đang giao',
-      delivered: 'Đã giao',
-      cancelled: 'Đã hủy',
-      refunded: 'Đã hoàn tiền',
+      pending: "Chờ xử lý",
+      preparing: "Đang xử lý", // Processing
+      shipping: "Đang giao",
+      delivered: "Đã giao",
+      cancelled: "Đã hủy",
+      refunded: "Đã hoàn tiền",
     };
     return statusMap[status] || status;
   }
 
   getPaymentStatusText(status) {
     const statusMap = {
-      pending: 'Chờ thanh toán',
-      processing: 'Đang xử lý',
-      paid: 'Đã thanh toán',
-      failed: 'Thất bại',
-      refunded: 'Đã hoàn tiền',
-      partially_refunded: 'Hoàn một phần',
+      pending: "Chờ thanh toán",
+      processing: "Đang xử lý",
+      paid: "Đã thanh toán",
+      failed: "Thất bại",
+      refunded: "Đã hoàn tiền",
+      partially_refunded: "Hoàn một phần",
     };
     return statusMap[status] || status;
   }
 
   formatPrice(price) {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(price);
   }
 
@@ -545,16 +570,24 @@ export class AdminOrders {
     // Any additional event listeners can be attached here
   }
 
-  showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer') || this.createToastContainer();
-    const toastId = 'toast-' + Date.now();
+  showToast(message, type = "info") {
+    const toastContainer =
+      document.getElementById("toastContainer") || this.createToastContainer();
+    const toastId = "toast-" + Date.now();
 
-    const bgClass = type === 'success' ? 'bg-success' : type === 'warning' ? 'bg-warning' : type === 'danger' ? 'bg-danger' : 'bg-info';
+    const bgClass =
+      type === "success"
+        ? "bg-success"
+        : type === "warning"
+        ? "bg-warning"
+        : type === "danger"
+        ? "bg-danger"
+        : "bg-info";
 
-    const toast = document.createElement('div');
+    const toast = document.createElement("div");
     toast.id = toastId;
     toast.className = `toast align-items-center text-white ${bgClass} border-0`;
-    toast.setAttribute('role', 'alert');
+    toast.setAttribute("role", "alert");
     toast.innerHTML = `
       <div class="d-flex">
         <div class="toast-body">${message}</div>
@@ -566,16 +599,16 @@ export class AdminOrders {
     const bsToast = new bootstrap.Toast(toast, { delay: 4000 });
     bsToast.show();
 
-    toast.addEventListener('hidden.bs.toast', () => {
+    toast.addEventListener("hidden.bs.toast", () => {
       toast.remove();
     });
   }
 
   createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.className = 'toast-container position-fixed top-0 end-0 p-3';
-    container.style.zIndex = '1055';
+    const container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast-container position-fixed top-0 end-0 p-3";
+    container.style.zIndex = "1055";
     document.body.appendChild(container);
     return container;
   }
