@@ -1,5 +1,6 @@
 import { CartModel, CartItemWithDetails } from "../models/CartModel";
 import { ProductVariantModel } from "../models/ProductVariantModel";
+import { ProductModel } from "../models/ProductModel";
 import { CartItem } from "../types/database.types";
 import { v4 as uuidv4 } from "uuid";
 
@@ -26,10 +27,12 @@ export interface CartSummary {
 export class CartService {
   private cartModel: CartModel;
   private variantModel: ProductVariantModel;
+  private productModel: ProductModel;
 
   constructor() {
     this.cartModel = new CartModel();
     this.variantModel = new ProductVariantModel();
+    this.productModel = new ProductModel();
   }
 
   async getCart(
@@ -119,7 +122,18 @@ export class CartService {
 
       console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
 
-      const price = variant.price || 0;
+      // Get price from variant, fallback to product price if variant price is null
+      let price = variant.price;
+      if (price == null || price === 0) {
+        console.log('[CartService.addItem] Variant price is null/0, fetching product price...');
+        const product = await this.productModel.findById(productId);
+        if (!product) {
+          console.error('[CartService.addItem] Product not found:', productId);
+          throw new Error("Không tìm thấy sản phẩm");
+        }
+        price = product.base_price || 0;
+        console.log('[CartService.addItem] Using product base_price:', price);
+      }
 
       // Atomically reserve inventory (prevents race conditions)
       console.log('[CartService.addItem] Attempting to reserve inventory atomically...');

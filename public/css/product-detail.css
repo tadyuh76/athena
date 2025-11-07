@@ -194,7 +194,8 @@ body {
 
 .size-btn:hover {
   border-color: var(--color-foreground);
-  background-color: transparent;
+  background-color: var(--color-foreground);
+  color: var(--color-background);
 }
 
 .size-btn.active,
@@ -234,19 +235,17 @@ body {
 }
 
 .add-to-cart-btn {
-  height: 3.5rem;
   font-size: 1rem;
   letter-spacing: 0.05em;
-  background-color: var(--color-foreground);
-  border: none;
-  margin-bottom: 1rem;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
+  border: 2px solid var(--color-foreground);
 }
 
 .add-to-cart-btn:hover {
-  background-color: #292524;
+  background-color: var(--color-foreground);
+  color: var(--color-background);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -256,7 +255,7 @@ body {
 }
 
 .add-to-cart-btn:disabled {
-  opacity: 0.8;
+  opacity: 0.6;
   transform: none;
   box-shadow: none;
 }
@@ -271,6 +270,8 @@ body {
 .add-to-cart-btn.success {
   animation: addToCartSuccess 0.3s ease;
   background-color: #059669 !important;
+  border-color: #059669 !important;
+  color: white !important;
 }
 
 .shipping-note {

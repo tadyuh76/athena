@@ -332,7 +332,7 @@ async function handlePlaceOrder(event) {
     const placeOrderBtn = document.getElementById("placeOrderBtn");
     placeOrderBtn.disabled = true;
     placeOrderBtn.setAttribute("aria-busy", "true");
-    placeOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang xử lý...';
+    placeOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" style="width: 1rem; height: 1rem; border-width: 0.15em;"></span>Đang xử lý...';
 
     // Get form data
     const formData = {

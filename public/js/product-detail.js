@@ -137,7 +137,8 @@ function renderProductDetail(product) {
   const discount = calculateDiscount(product.base_price, product.compare_price);
   const stockStatus = getStockStatus(product);
   // Prioritize featured_image_url as it's the uploaded image
-  const primaryImageUrl = product.featured_image_url ||
+  const primaryImageUrl =
+    product.featured_image_url ||
     product.images?.find((img) => img.is_primary)?.url ||
     product.images?.[0]?.url;
 
@@ -206,10 +207,10 @@ function renderProductDetail(product) {
 
         <!-- Quantity and Add to Cart -->
         <div class="mb-4">
-          <div class="row g-3">
-            <div class="col-4">
+          <div class="row g-3 mb-3">
+            <div class="col-12">
               <label class="form-label small fw-semibold">Số Lượng</label>
-              <div class="input-group">
+              <div class="input-group" style="max-width: 150px;">
                 <button class="btn btn-outline-secondary" type="button" onclick="window.changeQuantity(-1)">
                   <i class="bi bi-dash"></i>
                 </button>
@@ -220,33 +221,34 @@ function renderProductDetail(product) {
                 </button>
               </div>
             </div>
-            <div class="col-8">
-              <label class="form-label small fw-semibold">&nbsp;</label>
-              <button class="btn btn-dark btn-lg w-100 add-to-cart-btn" onclick="window.addToCart()"
+          </div>
+
+          <div class="row g-3">
+            <div class="col-6">
+              <button class="btn btn-outline-dark btn-lg w-100 add-to-cart-btn" onclick="window.addToCart()"
                       ${
                         stockStatus === "out-of-stock" || !selectedVariant
                           ? "disabled"
                           : ""
-                      }>
+                      }
+                      style="height: 56px;">
                 <i class="bi bi-cart-plus me-2"></i>
-                ${
-                  stockStatus === "out-of-stock"
-                    ? "Hết Hàng"
-                    : "Thêm Vào Giỏ"
-                }
+                ${stockStatus === "out-of-stock" ? "Hết Hàng" : "Thêm Vào Giỏ"}
+              </button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-dark btn-lg w-100" onclick="window.buyNow()"
+                      ${
+                        stockStatus === "out-of-stock" || !selectedVariant
+                          ? "disabled"
+                          : ""
+                      }
+                      style="height: 56px;">
+                <i class="bi bi-lightning-charge-fill me-2"></i>
+                Mua Ngay
               </button>
             </div>
           </div>
-
-          <button class="btn btn-success w-100 mt-3" onclick="window.buyNow()"
-                  ${
-                    stockStatus === "out-of-stock" || !selectedVariant
-                      ? "disabled"
-                      : ""
-                  }>
-            <i class="bi bi-lightning-charge-fill me-2"></i>
-            Mua Ngay
-          </button>
 
           <div class="mt-3">
             <p class="small text-muted mb-1">
@@ -513,7 +515,7 @@ function renderVariantSelectors(variants) {
             selectedVariant?.color || "Vui lòng chọn"
           }</span>
         </label>
-        <div class="d-flex gap-3 flex-wrap align-items-center">
+        <div class="d-flex gap-3 flex-wrap align-items-start">
           ${colors
             .map((colorObj) => {
               const { name: color, hex: colorHex } = colorObj;
@@ -527,7 +529,7 @@ function renderVariantSelectors(variants) {
               const isSelected = selectedVariant?.color === color;
 
               return `
-              <div class="text-center">
+              <div class="text-center" style="width: 80px;">
                 <button class="btn color-swatch ${isSelected ? "selected" : ""}"
                         onclick="window.selectVariant('color', '${color}')"
                         title="${color}"
@@ -540,16 +542,16 @@ function renderVariantSelectors(variants) {
                   : "cursor: pointer;"
               } box-shadow: ${
                 isSelected ? "0 0 0 2px #fff, 0 0 0 4px #000" : "none"
-              };">
+              }; margin: 0 auto;">
                   ${
                     isSelected
                       ? '<i class="bi bi-check-lg text-white" style="font-size: 24px; font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,0.5);"></i>'
                       : ""
                   }
                 </button>
-                <div class="small mt-1 ${
+                <div class="small mt-2 ${
                   isSelected ? "fw-semibold" : ""
-                }">${color}</div>
+                }" style="word-wrap: break-word; overflow-wrap: break-word; hyphens: auto; line-height: 1.2;">${color}</div>
               </div>
             `;
             })
@@ -714,12 +716,15 @@ function updateVariantUI() {
     const color = btn.getAttribute("title");
     const isSelected = color === selectedVariant.color;
     btn.classList.toggle("selected", isSelected);
-    btn.style.border = `2px solid ${isSelected ? "#000" : "#ddd"}`;
+
+    // Update border and box-shadow to match initial render
+    btn.style.border = `3px solid ${isSelected ? "#000" : "#ddd"}`;
+    btn.style.boxShadow = isSelected ? "0 0 0 2px #fff, 0 0 0 4px #000" : "none";
 
     // Update checkmark
-    if (isSelected && !btn.querySelector(".bi-check")) {
+    if (isSelected && !btn.querySelector(".bi-check-lg")) {
       btn.innerHTML =
-        '<i class="bi bi-check-lg text-white" style="font-size: 20px; font-weight: bold;"></i>';
+        '<i class="bi bi-check-lg text-white" style="font-size: 24px; font-weight: bold; text-shadow: 0 0 3px rgba(0,0,0,0.5);"></i>';
     } else if (!isSelected) {
       btn.innerHTML = "";
     }
@@ -772,8 +777,10 @@ function updateVariantUI() {
   // Update images - filter gallery by variant
   updateVariantImages();
 
-  // Update Buy Now button state
-  const buyNowBtn = document.querySelector(".btn-success");
+  // Update Buy Now button state - find by onclick attribute since there are multiple .btn-dark buttons
+  const buyNowBtn = Array.from(document.querySelectorAll("button")).find(
+    (btn) => btn.getAttribute("onclick") === "window.buyNow()"
+  );
   if (buyNowBtn) {
     const isOutOfStock = stock === 0;
     buyNowBtn.disabled = isOutOfStock;
@@ -810,7 +817,7 @@ function updateVariantImages() {
   const mainImage = document.getElementById("mainProductImage");
   if (mainImage) {
     // Fade out
-    mainImage.style.opacity = '0';
+    mainImage.style.opacity = "0";
 
     setTimeout(() => {
       if (displayImages.length > 0) {
@@ -822,7 +829,7 @@ function updateVariantImages() {
 
       // Fade in
       setTimeout(() => {
-        mainImage.style.opacity = '1';
+        mainImage.style.opacity = "1";
       }, 50);
     }, 300);
   }
@@ -1048,7 +1055,8 @@ async function loadRelatedProducts() {
               product.compare_price
             );
             // Prioritize featured_image_url as it's the uploaded image
-            const imageUrl = product.featured_image_url ||
+            const imageUrl =
+              product.featured_image_url ||
               product.images?.find((img) => img.is_primary)?.url ||
               product.images?.[0]?.url ||
               "/images/placeholder-user.jpg";
@@ -1391,10 +1399,12 @@ function renderReviewCard(review) {
                 }"
                         id="like-btn-${review.id}"
                         onclick="window.toggleReviewLike('${review.id}')">
-                  <i class="bi ${hasLiked ? "bi-heart-fill" : "bi-heart"} me-1"></i>
+                  <i class="bi ${
+                    hasLiked ? "bi-heart-fill" : "bi-heart"
+                  } me-1"></i>
                   <span id="like-count-${review.id}">${
-                    likeCount > 0 ? likeCount : ""
-                  }</span>
+                      likeCount > 0 ? likeCount : ""
+                    }</span>
                 </button>
               `
                   : `
@@ -1523,7 +1533,8 @@ async function loadBuyNowSavedAddresses() {
   try {
     if (!authService.isAuthenticated()) {
       // User not logged in, hide saved addresses section
-      document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+      document.getElementById("buyNowSavedAddressesSection").style.display =
+        "none";
       return;
     }
 
@@ -1532,12 +1543,14 @@ async function loadBuyNowSavedAddresses() {
 
     if (savedAddresses.length === 0) {
       // No saved addresses, hide the section
-      document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+      document.getElementById("buyNowSavedAddressesSection").style.display =
+        "none";
       return;
     }
 
     // Show saved addresses section
-    document.getElementById("buyNowSavedAddressesSection").style.display = "block";
+    document.getElementById("buyNowSavedAddressesSection").style.display =
+      "block";
 
     // Populate address select dropdown
     const addressSelect = document.getElementById("buyNowSavedAddressSelect");
@@ -1546,7 +1559,9 @@ async function loadBuyNowSavedAddresses() {
     savedAddresses.forEach((address) => {
       const option = document.createElement("option");
       option.value = address.id;
-      option.textContent = `${address.first_name} ${address.last_name} - ${address.address_line1}, ${address.city}${address.is_default ? " (Mặc định)" : ""}`;
+      option.textContent = `${address.first_name} ${address.last_name} - ${
+        address.address_line1
+      }, ${address.city}${address.is_default ? " (Mặc định)" : ""}`;
       addressSelect.appendChild(option);
     });
 
@@ -1559,7 +1574,8 @@ async function loadBuyNowSavedAddresses() {
   } catch (error) {
     console.error("Failed to load saved addresses for Buy Now:", error);
     // Don't show error to user, just hide the section
-    document.getElementById("buyNowSavedAddressesSection").style.display = "none";
+    document.getElementById("buyNowSavedAddressesSection").style.display =
+      "none";
   }
 }
 
@@ -1623,7 +1639,10 @@ async function confirmBuyNow() {
     console.log("[confirmBuyNow] Checkout session created:", result);
 
     if (result.checkoutUrl) {
-      console.log("[confirmBuyNow] Redirecting to Stripe checkout:", result.checkoutUrl);
+      console.log(
+        "[confirmBuyNow] Redirecting to Stripe checkout:",
+        result.checkoutUrl
+      );
       // Redirect to Stripe checkout
       window.location.href = result.checkoutUrl;
     } else {
@@ -1707,7 +1726,7 @@ function handleImageSelection(event) {
   }
 
   // Validate file sizes
-  const oversizedFiles = files.filter(file => file.size > maxSize);
+  const oversizedFiles = files.filter((file) => file.size > maxSize);
   if (oversizedFiles.length > 0) {
     showToast("Mỗi hình ảnh không được vượt quá 5MB", "warning");
     event.target.value = "";
@@ -1746,7 +1765,7 @@ function displayImagePreviews(files) {
 }
 
 // Remove review image
-window.removeReviewImage = function(index) {
+window.removeReviewImage = function (index) {
   const dt = new DataTransfer();
   const input = document.getElementById("reviewImages");
   const files = Array.from(input.files);
@@ -1842,21 +1861,22 @@ window.toggleReviewLike = async function (reviewId) {
     // Update UI immediately
     const likeBtn = document.getElementById(`like-btn-${reviewId}`);
     const likeCount = document.getElementById(`like-count-${reviewId}`);
-    const icon = likeBtn.querySelector('i');
+    const icon = likeBtn.querySelector("i");
 
     if (result.liked) {
-      likeBtn.classList.remove('text-muted');
-      likeBtn.classList.add('text-danger');
-      icon.classList.remove('bi-heart');
-      icon.classList.add('bi-heart-fill');
+      likeBtn.classList.remove("text-muted");
+      likeBtn.classList.add("text-danger");
+      icon.classList.remove("bi-heart");
+      icon.classList.add("bi-heart-fill");
     } else {
-      likeBtn.classList.remove('text-danger');
-      likeBtn.classList.add('text-muted');
-      icon.classList.remove('bi-heart-fill');
-      icon.classList.add('bi-heart');
+      likeBtn.classList.remove("text-danger");
+      likeBtn.classList.add("text-muted");
+      icon.classList.remove("bi-heart-fill");
+      icon.classList.add("bi-heart");
     }
 
-    likeCount.textContent = result.helpful_count > 0 ? result.helpful_count : '';
+    likeCount.textContent =
+      result.helpful_count > 0 ? result.helpful_count : "";
   } catch (error) {
     console.error("Error toggling review like:", error);
     showToast("Không thể cập nhật", "danger");
@@ -1864,9 +1884,9 @@ window.toggleReviewLike = async function (reviewId) {
 };
 
 // Open image modal (for review images)
-window.openImageModal = function(imageUrl) {
+window.openImageModal = function (imageUrl) {
   // Create a simple modal to display the full image
-  const existingModal = document.getElementById('imageViewModal');
+  const existingModal = document.getElementById("imageViewModal");
   if (existingModal) {
     existingModal.remove();
   }
@@ -1886,14 +1906,16 @@ window.openImageModal = function(imageUrl) {
     </div>
   `;
 
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-  const modal = new bootstrap.Modal(document.getElementById('imageViewModal'));
+  document.body.insertAdjacentHTML("beforeend", modalHtml);
+  const modal = new bootstrap.Modal(document.getElementById("imageViewModal"));
   modal.show();
 
   // Remove modal from DOM when hidden
-  document.getElementById('imageViewModal').addEventListener('hidden.bs.modal', function() {
-    this.remove();
-  });
+  document
+    .getElementById("imageViewModal")
+    .addEventListener("hidden.bs.modal", function () {
+      this.remove();
+    });
 };
 
 // Delete review

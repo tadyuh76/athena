@@ -22,8 +22,8 @@ class ProductController {
                 max_price: query.get("max_price")
                     ? parseFloat(query.get("max_price"))
                     : undefined,
-                in_stock: query.get("in_stock") === "true",
-                is_featured: query.get("featured") === "true",
+                in_stock: query.get("in_stock") === "true" ? true : undefined,
+                is_featured: query.get("is_featured") === "true" ? true : undefined,
                 search: query.get("search") || undefined,
                 status: (query.get("status") || "active"),
                 sort_by: (query.get("sort_by") || "newest"),

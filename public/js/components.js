@@ -135,7 +135,7 @@ class SiteHeader extends HTMLElement {
 
                 @media (max-width: 768px) {
                     .mobile-toggle {
-                        display: block;
+                        display: none;
                     }
 
                     nav {

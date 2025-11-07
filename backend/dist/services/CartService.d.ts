@@ -20,6 +20,7 @@ export interface CartSummary {
 export declare class CartService {
     private cartModel;
     private variantModel;
+    private productModel;
     constructor();
     getCart(userId?: string, sessionId?: string): Promise<CartWithItems | null>;
     addItem(userId: string | undefined, sessionId: string | undefined, productId: string, variantId: string, quantity?: number): Promise<CartItem>;

@@ -40,7 +40,8 @@ async function requireAuth(req, res) {
     return true;
 }
 async function optionalAuth(req) {
-    return await authenticateToken(req);
+    await authenticateToken(req);
+    return true;
 }
 function requireRole(allowedRoles) {
     return async (req, res) => {

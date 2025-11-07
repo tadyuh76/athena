@@ -3,13 +3,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CartService = void 0;
 const CartModel_1 = require("../models/CartModel");
 const ProductVariantModel_1 = require("../models/ProductVariantModel");
+const ProductModel_1 = require("../models/ProductModel");
 const uuid_1 = require("uuid");
 class CartService {
     cartModel;
     variantModel;
+    productModel;
     constructor() {
         this.cartModel = new CartModel_1.CartModel();
         this.variantModel = new ProductVariantModel_1.ProductVariantModel();
+        this.productModel = new ProductModel_1.ProductModel();
     }
     async getCart(userId, sessionId) {
         try {
@@ -67,7 +70,17 @@ class CartService {
                 throw new Error("Không tìm thấy phiên bản sản phẩm");
             }
             console.log('[CartService.addItem] Variant found:', { id: variant.id, inventory: variant.inventory_quantity, reserved: variant.reserved_quantity });
-            const price = variant.price || 0;
+            let price = variant.price;
+            if (price == null || price === 0) {
+                console.log('[CartService.addItem] Variant price is null/0, fetching product price...');
+                const product = await this.productModel.findById(productId);
+                if (!product) {
+                    console.error('[CartService.addItem] Product not found:', productId);
+                    throw new Error("Không tìm thấy sản phẩm");
+                }
+                price = product.base_price || 0;
+                console.log('[CartService.addItem] Using product base_price:', price);
+            }
             console.log('[CartService.addItem] Attempting to reserve inventory atomically...');
             const reservationSuccess = await this.variantModel.reserveInventoryAtomic(variantId, quantity, 15);
             if (!reservationSuccess) {

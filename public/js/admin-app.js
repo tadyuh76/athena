@@ -714,31 +714,38 @@ async function loadAdminProducts() {
     tableBody.innerHTML = productsWithVariants
       .map((p) => {
         const variantCount = p.variants.length;
+
+        // Build image list: featured image first, then variant images
+        const images = [];
+
+        // First image: featured image (larger)
+        if (p.featured_image_url) {
+          images.push(`
+            <img src="${p.featured_image_url}"
+                 alt="${p.name}"
+                 title="Featured Image"
+                 style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #0d6efd;">
+          `);
+        }
+
+        // Following images: variant images (smaller)
         const variantImages = p.variants
           .filter((v) => v.image_url)
           .slice(0, 3)
-          .map(
-            (v) =>
-              `<img src="${v.image_url}" alt="${v.size || ""} ${
-                v.color || ""
-              }" style="width:40px;height:40px;object-fit:cover;border-radius:4px;margin-right:4px;" title="${
-                v.size || ""
-              } ${v.color || ""}">`
-          )
-          .join("");
+          .map((v) => `
+            <img src="${v.image_url}"
+                 alt="${v.size || ""} ${v.color || ""}"
+                 title="Variant: ${v.size || ""} ${v.color || ""}"
+                 style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">
+          `);
+
+        images.push(...variantImages);
 
         return `
     <tr>
       <td data-label="Hình ảnh">
-        <div class="d-flex gap-2 align-items-center">
-          <img src="${p.featured_image_url || "/images/no-image.png"}"
-              alt="${p.name}"
-              style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #dee2e6;">
-          ${
-            variantImages
-              ? `<div class="d-flex flex-wrap">${variantImages}</div>`
-              : ""
-          }
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          ${images.length > 0 ? images.join('') : '<img src="/images/no-image.png" alt="No image" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">'}
         </div>
       </td>
       <td data-label="Tên sản phẩm">
