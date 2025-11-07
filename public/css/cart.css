@@ -43,6 +43,11 @@ body {
   background-color: #f8f9fa;
 }
 
+.quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .quantity-input {
   border: none;
   text-align: center;
@@ -80,4 +85,132 @@ body {
   top: 1rem;
   right: 1rem;
   z-index: 2000;
+}
+
+/* Responsive styles for tablet and mobile */
+@media (max-width: 991px) {
+  /* Cart summary should be full width and not sticky on tablet/mobile */
+  .cart-summary {
+    position: static;
+    margin-top: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Adjust cart item layout for mobile */
+  .cart-item {
+    padding: 1.25rem 0;
+  }
+
+  .cart-item-image {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+  }
+
+  /* Hide price per item on mobile in the price column */
+  .cart-item .col-6.col-md-2 .text-muted.small {
+    display: none;
+  }
+
+  /* Reduce button sizes on mobile */
+  .quantity-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0.25rem;
+  }
+
+  .quantity-input {
+    width: 50px;
+    font-size: 0.95rem;
+  }
+
+  /* Empty cart padding */
+  .empty-cart {
+    padding: 3rem 1rem;
+  }
+
+  .empty-cart i {
+    font-size: 3rem;
+  }
+
+  /* Toast container position for mobile */
+  #toastContainer {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 400px;
+  }
+
+  /* Offline banner responsive */
+  #cartOfflineBanner {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  #cartOfflineBanner > div {
+    width: 100%;
+  }
+
+  #cartOfflineBanner .btn {
+    width: 100%;
+    margin: 0 !important;
+  }
+
+  /* Cart heading and breadcrumb */
+  .breadcrumb {
+    font-size: 0.9rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  /* Remove button full width on mobile */
+  .cart-item .btn-outline-danger {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 575px) {
+  /* Further adjustments for small mobile screens */
+  .cart-item-image {
+    width: 140px;
+    height: 140px;
+  }
+
+  .cart-summary {
+    padding: 1rem;
+  }
+
+  /* Reduce font sizes slightly */
+  .cart-summary h5 {
+    font-size: 1.1rem;
+  }
+
+  /* Cart summary text sizing */
+  .cart-summary .d-flex {
+    font-size: 0.95rem;
+  }
+
+  /* Button text sizing */
+  .btn-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+
+  /* Smaller heading */
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  /* Quantity and price side by side */
+  .cart-item .col-6 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }

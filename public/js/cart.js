@@ -265,13 +265,13 @@ function renderCartItem(item) {
 
   return `
     <div class="cart-item" data-item-id="${item.id}">
-      <div class="row align-items-center">
-        <div class="col-md-2">
+      <div class="row align-items-center g-3">
+        <div class="col-12 col-md-2 text-center text-md-start">
           <img src="${imageUrl}"
                alt="${product.name}" class="cart-item-image">
         </div>
-        
-        <div class="col-md-4">
+
+        <div class="col-12 col-md-4 text-center text-md-start">
           <h6 class="mb-1">
             <a href="/product-detail.html?id=${
               product.id
@@ -291,12 +291,12 @@ function renderCartItem(item) {
               : ""
           }
         </div>
-        
-        <div class="col-md-2">
+
+        <div class="col-6 col-md-2 d-flex justify-content-center justify-content-md-start">
           <div class="quantity-controls">
             <button class="quantity-btn" onclick="updateQuantity('${
               item.id
-            }', ${item.quantity - 1})" 
+            }', ${item.quantity - 1})"
                     ${item.quantity <= 1 ? "disabled" : ""}>
               <i class="bi bi-dash"></i>
             </button>
@@ -306,14 +306,14 @@ function renderCartItem(item) {
                    onchange="updateQuantity('${item.id}', this.value)">
             <button class="quantity-btn" onclick="updateQuantity('${
               item.id
-            }', ${item.quantity + 1})" 
+            }', ${item.quantity + 1})"
                     ${item.quantity >= 10 || !isInStock ? "disabled" : ""}>
               <i class="bi bi-plus"></i>
             </button>
           </div>
         </div>
-        
-        <div class="col-md-2 text-end">
+
+        <div class="col-6 col-md-2 text-center text-md-end">
           <p class="mb-1"><strong>$${(
             item.price_at_time * item.quantity
           ).toFixed(2)}</strong></p>
@@ -321,12 +321,12 @@ function renderCartItem(item) {
             2
           )} mỗi cái</p>
         </div>
-        
-        <div class="col-md-2 text-end">
+
+        <div class="col-12 col-md-2 text-center text-md-end">
           <button class="btn btn-sm btn-outline-danger" onclick="removeItem('${
             item.id
           }')">
-            <i class="bi bi-trash"></i>
+            <i class="bi bi-trash"></i> <span class="d-none d-md-inline">Xóa</span>
           </button>
         </div>
       </div>
