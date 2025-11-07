@@ -18,6 +18,8 @@
     />
     <link href="css/index.css" rel="stylesheet" />
     <link href="css/account.css" rel="stylesheet" />
+    <!-- Supabase SDK (required by config.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/js/components.js"></script>
   </head>
   <body>
@@ -76,7 +78,7 @@
             <div class="row align-items-center mb-4">
               <div class="col-auto">
                 <img
-                  src="/images/placeholder-user.jpg"
+                  src="https://ui-avatars.com/api/?name=User&size=100&background=8B4513&color=fff"
                   alt="Hồ sơ"
                   class="profile-avatar"
                   id="profileAvatar"
@@ -438,10 +440,11 @@
         document.getElementById("profileEmail").textContent = currentUser.email;
 
         // Update avatar
+        const userName = `${currentUser.first_name || ""} ${currentUser.last_name || ""}`.trim() || "User";
         const avatarUrl =
           currentUser.avatar_url ||
           currentUser.metadata?.picture ||
-          "/images/placeholder-user.jpg";
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&size=100&background=8B4513&color=fff`;
         document.getElementById("profileAvatar").src = avatarUrl;
 
         // Member since
@@ -598,16 +601,17 @@
                     ? order.items
                         .map((item) => {
                           const variantInfo = [];
-                          if (item.variant_size)
-                            variantInfo.push(`Size: ${item.variant_size}`);
-                          if (item.variant_color)
-                            variantInfo.push(`Màu: ${item.variant_color}`);
+                          // Use nested variant object for size and color
+                          if (item.variant?.size || item.variant_size)
+                            variantInfo.push(`Size: ${item.variant?.size || item.variant_size}`);
+                          if (item.variant?.color || item.variant_color)
+                            variantInfo.push(`Màu: ${item.variant?.color || item.variant_color}`);
                           const variantText =
                             variantInfo.length > 0
                               ? ` (${variantInfo.join(", ")})`
                               : "";
-                          // Prioritize variant image over product image
-                          const imageUrl = item.variant_image_url || item.product_image_url || '/images/placeholder.jpg';
+                          // Prioritize variant image over product image (from nested variant object or direct field)
+                          const imageUrl = item.variant?.image_url || item.product_image_url || 'https://via.placeholder.com/50x50/f5f5f5/999999?text=No+Image';
                           return `
                             <div class="d-flex align-items-center mb-2">
                               <img src="${imageUrl}"

@@ -179,7 +179,7 @@ export class OrderService {
           product_name: item.product?.name || 'Unknown Product',
           product_sku: item.variant?.sku || item.product?.sku || 'N/A',
           variant_title: item.variant?.size || item.variant?.color || undefined,
-          product_image_url: item.product?.featured_image_url || undefined,
+          product_image_url: item.variant?.image_url || item.product?.featured_image_url || undefined,
         })),
         shippingAddress: {
           type: 'shipping',
@@ -376,7 +376,7 @@ export class OrderService {
           product_name: item.product?.name || 'Unknown Product',
           product_sku: item.variant?.sku || item.product?.sku || 'N/A',
           variant_title: item.variant?.size || item.variant?.color || undefined,
-          product_image_url: item.product?.featured_image_url || undefined,
+          product_image_url: item.variant?.image_url || item.product?.featured_image_url || undefined,
         })),
         shippingAddress: {
           type: 'shipping',

@@ -235,6 +235,22 @@ export class AuthService {
           .single();
 
       if (!publicError && publicUser) {
+        // Also fetch auth.users to merge avatar/metadata if needed
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+        // Merge avatar_url from auth.users if not present in public.users
+        if (authUser?.user && !publicUser.avatar_url) {
+          publicUser.avatar_url = authUser.user.user_metadata?.avatar_url || authUser.user.user_metadata?.picture || null;
+        }
+
+        // Merge metadata from auth.users
+        if (authUser?.user?.user_metadata && publicUser.metadata) {
+          publicUser.metadata = {
+            ...authUser.user.user_metadata,
+            ...publicUser.metadata, // public.users metadata takes precedence
+          };
+        }
+
         console.log("User fetched from public.users:", publicUser.email, "role:", publicUser.role);
         return publicUser;
       }
@@ -253,6 +269,7 @@ export class AuthService {
           last_name: authUser.user.user_metadata?.last_name || "",
           phone:
             authUser.user.phone || authUser.user.user_metadata?.phone || null,
+          avatar_url: authUser.user.user_metadata?.avatar_url || authUser.user.user_metadata?.picture || null,
           status: "active",
           role: "customer", // Always default to customer for auth-only users
           created_at: authUser.user.created_at,

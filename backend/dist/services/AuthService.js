@@ -173,6 +173,16 @@ class AuthService {
                 .eq("id", userId)
                 .single();
             if (!publicError && publicUser) {
+                const { data: authUser } = await supabase_1.supabaseAdmin.auth.admin.getUserById(userId);
+                if (authUser?.user && !publicUser.avatar_url) {
+                    publicUser.avatar_url = authUser.user.user_metadata?.avatar_url || authUser.user.user_metadata?.picture || null;
+                }
+                if (authUser?.user?.user_metadata && publicUser.metadata) {
+                    publicUser.metadata = {
+                        ...authUser.user.user_metadata,
+                        ...publicUser.metadata,
+                    };
+                }
                 console.log("User fetched from public.users:", publicUser.email, "role:", publicUser.role);
                 return publicUser;
             }
@@ -185,6 +195,7 @@ class AuthService {
                     first_name: authUser.user.user_metadata?.first_name || "",
                     last_name: authUser.user.user_metadata?.last_name || "",
                     phone: authUser.user.phone || authUser.user.user_metadata?.phone || null,
+                    avatar_url: authUser.user.user_metadata?.avatar_url || authUser.user.user_metadata?.picture || null,
                     status: "active",
                     role: "customer",
                     created_at: authUser.user.created_at,

@@ -209,10 +209,18 @@ export class OrderModel extends BaseModel<Order> {
           *,
           items:order_items(
             id,
+            product_id,
+            variant_id,
             product_name,
             variant_title,
+            product_image_url,
             quantity,
-            unit_price
+            unit_price,
+            variant:product_variants(
+              size,
+              color,
+              image_url
+            )
           )
         `)
         .eq('user_id', userId)
