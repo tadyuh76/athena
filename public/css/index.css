@@ -137,6 +137,11 @@ body {
 
   .hero-section {
     min-height: 80vh;
+    padding-top: 120px;
+  }
+
+  .hero-content {
+    padding-top: 2rem;
   }
 
   .py-5 {
