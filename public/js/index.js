@@ -79,10 +79,11 @@ async function loadFeaturedProducts() {
     `;
 
   try {
-    const { products } = await productService.getProducts({
-      featured: true,
-      limit: 4,
-    });
+    const { products } = await productService.getProducts(
+      { is_featured: true },
+      1,
+      4
+    );
 
     if (products.length === 0) {
       // Show placeholder products if no featured products

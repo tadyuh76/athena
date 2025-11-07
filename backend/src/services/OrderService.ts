@@ -64,7 +64,41 @@ export class OrderService {
       );
 
       const tax = subtotal * 0.085; // 8.5% tax
-      const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
+      // Calculate shipping based on weight and subtotal
+      let shipping = 0;
+      if (subtotal < 200) {
+        // Calculate total weight in kg
+        const totalWeightKg = cartItems.reduce((sum, item) => {
+          const product = item.product;
+          if (!product || !product.weight_value) {
+            return sum;
+          }
+
+          // Convert weight to kg
+          let weightInKg = product.weight_value;
+          switch (product.weight_unit) {
+            case 'g':
+              weightInKg = product.weight_value / 1000;
+              break;
+            case 'lb':
+              weightInKg = product.weight_value * 0.453592;
+              break;
+            case 'oz':
+              weightInKg = product.weight_value * 0.0283495;
+              break;
+            case 'kg':
+            default:
+              weightInKg = product.weight_value;
+              break;
+          }
+
+          return sum + (weightInKg * item.quantity);
+        }, 0);
+
+        // Shipping = 20 * total weight in kg
+        shipping = Math.round(totalWeightKg * 20 * 100) / 100;
+      }
+      // Free shipping for orders >= $200
 
       // 2.5. Validate and calculate discount if code is provided
       let discount = 0;
@@ -244,7 +278,41 @@ export class OrderService {
       );
 
       const tax = subtotal * 0.085; // 8.5% tax
-      const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
+      // Calculate shipping based on weight and subtotal
+      let shipping = 0;
+      if (subtotal < 200) {
+        // Calculate total weight in kg
+        const totalWeightKg = cartItems.reduce((sum, item) => {
+          const product = item.product;
+          if (!product || !product.weight_value) {
+            return sum;
+          }
+
+          // Convert weight to kg
+          let weightInKg = product.weight_value;
+          switch (product.weight_unit) {
+            case 'g':
+              weightInKg = product.weight_value / 1000;
+              break;
+            case 'lb':
+              weightInKg = product.weight_value * 0.453592;
+              break;
+            case 'oz':
+              weightInKg = product.weight_value * 0.0283495;
+              break;
+            case 'kg':
+            default:
+              weightInKg = product.weight_value;
+              break;
+          }
+
+          return sum + (weightInKg * item.quantity);
+        }, 0);
+
+        // Shipping = 20 * total weight in kg
+        shipping = Math.round(totalWeightKg * 20 * 100) / 100;
+      }
+      // Free shipping for orders >= $200
 
       // 2.5. Validate and calculate discount if code is provided
       let discount = 0;
@@ -614,7 +682,35 @@ export class OrderService {
       const unitPrice = variant.price || product.base_price;
       const subtotal = unitPrice * quantity;
       const tax = subtotal * 0.085; // 8.5% tax
-      const shipping = subtotal >= 150 ? 0 : 15; // Free shipping over $150
+
+      // Calculate shipping based on weight and subtotal
+      let shipping = 0;
+      if (subtotal < 200) {
+        // Calculate weight for this single item purchase
+        if (product.weight_value) {
+          // Convert weight to kg
+          let weightInKg = product.weight_value;
+          switch (product.weight_unit) {
+            case 'g':
+              weightInKg = product.weight_value / 1000;
+              break;
+            case 'lb':
+              weightInKg = product.weight_value * 0.453592;
+              break;
+            case 'oz':
+              weightInKg = product.weight_value * 0.0283495;
+              break;
+            case 'kg':
+            default:
+              weightInKg = product.weight_value;
+              break;
+          }
+
+          // Shipping = 20 * total weight in kg (weight × quantity)
+          shipping = Math.round(weightInKg * quantity * 20 * 100) / 100;
+        }
+      }
+      // Free shipping for orders >= $200
       const discount = 0;
       const total = subtotal + tax + shipping - discount;
 

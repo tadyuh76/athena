@@ -355,8 +355,41 @@ export class CartService {
       // Calculate tax (8.5% for example)
       const tax = subtotal * 0.085;
 
-      // Free shipping over $150
-      const shipping = subtotal >= 150 ? 0 : 15;
+      // Calculate shipping based on weight and subtotal
+      let shipping = 0;
+      if (subtotal < 200) {
+        // Calculate total weight in kg
+        const totalWeightKg = cart.items.reduce((sum, item) => {
+          const product = item.product;
+          if (!product || !product.weight_value) {
+            return sum;
+          }
+
+          // Convert weight to kg
+          let weightInKg = product.weight_value;
+          switch (product.weight_unit) {
+            case 'g':
+              weightInKg = product.weight_value / 1000;
+              break;
+            case 'lb':
+              weightInKg = product.weight_value * 0.453592;
+              break;
+            case 'oz':
+              weightInKg = product.weight_value * 0.0283495;
+              break;
+            case 'kg':
+            default:
+              weightInKg = product.weight_value;
+              break;
+          }
+
+          return sum + (weightInKg * item.quantity);
+        }, 0);
+
+        // Shipping = 20 * total weight in kg
+        shipping = totalWeightKg * 20;
+      }
+      // Free shipping for orders >= $200
 
       const discount = 0; // No discounts for now
       const total = subtotal + tax + shipping - discount;
@@ -364,7 +397,7 @@ export class CartService {
       return {
         subtotal: Math.round(subtotal * 100) / 100,
         tax: Math.round(tax * 100) / 100,
-        shipping,
+        shipping: Math.round(shipping * 100) / 100,
         discount,
         total: Math.round(total * 100) / 100,
         itemCount,

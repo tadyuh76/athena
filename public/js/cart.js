@@ -224,13 +224,20 @@ function renderCart() {
           </div>
 
           ${
-            cartSummary.shipping === 0 && cartSummary.subtotal < 150
+            cartSummary.subtotal < 200
               ? `
             <div class="alert alert-info small">
               <i class="bi bi-info-circle me-1"></i>
-              Thêm $${(150 - cartSummary.subtotal).toFixed(
+              Thêm $${(200 - cartSummary.subtotal).toFixed(
                 2
               )} để được miễn phí vận chuyển
+            </div>
+          `
+              : cartSummary.shipping === 0
+              ? `
+            <div class="alert alert-success small">
+              <i class="bi bi-check-circle me-1"></i>
+              Bạn được miễn phí vận chuyển!
             </div>
           `
               : ""
