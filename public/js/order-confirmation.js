@@ -96,9 +96,13 @@ function displayOrder(order) {
 
   // Order items
   if (order.items && order.items.length > 0) {
-    const itemsHtml = order.items.map(item => `
+    const itemsHtml = order.items.map(item => {
+      // Prioritize variant image over product image
+      const imageUrl = item.variant_image_url || item.product_image_url || '/images/placeholder.jpg';
+
+      return `
       <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-        <img src="${item.product_image_url || '/images/placeholder.jpg'}"
+        <img src="${imageUrl}"
              alt="${item.product_name}"
              style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;"
              class="me-3">
@@ -114,7 +118,8 @@ function displayOrder(order) {
           <div class="text-muted small">$${item.unit_price.toFixed(2)} mỗi cái</div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
     document.getElementById('orderItems').innerHTML = itemsHtml;
   }

@@ -715,10 +715,10 @@ async function loadAdminProducts() {
       .map((p) => {
         const variantCount = p.variants.length;
 
-        // Build image list: featured image first, then variant images
+        // Build image list: 1 featured image + 3 variant images from 3 different colors
         const images = [];
 
-        // First image: featured image (larger)
+        // 1. Featured image (larger, blue border)
         if (p.featured_image_url) {
           images.push(`
             <img src="${p.featured_image_url}"
@@ -728,24 +728,38 @@ async function loadAdminProducts() {
           `);
         }
 
-        // Following images: variant images (smaller)
-        const variantImages = p.variants
-          .filter((v) => v.image_url)
-          .slice(0, 3)
-          .map((v) => `
+        // 2. Get 3 variants with different colors (one image per unique color)
+        const variantsWithImages = p.variants.filter((v) => v.image_url);
+        const seenColors = new Set();
+        const uniqueColorVariants = [];
+
+        for (const variant of variantsWithImages) {
+          const colorKey = variant.color || variant.sku; // Use color or SKU as unique identifier
+          if (!seenColors.has(colorKey) && uniqueColorVariants.length < 3) {
+            seenColors.add(colorKey);
+            uniqueColorVariants.push(variant);
+          }
+        }
+
+        uniqueColorVariants.forEach((v) => {
+          images.push(`
             <img src="${v.image_url}"
                  alt="${v.size || ""} ${v.color || ""}"
                  title="Variant: ${v.size || ""} ${v.color || ""}"
-                 style="width:40px;height:40px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">
+                 style="width:45px;height:45px;object-fit:cover;border-radius:4px;border:1px solid #dee2e6;">
           `);
+        });
 
-        images.push(...variantImages);
+        // Show placeholder if no images at all
+        const imageDisplay = images.length > 0
+          ? images.join('')
+          : '<span class="text-muted small">Chưa có ảnh</span>';
 
         return `
     <tr>
       <td data-label="Hình ảnh">
         <div class="d-flex gap-2 align-items-center flex-wrap">
-          ${images.length > 0 ? images.join('') : '<img src="/images/no-image.png" alt="No image" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #dee2e6;">'}
+          ${imageDisplay}
         </div>
       </td>
       <td data-label="Tên sản phẩm">

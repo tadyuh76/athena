@@ -255,12 +255,12 @@ function renderCartItem(item) {
   const variant = item.variant;
   const isInStock = productService.getAvailableStock(variant) > 0;
 
-  // Get primary image or first image from images array
-  const primaryImage =
-    product.images?.find((img) => img.is_primary) || product.images?.[0];
+  // Prioritize variant image, then product images
   const imageUrl =
-    primaryImage?.url ||
+    variant.image_url ||
     product.featured_image_url ||
+    product.images?.find((img) => img.is_primary)?.url ||
+    product.images?.[0]?.url ||
     "/images/placeholder-user.jpg";
 
   return `
